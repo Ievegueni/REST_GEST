@@ -45,16 +45,14 @@ export async function payableRoutes(app: FastifyInstance) {
     data: await service.cancelManual(req.auth, idParam.parse(req.params).id),
   }));
   app.post('/payables/:id/payments', manage, async (req, reply) =>
-    reply
-      .status(201)
-      .send({
-        data: await service.addPayment(
-          req.auth,
-          idParam.parse(req.params).id,
-          service.paymentSchema.parse(req.body),
-          req.ip,
-        ),
-      }),
+    reply.status(201).send({
+      data: await service.addPayment(
+        req.auth,
+        idParam.parse(req.params).id,
+        service.paymentSchema.parse(req.body),
+        req.ip,
+      ),
+    }),
   );
   app.delete<{ Params: { id: string; paymentId: string } }>(
     '/payables/:id/payments/:paymentId',

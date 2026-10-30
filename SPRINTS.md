@@ -136,9 +136,10 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Antiguidade de saldos e previsão de pagamentos
 
 ### Sprint 14 — Resultados financeiros
-- [ ] Resultado diário/mensal por unidade e consolidado
-- [ ] CMV %, custo de pessoal %, ticket médio, ponto de equilíbrio
-- [ ] Dashboard executivo e exportações
+- [x] Resultado diário/mensal por unidade e consolidado
+- [x] CMV %, custo de pessoal %, ponto de equilíbrio
+- [ ] Ticket médio — quando o ficheiro do POS trouxer o nº de documentos
+- [x] Dashboard executivo e exportações
 
 ### Sprint 15 — Analisador IA (parte 1)
 - [ ] Integração Anthropic API, `AiRequest` com tokens/custo, limites por tenant

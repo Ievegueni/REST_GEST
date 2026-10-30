@@ -61,6 +61,7 @@ import { CashSessionsPage } from './modules/cash/CashSessionsPage';
 import { CashSessionPage } from './modules/cash/CashSessionPage';
 import { PayablesPage } from './modules/payables/PayablesPage';
 import { PayablePage } from './modules/payables/PayablePage';
+import { ResultsPage } from './modules/financial/ResultsPage';
 import { OrdersPage } from './modules/purchases/OrdersPage';
 import { OrderPage } from './modules/purchases/OrderPage';
 import { ReceiptsPage } from './modules/purchases/ReceiptsPage';
@@ -140,6 +141,7 @@ export function App() {
         <Route path="/custos/categorias" element={gate('daily_costs', <CostCategoriesPage />)} />
         <Route path="/caixa" element={gate('cash_closing', <CashSessionsPage />)} />
         <Route path="/caixa/:id" element={gate('cash_closing', <CashSessionPage />)} />
+        <Route path="/resultados" element={gate('financial_results', <ResultsPage />)} />
         <Route path="/contas-a-pagar" element={gate('payables', <PayablesPage />)} />
         <Route path="/contas-a-pagar/:id" element={gate('payables', <PayablePage />)} />
         <Route path="/salarios" element={gate('payroll', <PayrollPage />)} />

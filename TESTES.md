@@ -129,3 +129,13 @@ Preparação: Definições → Caixa: criar meios de pagamento (Numerário marca
 - [ ] Lista: filtro "Só em aberto", por fornecedor; vencidas a vermelho; total em dívida.
 - [ ] Alertas: conta a vencer dentro do limiar e conta vencida aparecem no sino (varrimento a cada 30 min, ou "Verificar agora" em Alertas); pagar → alerta resolve.
 - [ ] Relatórios "Contas a pagar: antiguidade" (colunas não vencido / 0–30 / 31–60 / 61–90 / +90) e "Previsão de pagamentos" por semana; exportar Excel/PDF.
+
+## 14. Resultados financeiros (plano COMPLETO)
+Preparação: ter no mesmo mês vendas importadas e confirmadas, quebras, custos diários e salários aprovados.
+- [ ] Resultados: período = mês → Receita, CMV vendas, Quebras, Custos operacionais, Custo de pessoal e Resultado batem com os módulos de origem (conferir 1–2 valores à mão).
+- [ ] CMV %, Pessoal % e ponto de equilíbrio coerentes; variação vs. período anterior.
+- [ ] Tabela por unidade + total; trocar a unidade no topo filtra tudo.
+- [ ] Gráfico diário: barras de receita e de resultado (negativo a vermelho); passar o rato mostra os valores.
+- [ ] Exportar Excel por dia / por mês / por unidade e PDF; abrir os ficheiros.
+- [ ] Período de 1 dia: o custo de pessoal aparece rateado (salário do mês ÷ dias do mês).
+- [ ] Ticket médio: **pendente** (o ficheiro do POS ainda não traz o nº de documentos).

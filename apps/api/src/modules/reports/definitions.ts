@@ -5,6 +5,7 @@
 import { Prisma, type MovementType } from '@prisma/client';
 import type { Feature } from '@restgest/shared';
 import type { AuthContext } from '../../core/auth';
+import { dailyCells, metrics, sumCells, type Cell } from '../financial/service';
 import { averageCosts, loadRecipeBook, theoreticalCost } from '../recipes/book';
 import {
   period,
@@ -743,6 +744,52 @@ async function payablesForecast(auth: AuthContext, f: Filters): Promise<Report> 
   };
 }
 
+// ---------- 13. Resultados financeiros ----------
+async function financialResults(auth: AuthContext, f: Filters): Promise<Report> {
+  const p = period(f);
+  const cells = await dailyCells(auth, p.from, p.to, scopeUnits(auth, f));
+  const group = f.group === 'month' ? 'month' : f.group === 'unit' ? 'unit' : 'day';
+  const units = new Map(
+    (await auth.db.unit.findMany({ select: { id: true, name: true } })).map((u) => [u.id, u.name]),
+  );
+  const buckets = new Map<string, Cell[]>();
+  for (const [k, c] of cells) {
+    const [unitId, d] = k.split('|') as [string, string];
+    const key =
+      group === 'unit' ? (units.get(unitId) ?? unitId) : group === 'month' ? d.slice(0, 7) : d;
+    buckets.set(key, [...(buckets.get(key) ?? []), c]);
+  }
+  const rows: Row[] = [...buckets]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, cs]) => ({
+      period:
+        group === 'day'
+          ? key.split('-').reverse().join('/')
+          : group === 'month'
+            ? key.split('-').reverse().join('/')
+            : key,
+      ...metrics(sumCells(cs)),
+    }));
+  const total = metrics(sumCells(cells.values()));
+  return {
+    title: 'Resultados financeiros',
+    columns: [
+      col('period', group === 'unit' ? 'Unidade' : group === 'month' ? 'Mês' : 'Dia'),
+      col('revenue', 'Receita', 'money'),
+      col('cogs', 'CMV vendas', 'money'),
+      col('waste', 'Quebras', 'money'),
+      col('opex', 'Custos operacionais', 'money'),
+      col('personnel', 'Custo de pessoal', 'money'),
+      col('result', 'Resultado', 'money'),
+      col('cmvPct', 'CMV %', 'pct'),
+      col('personnelPct', 'Pessoal %', 'pct'),
+    ],
+    rows,
+    totals: { period: 'Total', ...total },
+    notes: `Ponto de equilíbrio no período: ${total.breakEven == null ? '—' : new Intl.NumberFormat('pt-AO').format(total.breakEven) + ' Kz'} de receita. Custo de pessoal = salários aprovados (bruto + INSS da entidade), rateado por dia.`,
+  };
+}
+
 export const REPORTS = {
   stock: { title: 'Stock actual', run: stock, period: false },
   consumption: { title: 'Consumo', run: consumption, period: true },
@@ -769,6 +816,12 @@ export const REPORTS = {
     run: payablesForecast,
     period: false,
     feature: 'payables',
+  },
+  'financial-results': {
+    title: 'Resultados financeiros',
+    run: financialResults,
+    period: true,
+    feature: 'financial_results',
   },
 } as const satisfies Record<
   string,
