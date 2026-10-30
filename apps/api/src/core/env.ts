@@ -24,6 +24,14 @@ const schema = z.object({
     .string()
     .optional()
     .transform((v) => v || undefined),
+  ANTHROPIC_API_KEY: z
+    .string()
+    .optional()
+    .transform((v) => v || undefined),
+  ANTHROPIC_MODEL: z
+    .string()
+    .optional()
+    .transform((v) => v || 'claude-opus-5'),
   RUN_WORKERS: z.enum(['true', 'false']).default('true'),
   APP_URL: z.string().default('http://localhost:5173'),
 });

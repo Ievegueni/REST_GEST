@@ -142,10 +142,11 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Dashboard executivo e exportações
 
 ### Sprint 15 — Analisador IA (parte 1)
-- [ ] Integração Anthropic API, `AiRequest` com tokens/custo, limites por tenant
-- [ ] Tools de leitura agregada (filtradas por tenant e unidades)
-- [ ] Chat em linguagem natural com respostas e gráficos
-- [ ] Prompts de sistema versionados
+- [x] Integração Anthropic API, `AiRequest` com tokens/custo, limites por tenant (+ uso do mês no Super Admin)
+- [x] Tools de leitura agregada (filtradas por tenant, unidades, plano e permissões)
+- [x] Chat em linguagem natural com respostas e gráficos
+- [x] Prompts de sistema versionados (`modules/ai/prompts.ts`)
+- [ ] Testar com chave real da Anthropic (`ANTHROPIC_API_KEY`)
 
 ### Sprint 16 — Analisador IA (parte 2)
 - [ ] Detecção de anomalias (job diário, estatística no backend + explicação IA)
@@ -160,7 +161,7 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 ### Sprint 17+
 - [ ] Onboarding self-service de novos restaurantes
 - [ ] Cobrança de subscrições (ProxyPay/Multicaixa)
-- [ ] Métricas de uso para facturação (SMS, IA, unidades)
+- [x] Métricas de uso para facturação (SMS, IA, importações — Super Admin, mês corrente)
 - [ ] Integração directa Winrest (API/BD), se disponível
 - [ ] Conectores para outros POS
 - [ ] Relógio de ponto para presenças

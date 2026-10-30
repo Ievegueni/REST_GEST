@@ -139,3 +139,17 @@ Preparação: ter no mesmo mês vendas importadas e confirmadas, quebras, custos
 - [ ] Exportar Excel por dia / por mês / por unidade e PDF; abrir os ficheiros.
 - [ ] Período de 1 dia: o custo de pessoal aparece rateado (salário do mês ÷ dias do mês).
 - [ ] Ticket médio: **pendente** (o ficheiro do POS ainda não traz o nº de documentos).
+
+## 15. Analisador IA (plano COMPLETO)
+Preparação: `ANTHROPIC_API_KEY` no `.env` da API (opcional `ANTHROPIC_MODEL`, por defeito `claude-opus-5`); reiniciar a API. Ter dados de stock, vendas, quebras e custos.
+- [ ] Sem chave: a página Analisador IA mostra o aviso "ainda não está configurado"; perguntar dá erro.
+- [ ] Plano STOCK ou override "Analisador IA" desligado → o menu não mostra Analisador IA.
+- [ ] Perfil sem `ai.use` (ex.: Ecónomo) → "Sem permissão".
+- [ ] Perguntar "Quanto gastámos em bebidas este mês?" → resposta em Kz com período e unidade; conferir o valor no relatório Consumo (categoria Bebidas).
+- [ ] Pergunta de evolução/comparação ("compara as quebras por semana") → aparece um gráfico; passar o rato nas barras mostra valores.
+- [ ] Pergunta de seguimento na mesma conversa ("e no mês passado?") usa o contexto anterior; "Nova conversa" limpa.
+- [ ] Utilizador com acesso só a uma unidade, pergunta pela outra → a IA diz que não tem acesso a esses dados.
+- [ ] Pergunta sem dados (ex.: período sem vendas) → a IA diz que não há dados suficientes, sem inventar números.
+- [ ] Contador "N / limite pedidos este mês" aumenta; no `/admin` definir limite IA = pedidos já feitos → nova pergunta dá "Limite mensal … atingido".
+- [ ] `/admin` → tenant → "Uso este mês": pedidos IA, tokens e custo estimado (USD); SMS enviados e importações.
+

@@ -4,6 +4,7 @@ import { audit } from '../../core/audit';
 import { AppError } from '../../core/errors';
 import { prisma } from '../../core/prisma';
 import { createTenant } from '../../core/tenants';
+import { todayLocal, zonedMidnight } from '../reports/common';
 import type { z } from 'zod';
 import type { createTenantSchema, updateTenantSchema } from './schemas';
 
@@ -44,7 +45,33 @@ export async function getTenant(id: string) {
     },
   });
   if (!tenant) throw new AppError('NOT_FOUND', 'Tenant não encontrado');
-  return tenant;
+  return { ...tenant, usage: await monthUsage(id) };
+}
+
+/** Uso do mês corrente para facturação: SMS enviados, pedidos IA, importações. */
+async function monthUsage(tenantId: string) {
+  const createdAt = { gte: zonedMidnight(`${todayLocal().slice(0, 8)}01`) };
+  const [sms, ai, imports] = await Promise.all([
+    prisma.smsLog.aggregate({
+      where: { tenantId, status: 'SENT', createdAt },
+      _count: true,
+      _sum: { cost: true },
+    }),
+    prisma.aiRequest.aggregate({
+      where: { tenantId, createdAt },
+      _count: true,
+      _sum: { costMicroUsd: true, inputTokens: true, outputTokens: true },
+    }),
+    prisma.salesImport.count({ where: { tenantId, createdAt } }),
+  ]);
+  return {
+    smsSent: sms._count,
+    smsCost: sms._sum.cost ?? 0,
+    aiRequests: ai._count,
+    aiTokens: (ai._sum.inputTokens ?? 0) + (ai._sum.outputTokens ?? 0),
+    aiCostUsd: (ai._sum.costMicroUsd ?? 0) / 1e6,
+    salesImports: imports,
+  };
 }
 
 export async function create(

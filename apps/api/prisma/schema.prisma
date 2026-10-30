@@ -98,6 +98,8 @@ model Tenant {
   alerts                 Alert[]
   notifications          Notification[]
   smsLogs                SmsLog[]
+  aiRequests             AiRequest[]
+  aiReports              AiReport[]
   wasteReasons           WasteReason[]
   departments            Department[]
   positions              Position[]
@@ -1659,4 +1661,62 @@ model AuditLog {
 
   @@index([tenantId, entity, entityId])
   @@index([tenantId, createdAt])
+}
+
+// ---------- Analisador IA ----------
+
+enum AiRequestKind {
+  CHAT
+  ANOMALIES
+  FORECAST
+  WEEKLY_REPORT
+}
+
+/// Cada pedido à API da Anthropic (controlo de custos e limite mensal por tenant).
+model AiRequest {
+  id            String        @id @default(cuid())
+  tenantId      String        @default(dbgenerated("current_setting('app.tenant_id')"))
+  /// null = job automático
+  userId        String?
+  kind          AiRequestKind
+  model         String
+  promptVersion String
+  inputTokens   Int           @default(0)
+  outputTokens  Int           @default(0)
+  /// custo estimado em micro-USD (1e-6 USD)
+  costMicroUsd  Int           @default(0)
+  toolCalls     Int           @default(0)
+  ok            Boolean       @default(true)
+  error         String?
+  createdAt     DateTime      @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, createdAt])
+}
+
+enum AiReportKind {
+  ANOMALIES
+  WEEKLY
+}
+
+/// Relatórios gerados pela IA (anomalias diárias, relatório semanal por unidade).
+model AiReport {
+  id         String       @id @default(cuid())
+  tenantId   String       @default(dbgenerated("current_setting('app.tenant_id')"))
+  kind       AiReportKind
+  /// null = consolidado
+  unitId     String?
+  periodFrom DateTime     @db.Date
+  periodTo   DateTime     @db.Date
+  /// texto (markdown simples) escrito pela IA
+  content    String
+  /// dados calculados no backend que serviram de base
+  data       Json
+  createdAt  DateTime     @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, kind, unitId, periodFrom])
+  @@index([tenantId, kind, createdAt])
 }

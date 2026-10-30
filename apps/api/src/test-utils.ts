@@ -36,6 +36,8 @@ export async function createTestTenant(opts: {
 export async function deleteTenants(ids: string[]) {
   const where = { tenantId: { in: ids } };
   await prisma.auditLog.deleteMany({ where });
+  await prisma.aiRequest.deleteMany({ where });
+  await prisma.aiReport.deleteMany({ where });
   await prisma.refreshToken.deleteMany({ where });
   await prisma.passwordReset.deleteMany({ where });
   await prisma.payable.deleteMany({ where });

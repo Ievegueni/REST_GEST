@@ -11,6 +11,7 @@ import { buttonCls, ErrorBox, Field, secondaryCls } from '../../components/ui';
 import { useSession } from '../../features/session';
 import { t, type TKey } from '../../i18n';
 import { api } from '../../lib/api';
+import { formatMoney } from '../../lib/format';
 import {
   inputsToLimits,
   LimitsFields,
@@ -187,6 +188,26 @@ export function TenantDetailPage() {
       <button className={buttonCls} onClick={save}>
         {t('admin.save')}
       </button>
+
+      <section className="rounded border bg-white p-4">
+        <h2 className="mb-2 font-medium">{t('admin.usage')}</h2>
+        <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-5">
+          {(
+            [
+              ['admin.usage.sms', `${tenant.usage.smsSent} (${formatMoney(tenant.usage.smsCost)})`],
+              ['admin.usage.ai', String(tenant.usage.aiRequests)],
+              ['admin.usage.aiTokens', tenant.usage.aiTokens.toLocaleString('pt-AO')],
+              ['admin.usage.aiCost', `${tenant.usage.aiCostUsd.toFixed(2)} USD`],
+              ['admin.usage.imports', String(tenant.usage.salesImports)],
+            ] as const
+          ).map(([k, v]) => (
+            <div key={k}>
+              <dt className="text-slate-500">{t(k)}</dt>
+              <dd className="font-medium">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       <section className="rounded border bg-white">
         <h2 className="border-b px-4 py-2 font-medium">{t('admin.users')}</h2>

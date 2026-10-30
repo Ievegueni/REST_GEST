@@ -18,6 +18,14 @@ export type TenantRow = Limits & {
 };
 
 export type TenantDetail = TenantRow & {
+  usage: {
+    smsSent: number;
+    smsCost: number;
+    aiRequests: number;
+    aiTokens: number;
+    aiCostUsd: number;
+    salesImports: number;
+  };
   users: { id: string; name: string; email: string; active: boolean; role: { name: string } }[];
 };
 
