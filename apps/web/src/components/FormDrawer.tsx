@@ -7,7 +7,15 @@ export type FieldDef = {
   key: string;
   label: string;
   type?:
-    'text' | 'number' | 'email' | 'password' | 'textarea' | 'select' | 'checkbox' | 'checkboxes';
+    | 'text'
+    | 'number'
+    | 'email'
+    | 'password'
+    | 'date'
+    | 'textarea'
+    | 'select'
+    | 'checkbox'
+    | 'checkboxes';
   options?: Option[];
   required?: boolean;
 };

@@ -11,6 +11,7 @@ pnpm install
 pnpm --filter @restgest/api db:migrate
 pnpm --filter @restgest/api db:seed   # tenant: admin@demo.local · /admin: admin@comunica.local (demo1234)
 pnpm dev                      # API :3000, web :5173
+pnpm dev:stop                 # termina todos os processos de dev (inclui filhos do tsx)
 pnpm test && pnpm typecheck && pnpm lint
 ```
 

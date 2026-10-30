@@ -24,11 +24,9 @@ export async function stockRoutes(app: FastifyInstance) {
     '/waste-reasons',
     protect({ feature: 'stock', permission: 'settings.manage' }),
     async (req, reply) =>
-      reply
-        .status(201)
-        .send({
-          data: await req.auth.db.wasteReason.create({ data: reasonSchema.parse(req.body) }),
-        }),
+      reply.status(201).send({
+        data: await req.auth.db.wasteReason.create({ data: reasonSchema.parse(req.body) }),
+      }),
   );
   app.patch(
     '/waste-reasons/:id',

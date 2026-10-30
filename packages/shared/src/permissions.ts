@@ -46,7 +46,10 @@ const STOCK_OPS: Permission[] = [
 /** Perfis base criados em cada tenant. O tenant pode criar perfis personalizados. */
 export const BASE_ROLES: Record<string, readonly Permission[]> = {
   Administrador: ALL,
-  Gerente: ALL.filter((p) => !['settings.manage', 'users.manage', 'units.manage'].includes(p)),
+  // Gerente não vê dados sensíveis de funcionários (salário, IBAN, documentos): só o perfil RH.
+  Gerente: ALL.filter(
+    (p) => !['settings.manage', 'users.manage', 'units.manage', 'hr.sensitive'].includes(p),
+  ),
   Ecónomo: STOCK_OPS,
   Caixa: ['cash.close'],
   RH: ['hr.view', 'hr.manage', 'hr.sensitive', 'payroll.process'],

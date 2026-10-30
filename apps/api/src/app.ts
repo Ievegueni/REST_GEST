@@ -24,6 +24,7 @@ import { recipeRoutes } from './modules/recipes/routes';
 import { salesImportRoutes } from './modules/sales-import/routes';
 import { alertRoutes } from './modules/alerts/routes';
 import { reportRoutes } from './modules/reports/routes';
+import { hrRoutes } from './modules/hr/routes';
 
 export async function buildApp() {
   const app = Fastify({
@@ -64,6 +65,7 @@ export async function buildApp() {
       await api.register(salesImportRoutes);
       await api.register(alertRoutes);
       await api.register(reportRoutes);
+      await api.register(hrRoutes);
     },
     { prefix: '/api' },
   );

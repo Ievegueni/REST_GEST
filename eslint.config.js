@@ -7,4 +7,6 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   { files: ['apps/web/**/*.{ts,tsx}'], ...reactHooks.configs.flat.recommended },
+  // omitir campos com `const { a, ...resto } = obj` é intencional
+  { rules: { '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }] } },
 );

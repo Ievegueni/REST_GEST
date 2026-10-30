@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { effectiveFeatures, type Plan } from '@restgest/shared';
 import { App } from './App';
 import { FeatureGate, SessionContext, type Session } from './features/session';
@@ -36,6 +36,8 @@ function renderAt(path: string, plan: Plan | null) {
     </SessionContext.Provider>,
   );
 }
+
+afterEach(cleanup);
 
 describe('App', () => {
   it('sem sessão redirecciona para o login', () => {

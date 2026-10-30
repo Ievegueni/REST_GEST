@@ -20,6 +20,10 @@ const schema = z.object({
     .optional()
     .transform((v) => v || undefined),
   TZ_DISPLAY: z.string().default('Africa/Luanda'),
+  ENCRYPTION_KEY: z
+    .string()
+    .optional()
+    .transform((v) => v || undefined),
   RUN_WORKERS: z.enum(['true', 'false']).default('true'),
   APP_URL: z.string().default('http://localhost:5173'),
 });

@@ -108,11 +108,11 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 ## FASE 2 — Plano COMPLETO
 
 ### Sprint 10 — RH base
-- [ ] Funcionários (documentos, IBAN encriptado, permissão `hr.sensitive`)
-- [ ] Cargos e departamentos
-- [ ] Escalas/turnos semanais
-- [ ] Presenças, faltas, horas extra
-- [ ] Férias e licenças
+- [x] Funcionários (documentos, IBAN encriptado, permissão `hr.sensitive`)
+- [x] Cargos e departamentos
+- [x] Escalas/turnos semanais
+- [x] Presenças, faltas, horas extra
+- [x] Férias e licenças
 
 ### Sprint 11 — Salários
 - [ ] Tabela de IRT e taxas INSS configuráveis e versionadas (validar valores em vigor)

@@ -44,6 +44,13 @@ import { ProfilesPage } from './modules/sales/ProfilesPage';
 import { DashboardPage } from './modules/reports/DashboardPage';
 import { ReportsPage } from './modules/reports/ReportsPage';
 import { ReplenishmentPage } from './modules/purchases/ReplenishmentPage';
+import { HrLayout } from './modules/hr/HrLayout';
+import { EmployeesPage } from './modules/hr/EmployeesPage';
+import { EmployeePage } from './modules/hr/EmployeePage';
+import { SchedulePage } from './modules/hr/SchedulePage';
+import { AttendancePage } from './modules/hr/AttendancePage';
+import { LeavesPage } from './modules/hr/LeavesPage';
+import { PositionsPage } from './modules/hr/PositionsPage';
 import { OrdersPage } from './modules/purchases/OrdersPage';
 import { OrderPage } from './modules/purchases/OrderPage';
 import { ReceiptsPage } from './modules/purchases/ReceiptsPage';
@@ -109,6 +116,14 @@ export function App() {
 
         <Route path="/" element={<DashboardPage />} />
         <Route path="/relatorios" element={gate('reports_stock', <ReportsPage />)} />
+        <Route path="/rh" element={gate('hr', <HrLayout />)}>
+          <Route index element={<EmployeesPage />} />
+          <Route path="funcionarios/:id" element={<EmployeePage />} />
+          <Route path="escalas" element={<SchedulePage />} />
+          <Route path="presencas" element={<AttendancePage />} />
+          <Route path="licencas" element={<LeavesPage />} />
+          <Route path="cargos" element={<PositionsPage />} />
+        </Route>
         <Route path="/alertas" element={gate('alerts_sms', <AlertsPage />)} />
         <Route path="/definicoes" element={<SettingsLayout />}>
           <Route index element={<Navigate to="plano" replace />} />

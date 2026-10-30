@@ -93,6 +93,14 @@ model Tenant {
   notifications          Notification[]
   smsLogs                SmsLog[]
   wasteReasons           WasteReason[]
+  departments            Department[]
+  positions              Position[]
+  employees              Employee[]
+  allowances             EmployeeAllowance[]
+  employeeDocs           EmployeeDocument[]
+  shifts                 Shift[]
+  attendance             Attendance[]
+  leaves                 Leave[]
 }
 
 model Unit {
@@ -111,6 +119,7 @@ model Unit {
   orders          PurchaseOrder[]
   outputLocations CategoryOutputLocation[]
   salesImports    SalesImport[]
+  employees       Employee[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -970,6 +979,201 @@ model WasteReason {
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@unique([tenantId, name])
+}
+
+// ---------- Recursos humanos ----------
+
+model Department {
+  id       String  @id @default(cuid())
+  tenantId String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  name     String
+  active   Boolean @default(true)
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  positions Position[]
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, id])
+}
+
+model Position {
+  id           String  @id @default(cuid())
+  tenantId     String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  name         String
+  departmentId String?
+  active       Boolean @default(true)
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  department Department? @relation(fields: [tenantId, departmentId], references: [tenantId, id], onDelete: Restrict)
+  employees  Employee[]
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, id])
+}
+
+enum ContractType {
+  PERMANENT
+  FIXED_TERM
+  OTHER
+}
+
+model Employee {
+  id                  String       @id @default(cuid())
+  tenantId            String       @default(dbgenerated("current_setting('app.tenant_id')"))
+  number              String
+  name                String
+  unitId              String
+  positionId          String?
+  userId              String?
+  contractType        ContractType @default(PERMANENT)
+  hireDate            DateTime     @db.Date
+  contractEndDate     DateTime?    @db.Date
+  terminationDate     DateTime?    @db.Date
+  phone               String?
+  email               String?
+  address             String?
+  birthDate           DateTime?    @db.Date
+  /// dias de férias por ano (conforme contrato/lei; sem valor por defeito no código)
+  vacationDaysPerYear Int?
+  // ---- dados sensíveis (hr.sensitive) ----
+  /// salário base mensal, AOA
+  baseSalary          Int?
+  nif                 String?
+  idNumber            String?
+  socialSecurityNo    String?
+  bankName            String?
+  /// IBAN encriptado (AES-256-GCM)
+  ibanEncrypted       String?
+  active              Boolean      @default(true)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  tenant     Tenant              @relation(fields: [tenantId], references: [id])
+  unit       Unit                @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  position   Position?           @relation(fields: [tenantId, positionId], references: [tenantId, id], onDelete: Restrict)
+  allowances EmployeeAllowance[]
+  documents  EmployeeDocument[]
+  shifts     Shift[]
+  attendance Attendance[]
+  leaves     Leave[]
+
+  @@unique([tenantId, number])
+  @@unique([tenantId, id])
+  @@index([tenantId, unitId])
+}
+
+/// Subsídio fixo mensal (sensível).
+model EmployeeAllowance {
+  id         String @id @default(cuid())
+  tenantId   String @default(dbgenerated("current_setting('app.tenant_id')"))
+  employeeId String
+  name       String
+  amount     Int
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [tenantId, employeeId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, employeeId])
+}
+
+/// Documento do funcionário (sensível).
+model EmployeeDocument {
+  id         String    @id @default(cuid())
+  tenantId   String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  employeeId String
+  name       String
+  url        String
+  expiresAt  DateTime? @db.Date
+  uploadedAt DateTime  @default(now())
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [tenantId, employeeId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, employeeId])
+}
+
+/// Turno escalado (escala semanal).
+model Shift {
+  id         String   @id @default(cuid())
+  tenantId   String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  employeeId String
+  date       DateTime @db.Date
+  /// "HH:MM" no fuso de apresentação
+  start      String
+  end        String
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [tenantId, employeeId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+  @@index([tenantId, date])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT_JUSTIFIED
+  ABSENT_UNJUSTIFIED
+  LEAVE
+  DAY_OFF
+}
+
+model Attendance {
+  id              String           @id @default(cuid())
+  tenantId        String           @default(dbgenerated("current_setting('app.tenant_id')"))
+  employeeId      String
+  date            DateTime         @db.Date
+  status          AttendanceStatus
+  checkIn         String?
+  checkOut        String?
+  overtimeMinutes Int              @default(0)
+  notes           String?
+  recordedById    String
+  updatedAt       DateTime         @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [tenantId, employeeId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+  @@index([tenantId, date])
+}
+
+enum LeaveType {
+  VACATION
+  SICK
+  MATERNITY
+  PATERNITY
+  BEREAVEMENT
+  MARRIAGE
+  OTHER
+}
+
+enum LeaveStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Leave {
+  id            String      @id @default(cuid())
+  tenantId      String      @default(dbgenerated("current_setting('app.tenant_id')"))
+  employeeId    String
+  type          LeaveType
+  startDate     DateTime    @db.Date
+  endDate       DateTime    @db.Date
+  /// dias úteis (seg–sex) no intervalo
+  days          Int
+  status        LeaveStatus @default(REQUESTED)
+  notes         String?
+  requestedById String
+  decidedById   String?
+  decidedAt     DateTime?
+  createdAt     DateTime    @default(now())
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [tenantId, employeeId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, employeeId, startDate])
 }
 
 // ---------- Utilizadores e permissões ----------
