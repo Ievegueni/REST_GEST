@@ -19,10 +19,12 @@
     "@fastify/cors": "^11.3.1",
     "@fastify/helmet": "^13.2.0",
     "@fastify/jwt": "^10.2.6",
+    "@fastify/multipart": "^10.1.6",
     "@fastify/rate-limit": "^11.2.1",
     "@prisma/client": "~6.19.3",
     "@restgest/shared": "workspace:*",
     "argon2": "^0.45.1",
+    "exceljs": "^4.4.0",
     "fastify": "^5.12.7",
     "zod": "^4.6.7"
   },

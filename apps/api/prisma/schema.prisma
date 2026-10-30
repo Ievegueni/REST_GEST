@@ -40,14 +40,21 @@ model Tenant {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
-  units          Unit[]
-  locations      StockLocation[]
-  users          User[]
-  roles          Role[]
-  userUnits      UserUnit[]
-  auditLogs      AuditLog[]
-  refreshTokens  RefreshToken[]
-  passwordResets PasswordReset[]
+  units                  Unit[]
+  locations              StockLocation[]
+  users                  User[]
+  roles                  Role[]
+  userUnits              UserUnit[]
+  auditLogs              AuditLog[]
+  refreshTokens          RefreshToken[]
+  passwordResets         PasswordReset[]
+  categories             Category[]
+  measureUnits           MeasureUnit[]
+  products               Product[]
+  productUnitConversions ProductUnitConversion[]
+  productLocationLimits  ProductLocationLimit[]
+  suppliers              Supplier[]
+  supplierProducts       SupplierProduct[]
 }
 
 model Unit {
@@ -64,6 +71,7 @@ model Unit {
   userUnits UserUnit[]
 
   @@unique([tenantId, name])
+  @@unique([tenantId, id])
 }
 
 enum LocationType {
@@ -84,10 +92,12 @@ model StockLocation {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-  unit   Unit   @relation(fields: [unitId], references: [id])
+  limits ProductLocationLimit[]
+  tenant Tenant                 @relation(fields: [tenantId], references: [id])
+  unit   Unit                   @relation(fields: [tenantId, unitId], references: [tenantId, id])
 
   @@unique([tenantId, unitId, name])
+  @@unique([tenantId, id])
 }
 
 // ---------- Super Admin (COMUNICA) — fora de qualquer tenant ----------
@@ -100,6 +110,151 @@ model SuperAdmin {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// ---------- Catálogo ----------
+// Relações internas ao tenant usam FK composta (tenantId, id): a BD impede referências a outro tenant.
+
+model Category {
+  id        String   @id @default(cuid())
+  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  parentId  String?
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant     @relation(fields: [tenantId], references: [id])
+  parent   Category?  @relation("CategoryTree", fields: [tenantId, parentId], references: [tenantId, id], onDelete: Restrict)
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@unique([tenantId, parentId, name])
+  @@unique([tenantId, id])
+}
+
+model MeasureUnit {
+  id        String   @id @default(cuid())
+  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  name      String
+  symbol    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant              Tenant                  @relation(fields: [tenantId], references: [id])
+  stockProducts       Product[]               @relation("StockUnit")
+  purchaseProducts    Product[]               @relation("PurchaseUnit")
+  consumptionProducts Product[]               @relation("ConsumptionUnit")
+  conversions         ProductUnitConversion[]
+
+  @@unique([tenantId, symbol])
+  @@unique([tenantId, id])
+}
+
+model Product {
+  id                  String   @id @default(cuid())
+  tenantId            String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  code                String
+  name                String
+  categoryId          String
+  /// unidade em que o stock é contado (ex.: garrafa)
+  stockUnitId         String
+  /// unidade habitual de compra (ex.: caixa) — precisa de conversão
+  purchaseUnitId      String?
+  /// unidade usada nas fichas técnicas (ex.: ml) — precisa de conversão
+  consumptionUnitId   String?
+  tracksLots          Boolean  @default(false)
+  reorderPoint        Decimal? @db.Decimal(14, 3)
+  preferredSupplierId String?
+  active              Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant            Tenant       @relation(fields: [tenantId], references: [id])
+  category          Category     @relation(fields: [tenantId, categoryId], references: [tenantId, id])
+  stockUnit         MeasureUnit  @relation("StockUnit", fields: [tenantId, stockUnitId], references: [tenantId, id])
+  purchaseUnit      MeasureUnit? @relation("PurchaseUnit", fields: [tenantId, purchaseUnitId], references: [tenantId, id], onDelete: Restrict)
+  consumptionUnit   MeasureUnit? @relation("ConsumptionUnit", fields: [tenantId, consumptionUnitId], references: [tenantId, id], onDelete: Restrict)
+  preferredSupplier Supplier?    @relation("PreferredSupplier", fields: [tenantId, preferredSupplierId], references: [tenantId, id], onDelete: Restrict)
+
+  conversions      ProductUnitConversion[]
+  locationLimits   ProductLocationLimit[]
+  supplierProducts SupplierProduct[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, id])
+  @@index([tenantId, categoryId])
+}
+
+/// 1 [unit] = factor × unidade de stock (ex.: caixa = 24 garrafas; ml = 1/750 garrafa)
+model ProductUnitConversion {
+  id        String  @id @default(cuid())
+  tenantId  String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  productId String
+  unitId    String
+  factor    Decimal @db.Decimal(20, 10)
+
+  tenant  Tenant      @relation(fields: [tenantId], references: [id])
+  product Product     @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Cascade)
+  unit    MeasureUnit @relation(fields: [tenantId, unitId], references: [tenantId, id])
+
+  @@unique([tenantId, productId, unitId])
+}
+
+model ProductLocationLimit {
+  tenantId   String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  productId  String
+  locationId String
+  minQty     Decimal? @db.Decimal(14, 3)
+  maxQty     Decimal? @db.Decimal(14, 3)
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id])
+  product  Product       @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Cascade)
+  location StockLocation @relation(fields: [tenantId, locationId], references: [tenantId, id])
+
+  @@id([productId, locationId])
+  @@index([tenantId])
+}
+
+model Supplier {
+  id              String   @id @default(cuid())
+  tenantId        String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  name            String
+  nif             String?
+  contactName     String?
+  phone           String?
+  email           String?
+  address         String?
+  /// prazo de pagamento em dias (vencimento das contas a pagar)
+  paymentTermDays Int      @default(0)
+  notes           String?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant            Tenant            @relation(fields: [tenantId], references: [id])
+  products          SupplierProduct[]
+  preferredProducts Product[]         @relation("PreferredSupplier")
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, id])
+}
+
+model SupplierProduct {
+  tenantId     String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  supplierId   String
+  productId    String
+  supplierCode String?
+  /// último preço em AOA (inteiro), por unidade de compra
+  lastPrice    Int?
+  lastPriceAt  DateTime?
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  supplier Supplier @relation(fields: [tenantId, supplierId], references: [tenantId, id], onDelete: Cascade)
+  product  Product  @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([supplierId, productId])
+  @@index([tenantId, productId])
 }
 
 // ---------- Utilizadores e permissões ----------
@@ -120,12 +275,12 @@ model User {
   updatedAt    DateTime  @updatedAt
 
   tenant         Tenant          @relation(fields: [tenantId], references: [id])
-  role           Role            @relation(fields: [roleId], references: [id])
+  role           Role            @relation(fields: [tenantId, roleId], references: [tenantId, id])
   userUnits      UserUnit[]
   refreshTokens  RefreshToken[]
   passwordResets PasswordReset[]
 
-  @@index([tenantId])
+  @@unique([tenantId, id])
 }
 
 model Role {
@@ -142,6 +297,7 @@ model Role {
   permissions Permission[]
 
   @@unique([tenantId, name])
+  @@unique([tenantId, id])
 }
 
 /// Catálogo global de permissões (sem tenantId).
@@ -158,8 +314,8 @@ model UserUnit {
   createdAt DateTime @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  unit   Unit   @relation(fields: [unitId], references: [id])
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+  unit   Unit   @relation(fields: [tenantId, unitId], references: [tenantId, id])
 
   @@id([userId, unitId])
   @@index([tenantId])
@@ -176,7 +332,7 @@ model RefreshToken {
   createdAt DateTime  @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
 
   @@index([tenantId, userId])
 }
@@ -191,7 +347,7 @@ model PasswordReset {
   createdAt DateTime  @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
 
   @@index([tenantId, userId])
 }

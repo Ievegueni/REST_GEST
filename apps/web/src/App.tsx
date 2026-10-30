@@ -1,15 +1,30 @@
-import { Route, Routes } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import type { Feature } from '@restgest/shared';
 import { Layout, NAV } from './components/Layout';
 import { FeatureGate } from './features/session';
 import { t } from './i18n';
-import { ForgotPasswordPage } from './modules/auth/ForgotPasswordPage';
-import { LoginPage } from './modules/auth/LoginPage';
-import { ResetPasswordPage } from './modules/auth/ResetPasswordPage';
-import { PlanPage } from './modules/settings/PlanPage';
 import { AdminLayout } from './modules/admin/AdminLayout';
 import { NewTenantPage } from './modules/admin/NewTenantPage';
 import { TenantDetailPage } from './modules/admin/TenantDetailPage';
 import { TenantsPage } from './modules/admin/TenantsPage';
+import { ForgotPasswordPage } from './modules/auth/ForgotPasswordPage';
+import { LoginPage } from './modules/auth/LoginPage';
+import { ResetPasswordPage } from './modules/auth/ResetPasswordPage';
+import { CatalogLayout } from './modules/catalog/CatalogLayout';
+import { CategoriesPage } from './modules/catalog/CategoriesPage';
+import { ImportPage } from './modules/catalog/ImportPage';
+import { MeasureUnitsPage } from './modules/catalog/MeasureUnitsPage';
+import { ProductFormPage } from './modules/catalog/ProductFormPage';
+import { ProductsPage } from './modules/catalog/ProductsPage';
+import { PlanPage } from './modules/settings/PlanPage';
+import { SettingsLayout } from './modules/settings/SettingsLayout';
+import { UnitsPage } from './modules/settings/UnitsPage';
+import { UsersPage } from './modules/settings/UsersPage';
+import { SupplierPage } from './modules/suppliers/SupplierPage';
+import { SuppliersPage } from './modules/suppliers/SuppliersPage';
+
+const gate = (feature: Feature, el: ReactNode) => <FeatureGate feature={feature}>{el}</FeatureGate>;
 
 export function App() {
   return (
@@ -17,14 +32,33 @@ export function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<TenantsPage />} />
         <Route path="tenants/novo" element={<NewTenantPage />} />
         <Route path="tenants/:id" element={<TenantDetailPage />} />
       </Route>
+
       <Route element={<Layout />}>
-        <Route path="/definicoes/plano" element={<PlanPage />} />
-        {NAV.filter((n) => n.to !== '/definicoes/plano').map((n) => {
+        <Route path="/catalogo" element={gate('stock', <CatalogLayout />)}>
+          <Route index element={<Navigate to="produtos" replace />} />
+          <Route path="produtos" element={<ProductsPage />} />
+          <Route path="produtos/:id" element={<ProductFormPage />} />
+          <Route path="categorias" element={<CategoriesPage />} />
+          <Route path="unidades-medida" element={<MeasureUnitsPage />} />
+          <Route path="importar" element={<ImportPage />} />
+        </Route>
+        <Route path="/fornecedores" element={gate('stock', <SuppliersPage />)} />
+        <Route path="/fornecedores/:id" element={gate('stock', <SupplierPage />)} />
+
+        <Route path="/definicoes" element={<SettingsLayout />}>
+          <Route index element={<Navigate to="plano" replace />} />
+          <Route path="plano" element={<PlanPage />} />
+          <Route path="unidades" element={<UnitsPage />} />
+          <Route path="utilizadores" element={<UsersPage />} />
+        </Route>
+
+        {NAV.filter((n) => n.placeholder).map((n) => {
           const page = (
             <>
               <h1 className="mb-2 text-xl font-semibold">{t(n.label)}</h1>
@@ -32,11 +66,7 @@ export function App() {
             </>
           );
           return (
-            <Route
-              key={n.to}
-              path={n.to}
-              element={n.feature ? <FeatureGate feature={n.feature}>{page}</FeatureGate> : page}
-            />
+            <Route key={n.to} path={n.to} element={n.feature ? gate(n.feature, page) : page} />
           );
         })}
       </Route>

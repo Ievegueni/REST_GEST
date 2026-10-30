@@ -2,6 +2,17 @@ import argon2 from 'argon2';
 import { BASE_ROLES, PERMISSIONS, type Plan } from '@restgest/shared';
 import { prisma } from './prisma';
 
+/** Unidades de medida iniciais de cada tenant (editáveis). */
+const DEFAULT_MEASURE_UNITS = [
+  { name: 'Unidade', symbol: 'un' },
+  { name: 'Quilograma', symbol: 'kg' },
+  { name: 'Grama', symbol: 'g' },
+  { name: 'Litro', symbol: 'L' },
+  { name: 'Mililitro', symbol: 'ml' },
+  { name: 'Garrafa', symbol: 'gf' },
+  { name: 'Caixa', symbol: 'cx' },
+];
+
 export type TenantLimits = {
   maxUnits?: number | null;
   maxUsers?: number | null;
@@ -49,6 +60,9 @@ export async function createTenant(input: {
         roleId: adminRoleId,
         allUnits: true,
       },
+    });
+    await tx.measureUnit.createMany({
+      data: DEFAULT_MEASURE_UNITS.map((u) => ({ ...u, tenantId: tenant.id })),
     });
     return { tenant, admin };
   });

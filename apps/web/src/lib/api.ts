@@ -16,7 +16,7 @@ const raw = (path: string, init: RequestInit = {}) =>
     ...init,
     credentials: 'include',
     headers: {
-      ...(init.body ? { 'content-type': 'application/json' } : {}),
+      ...(typeof init.body === 'string' ? { 'content-type': 'application/json' } : {}),
       ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
     },
   });
@@ -35,31 +35,50 @@ export function refresh(): Promise<boolean> {
   return refreshing;
 }
 
+/** Pedido com renovação automática do access token (excepto rotas de auth e /admin). */
+async function send(path: string, init: RequestInit) {
+  let res = await raw(path, init);
+  const renewable = accessToken && !path.startsWith('/auth/') && !path.startsWith('/admin');
+  if (res.status === 401 && renewable && (await refresh())) res = await raw(path, init);
+  return res;
+}
+
+async function fail(res: Response): Promise<never> {
+  const json = await res.json().catch(() => ({}));
+  throw new ApiError(
+    json.error?.code ?? 'INTERNAL_ERROR',
+    json.error?.message ?? res.statusText,
+    res.status,
+  );
+}
+
 export async function api<T>(
   path: string,
   opts: { method?: string; body?: unknown } = {},
 ): Promise<T> {
-  const init: RequestInit = {
+  const res = await send(path, {
     method: opts.method ?? (opts.body ? 'POST' : 'GET'),
     body: opts.body ? JSON.stringify(opts.body) : undefined,
-  };
-  let res = await raw(path, init);
-  if (
-    res.status === 401 &&
-    accessToken &&
-    !path.startsWith('/auth/') &&
-    !path.startsWith('/admin') &&
-    (await refresh())
-  ) {
-    res = await raw(path, init);
-  }
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new ApiError(
-      json.error?.code ?? 'INTERNAL_ERROR',
-      json.error?.message ?? res.statusText,
-      res.status,
-    );
-  }
-  return json.data as T;
+  });
+  if (!res.ok) return fail(res);
+  return (await res.json()).data as T;
+}
+
+/** Envia um ficheiro (multipart). */
+export async function apiUpload<T>(path: string, file: File): Promise<T> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await send(path, { method: 'POST', body: form });
+  if (!res.ok) return fail(res);
+  return (await res.json()).data as T;
+}
+
+/** Descarrega um ficheiro autenticado. */
+export async function apiDownload(path: string, filename: string) {
+  const res = await send(path, { method: 'GET' });
+  if (!res.ok) return fail(res);
+  const url = URL.createObjectURL(await res.blob());
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  a.click();
+  URL.revokeObjectURL(url);
 }

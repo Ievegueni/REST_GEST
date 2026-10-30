@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { Feature, Plan } from '@restgest/shared';
+import type { Feature, Permission, Plan } from '@restgest/shared';
 import { api, refresh, setAccessToken } from '../lib/api';
 
 export type Session = {
@@ -84,6 +84,9 @@ export function useSession() {
 
 export const useFeature = (feature: Feature) =>
   useSession().session?.features.includes(feature) ?? false;
+
+export const useCan = (permission: Permission) =>
+  useSession().session?.permissions.includes(permission) ?? false;
 
 export function FeatureGate({
   feature,

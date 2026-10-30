@@ -39,6 +39,11 @@ export function registerErrorHandler(app: FastifyInstance) {
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
       if (err.code === 'P2002')
         return reply.status(409).send(body('CONFLICT', 'Registo duplicado', err.meta));
+      if (err.code === 'P2003') {
+        return reply
+          .status(400)
+          .send(body('VALIDATION_ERROR', 'Referência inválida ou em uso', err.meta));
+      }
       if (err.code === 'P2025')
         return reply.status(404).send(body('NOT_FOUND', 'Recurso não encontrado'));
     }

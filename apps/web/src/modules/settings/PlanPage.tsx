@@ -21,7 +21,6 @@ export function PlanPage() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="mb-4 text-xl font-semibold">{t('settings.plan')}</h1>
       <p className="mb-6 text-sm">
         {t('settings.planCurrent')}: <strong>{t(`plan.${session.tenant.plan}` as TKey)}</strong>
       </p>

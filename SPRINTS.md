@@ -39,12 +39,14 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Impersonation com auditoria
 
 ### Sprint 3 — Estrutura e catálogo
-- [ ] CRUD de unidades e locais de stock
-- [ ] Categorias hierárquicas
-- [ ] Unidades de medida e conversões por produto
-- [ ] CRUD de produtos (min/máx por local, lote/validade)
-- [ ] CRUD de fornecedores e produtos por fornecedor
-- [ ] Importação de produtos via Excel (carga inicial)
+- [x] CRUD de unidades e locais de stock
+- [x] Categorias hierárquicas
+- [x] Unidades de medida e conversões por produto
+- [x] CRUD de produtos (min/máx por local, lote/validade)
+- [x] CRUD de fornecedores e produtos por fornecedor
+- [x] Importação de produtos via Excel (carga inicial)
+- [x] Gestão de utilizadores (perfil, acesso por unidade, limite do plano) — não estava planeada
+- [ ] Perfis personalizados (o tenant criar/editar perfis) — por fazer
 
 ### Sprint 4 — Núcleo de stock
 - [ ] `StockMovement` (imutável) + `StockBalance`

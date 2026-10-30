@@ -4,11 +4,16 @@ import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import cookie from '@fastify/cookie';
 import jwt from '@fastify/jwt';
+import multipart from '@fastify/multipart';
 import { env } from './core/env';
 import { registerErrorHandler } from './core/errors';
 import { prisma } from './core/prisma';
 import { authRoutes } from './modules/auth/routes';
 import { adminRoutes } from './modules/admin/routes';
+import { catalogRoutes } from './modules/catalog/routes';
+import { supplierRoutes } from './modules/suppliers/routes';
+import { unitRoutes } from './modules/units/routes';
+import { userRoutes } from './modules/users/routes';
 
 export async function buildApp() {
   const app = Fastify({
@@ -24,6 +29,7 @@ export async function buildApp() {
   await app.register(rateLimit, { max: 300, timeWindow: '1 minute' });
   await app.register(cookie);
   await app.register(jwt, { secret: env.JWT_SECRET });
+  await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
   registerErrorHandler(app);
 
   await app.register(
@@ -34,6 +40,10 @@ export async function buildApp() {
       });
       await api.register(authRoutes);
       await api.register(adminRoutes, { prefix: '/admin' });
+      await api.register(unitRoutes);
+      await api.register(userRoutes);
+      await api.register(catalogRoutes);
+      await api.register(supplierRoutes);
     },
     { prefix: '/api' },
   );

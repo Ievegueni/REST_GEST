@@ -1,22 +1,28 @@
-import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import type { Feature } from '@restgest/shared';
 import { useSession } from '../features/session';
 import { t, type TKey } from '../i18n';
 
-export const NAV: { to: string; label: TKey; feature?: Feature }[] = [
-  { to: '/', label: 'nav.dashboard' },
-  { to: '/stock', label: 'nav.stock', feature: 'stock' },
-  { to: '/compras', label: 'nav.purchases', feature: 'purchases' },
-  { to: '/fichas', label: 'nav.recipes', feature: 'recipes' },
-  { to: '/vendas', label: 'nav.salesImport', feature: 'sales_import' },
-  { to: '/relatorios', label: 'nav.reports', feature: 'reports_stock' },
+export const NAV: { to: string; label: TKey; feature?: Feature; placeholder?: boolean }[] = [
+  { to: '/', label: 'nav.dashboard', placeholder: true },
+  { to: '/catalogo/produtos', label: 'nav.catalog', feature: 'stock' },
+  { to: '/fornecedores', label: 'nav.suppliers', feature: 'stock' },
+  { to: '/stock', label: 'nav.stock', feature: 'stock', placeholder: true },
+  { to: '/compras', label: 'nav.purchases', feature: 'purchases', placeholder: true },
+  { to: '/fichas', label: 'nav.recipes', feature: 'recipes', placeholder: true },
+  { to: '/vendas', label: 'nav.salesImport', feature: 'sales_import', placeholder: true },
+  { to: '/relatorios', label: 'nav.reports', feature: 'reports_stock', placeholder: true },
   { to: '/definicoes/plano', label: 'nav.settings' },
 ];
+
+/** Secção activa pelo primeiro segmento do caminho (ex.: /catalogo/...). */
+const section = (path: string) => path.split('/')[1] ?? '';
 
 /** Área autenticada: redirecciona para login sem sessão. */
 export function Layout() {
   const { session, loading, unitId, setUnitId, logout, endImpersonation } = useSession();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   if (loading) return <p className="p-6 text-slate-500">{t('common.loading')}</p>;
   if (!session) return <Navigate to="/login" replace />;
@@ -35,9 +41,8 @@ export function Layout() {
             <NavLink
               key={n.to}
               to={n.to}
-              end
-              className={({ isActive }) =>
-                `rounded px-3 py-2 text-sm ${isActive ? 'bg-slate-700' : 'hover:bg-slate-800'}`
+              className={() =>
+                `rounded px-3 py-2 text-sm ${section(pathname) === section(n.to) ? 'bg-slate-700' : 'hover:bg-slate-800'}`
               }
             >
               {t(n.label)}

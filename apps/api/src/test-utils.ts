@@ -38,10 +38,30 @@ export async function deleteTenants(ids: string[]) {
   await prisma.auditLog.deleteMany({ where });
   await prisma.refreshToken.deleteMany({ where });
   await prisma.passwordReset.deleteMany({ where });
+  await prisma.supplierProduct.deleteMany({ where });
+  await prisma.productLocationLimit.deleteMany({ where });
+  await prisma.productUnitConversion.deleteMany({ where });
+  await prisma.product.deleteMany({ where });
+  await prisma.supplier.deleteMany({ where });
+  await prisma.measureUnit.deleteMany({ where });
+  for (let i = 0; i < 5; i++)
+    await prisma.category.deleteMany({ where: { ...where, children: { none: {} } } });
   await prisma.userUnit.deleteMany({ where });
   await prisma.user.deleteMany({ where });
   await prisma.role.deleteMany({ where });
   await prisma.stockLocation.deleteMany({ where });
   await prisma.unit.deleteMany({ where });
   await prisma.tenant.deleteMany({ where: { id: { in: ids } } });
+}
+
+/** Cliente HTTP autenticado como `email` (senha de teste por defeito). */
+export async function clientFor(app: import('fastify').FastifyInstance, email: string) {
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    payload: { email, password: 'password123' },
+  });
+  const token = res.json().data.accessToken as string;
+  return (method: 'GET' | 'POST' | 'PATCH' | 'PUT', url: string, payload?: object) =>
+    app.inject({ method, url, payload, headers: { authorization: `Bearer ${token}` } });
 }

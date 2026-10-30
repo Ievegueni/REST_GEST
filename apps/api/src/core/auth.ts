@@ -89,3 +89,14 @@ export function canAccessUnit(auth: AuthContext, unitId: string) {
 export function assertUnitAccess(auth: AuthContext, unitId: string) {
   if (!canAccessUnit(auth, unitId)) throw new AppError('FORBIDDEN', 'Sem acesso a esta unidade');
 }
+
+/** Opções de rota: autenticação + feature do plano + permissão. */
+export function protect(opts: { feature?: Feature; permission?: Permission } = {}) {
+  return {
+    preHandler: [
+      authenticate,
+      ...(opts.feature ? [requireFeature(opts.feature)] : []),
+      ...(opts.permission ? [requirePermission(opts.permission)] : []),
+    ],
+  };
+}
