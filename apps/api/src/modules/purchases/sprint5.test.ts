@@ -287,6 +287,8 @@ describe('inventário', () => {
 
     const closed = (await api('POST', `/api/inventory-counts/${c.id}/close`)).json().data;
     expect(closed.status).toBe('CLOSED');
+    const alert = await db.alert.findFirstOrThrow({ where: { type: 'INVENTORY_VARIANCE' } });
+    expect(alert.message).toContain('desvio > 5%'); // 7 vs 10 = 30%
     expect(await qty(a, ids.bar)).toBe(7);
     expect(await qty(b, ids.bar)).toBe(5); // não contado
     const adj = await db.stockMovement.findFirstOrThrow({

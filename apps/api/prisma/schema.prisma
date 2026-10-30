@@ -44,6 +44,11 @@ model Tenant {
   smsMonthlyLimit     Int?
   aiMonthlyLimit      Int?
   negativeStockPolicy NegativeStockPolicy @default(ALLOW)
+  /// horário de silêncio dos SMS ("HH:MM", fuso de apresentação); vazio = sem silêncio
+  smsQuietStart       String?
+  smsQuietEnd         String?
+  /// true = um SMS-resumo diário em vez de um SMS por alerta
+  smsDigest           Boolean             @default(false)
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 
@@ -83,6 +88,10 @@ model Tenant {
   posMappings            PosItemMapping[]
   salesImports           SalesImport[]
   salesImportLines       SalesImportLine[]
+  alertRules             AlertRule[]
+  alerts                 Alert[]
+  notifications          Notification[]
+  smsLogs                SmsLog[]
 }
 
 model Unit {
@@ -847,6 +856,109 @@ model SalesImportLine {
   @@index([tenantId, importId, posCode])
 }
 
+// ---------- Alertas e notificações ----------
+
+enum AlertType {
+  STOCK_BELOW_MIN
+  STOCK_OUT
+  STOCK_ABOVE_MAX
+  EXPIRY_NEAR
+  INVENTORY_VARIANCE
+  POS_UNMAPPED
+  SALES_IMPORT_MISSING
+}
+
+enum AlertStatus {
+  OPEN
+  RESOLVED
+}
+
+/// Configuração por tipo de alerta (linhas em falta usam os valores por defeito de @restgest/shared).
+model AlertRule {
+  id               String    @id @default(cuid())
+  tenantId         String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  type             AlertType
+  enabled          Boolean   @default(true)
+  sms              Boolean   @default(true)
+  /// EXPIRY_NEAR: dias; INVENTORY_VARIANCE: %
+  threshold        Decimal?  @db.Decimal(10, 2)
+  /// perfis que recebem (filtrados pelo acesso à unidade do alerta)
+  recipientRoleIds String[]
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, type])
+}
+
+model Alert {
+  id         String      @id @default(cuid())
+  tenantId   String      @default(dbgenerated("current_setting('app.tenant_id')"))
+  type       AlertType
+  /// deduplicação: um alerta aberto por chave até o estado mudar
+  key        String
+  unitId     String?
+  message    String
+  data       Json?
+  status     AlertStatus @default(OPEN)
+  createdAt  DateTime    @default(now())
+  resolvedAt DateTime?
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  notifications Notification[]
+  smsLogs       SmsLog[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, status, createdAt])
+  @@index([tenantId, key, status])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  tenantId  String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  userId    String
+  alertId   String?
+  title     String
+  body      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade)
+  alert  Alert? @relation(fields: [tenantId, alertId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, userId, readAt, createdAt])
+}
+
+enum SmsStatus {
+  QUEUED
+  SENT
+  FAILED
+  /// não enviado (sem configuração, limite do plano, sem telefone…)
+  SKIPPED
+}
+
+model SmsLog {
+  id         String    @id @default(cuid())
+  tenantId   String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  alertId    String?
+  userId     String?
+  to         String
+  message    String
+  status     SmsStatus @default(QUEUED)
+  providerId String?
+  /// custo reportado pelo fornecedor, AOA
+  cost       Int?
+  error      String?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+  sentAt     DateTime?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  alert  Alert? @relation(fields: [tenantId, alertId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, status, createdAt])
+}
+
 // ---------- Utilizadores e permissões ----------
 
 model User {
@@ -870,6 +982,7 @@ model User {
   refreshTokens  RefreshToken[]
   passwordResets PasswordReset[]
   movements      StockMovement[]
+  notifications  Notification[]
 
   @@unique([tenantId, id])
 }

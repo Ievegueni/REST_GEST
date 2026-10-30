@@ -22,6 +22,8 @@ import { SettingsLayout } from './modules/settings/SettingsLayout';
 import { UnitsPage } from './modules/settings/UnitsPage';
 import { UsersPage } from './modules/settings/UsersPage';
 import { StockSettingsPage } from './modules/settings/StockSettingsPage';
+import { AlertSettingsPage } from './modules/settings/AlertSettingsPage';
+import { AlertsPage } from './modules/alerts/AlertsPage';
 import { BalancesPage } from './modules/stock/BalancesPage';
 import { KardexPage } from './modules/stock/KardexPage';
 import { MovementPage } from './modules/stock/MovementPage';
@@ -102,12 +104,14 @@ export function App() {
         <Route path="/fornecedores" element={gate('stock', <SuppliersPage />)} />
         <Route path="/fornecedores/:id" element={gate('stock', <SupplierPage />)} />
 
+        <Route path="/alertas" element={gate('alerts_sms', <AlertsPage />)} />
         <Route path="/definicoes" element={<SettingsLayout />}>
           <Route index element={<Navigate to="plano" replace />} />
           <Route path="plano" element={<PlanPage />} />
           <Route path="unidades" element={<UnitsPage />} />
           <Route path="utilizadores" element={<UsersPage />} />
           <Route path="stock" element={<StockSettingsPage />} />
+          <Route path="alertas" element={gate('alerts_sms', <AlertSettingsPage />)} />
         </Route>
 
         {NAV.filter((n) => n.placeholder).map((n) => {

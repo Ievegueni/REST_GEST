@@ -1,6 +1,7 @@
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import type { Feature } from '@restgest/shared';
 import { useSession } from '../features/session';
+import { NotificationBell } from '../modules/alerts/NotificationBell';
 import { t, type TKey } from '../i18n';
 
 export const NAV: { to: string; label: TKey; feature?: Feature; placeholder?: boolean }[] = [
@@ -11,6 +12,7 @@ export const NAV: { to: string; label: TKey; feature?: Feature; placeholder?: bo
   { to: '/compras', label: 'nav.purchases', feature: 'purchases' },
   { to: '/fichas', label: 'nav.recipes', feature: 'recipes' },
   { to: '/vendas', label: 'nav.salesImport', feature: 'sales_import' },
+  { to: '/alertas', label: 'nav.alerts', feature: 'alerts_sms' },
   { to: '/relatorios', label: 'nav.reports', feature: 'reports_stock', placeholder: true },
   { to: '/definicoes/plano', label: 'nav.settings' },
 ];
@@ -82,6 +84,7 @@ export function Layout() {
               </option>
             ))}
           </select>
+          {session.features.includes('alerts_sms') && <NotificationBell />}
           <span className="text-sm">{session.user.name}</span>
           <button onClick={logout} className="text-sm text-slate-500 hover:underline">
             {t('auth.logout')}

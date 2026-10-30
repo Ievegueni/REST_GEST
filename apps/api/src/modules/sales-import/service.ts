@@ -10,6 +10,7 @@ import { defineJob } from '../../jobs/queue';
 import { explode, loadRecipeBook, outputLocationResolver } from '../recipes/book';
 import { postMovements, reverseMovements, type MovementInput } from '../stock/engine';
 import { parseSalesFile, type ProfileConfig } from './parse';
+import { evaluatePosUnmapped } from '../alerts/engine';
 
 const D = Prisma.Decimal;
 const REF = 'SalesImport';
@@ -325,6 +326,7 @@ export async function confirmImport(auth: AuthContext, id: string, ip?: string) 
     after: { postedLines: n },
     ip,
   });
+  if (auth.features.has('alerts_sms')) await evaluatePosUnmapped(auth.db, auth.tenantId);
   return getImport(auth, id);
 }
 
@@ -334,6 +336,7 @@ export async function postPending(auth: AuthContext, id: string) {
   if (imp.status !== 'CONFIRMED')
     throw new AppError('VALIDATION_ERROR', 'Importação não confirmada');
   await postLines(auth, id);
+  if (auth.features.has('alerts_sms')) await evaluatePosUnmapped(auth.db, auth.tenantId);
   return getImport(auth, id);
 }
 

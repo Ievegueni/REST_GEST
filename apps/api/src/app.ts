@@ -22,6 +22,7 @@ import { inventoryRoutes } from './modules/inventory/routes';
 import { fileRoutes } from './modules/files/routes';
 import { recipeRoutes } from './modules/recipes/routes';
 import { salesImportRoutes } from './modules/sales-import/routes';
+import { alertRoutes } from './modules/alerts/routes';
 
 export async function buildApp() {
   const app = Fastify({
@@ -60,6 +61,7 @@ export async function buildApp() {
       await api.register(fileRoutes);
       await api.register(recipeRoutes);
       await api.register(salesImportRoutes);
+      await api.register(alertRoutes);
     },
     { prefix: '/api' },
   );

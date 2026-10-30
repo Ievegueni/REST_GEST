@@ -13,11 +13,9 @@ export async function salesImportRoutes(app: FastifyInstance) {
     data: await req.auth.db.importProfile.findMany({ orderBy: { name: 'asc' } }),
   }));
   app.post('/import-profiles', guard, async (req, reply) =>
-    reply
-      .status(201)
-      .send({
-        data: await req.auth.db.importProfile.create({ data: profileSchema.parse(req.body) }),
-      }),
+    reply.status(201).send({
+      data: await req.auth.db.importProfile.create({ data: profileSchema.parse(req.body) }),
+    }),
   );
   app.put('/import-profiles/:id', guard, async (req) => ({
     data: await req.auth.db.importProfile.update({
@@ -76,11 +74,9 @@ export async function salesImportRoutes(app: FastifyInstance) {
         .map(([k, v]) => [k, (v as { value: unknown }).value]),
     );
     const input = uploadFields.parse(fields);
-    return reply
-      .status(201)
-      .send({
-        data: await service.createImport(req.auth, input, { buffer, filename: file.filename }),
-      });
+    return reply.status(201).send({
+      data: await service.createImport(req.auth, input, { buffer, filename: file.filename }),
+    });
   });
 
   app.get('/sales-imports/:id', guard, async (req) => ({

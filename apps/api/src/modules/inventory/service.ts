@@ -5,6 +5,7 @@ import { assertUnitAccess, type AuthContext } from '../../core/auth';
 import { AppError } from '../../core/errors';
 import { nextNumber } from '../../core/sequence';
 import { lockCosts, postMovements } from '../stock/engine';
+import { evaluateInventory } from '../alerts/engine';
 import type { countSchema, openSchema } from './schemas';
 
 const D = Prisma.Decimal;
@@ -192,6 +193,7 @@ export async function closeCount(auth: AuthContext, id: string, ip?: string) {
     },
     { timeout: 120_000 },
   );
+  if (auth.features.has('alerts_sms')) await evaluateInventory(auth.db, auth.tenantId, id);
   await audit({
     tenantId: auth.tenantId,
     userId: auth.userId,

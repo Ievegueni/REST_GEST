@@ -10,6 +10,16 @@ const schema = z.object({
     .string()
     .optional()
     .transform((v) => v || undefined),
+  FUTURIX_SMS_API_URL: z.string().default('https://sms-api.futurix.ao'),
+  FUTURIX_SMS_API_KEY: z
+    .string()
+    .optional()
+    .transform((v) => v || undefined),
+  FUTURIX_SMS_SENDER: z
+    .string()
+    .optional()
+    .transform((v) => v || undefined),
+  TZ_DISPLAY: z.string().default('Africa/Luanda'),
   RUN_WORKERS: z.enum(['true', 'false']).default('true'),
   APP_URL: z.string().default('http://localhost:5173'),
 });

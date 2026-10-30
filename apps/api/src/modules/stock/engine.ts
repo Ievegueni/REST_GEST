@@ -6,6 +6,7 @@
 import { Prisma, type MovementType } from '@prisma/client';
 import { AppError } from '../../core/errors';
 import type { TenantDb } from '../../core/prisma';
+import { stockCheckJob } from '../alerts/jobs';
 
 const D = Prisma.Decimal;
 type Decimal = Prisma.Decimal;
@@ -283,6 +284,12 @@ async function post(tx: Tx, parts: Part[], meta: MovementMeta) {
       data: { qty: c.qty, avgCost: c.avgCost },
     });
   }
+  // Alertas de mínimo/máximo: avaliados fora da transacção (atraso para correr após o commit; idempotente).
+  const pairs = [...new Set(parts.map((p) => `${p.productId}|${p.locationId}`))].map((k) => {
+    const [productId, locationId] = k.split('|') as [string, string];
+    return { productId, locationId };
+  });
+  await stockCheckJob.enqueue({ tenantId: meta.tenantId, pairs }, { delay: 1500 });
   return created;
 }
 

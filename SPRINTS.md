@@ -77,12 +77,13 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [ ] **Quando houver ficheiro Winrest:** criar perfis pré-definidos `winrest_vendas_artigo` e `winrest_pagamentos`
 
 ### Sprint 7 — Alertas e SMS
-- [ ] Integração Futurix SMS (fila BullMQ, retries, `SmsLog`)
-- [ ] Regras de alerta e destinatários (padrão: Admin + Gerente da unidade + Ecónomo)
-- [ ] Alertas: stock mínimo, rotura, validade, stock máximo, desvio de inventário, artigos não mapeados, importação em falta
-- [ ] Centro de notificações (sino) na plataforma
-- [ ] Anti-spam, digest diário, horário de silêncio
-- [ ] Job periódico de verificação
+- [x] Integração Futurix SMS (fila BullMQ, retries, `SmsLog`) — formato do pedido assumido; falta testar com credenciais/documentação reais
+- [x] Regras de alerta e destinatários (padrão: Admin + Gerente da unidade + Ecónomo)
+- [x] Alertas: stock mínimo, rotura, validade, stock máximo, desvio de inventário, artigos não mapeados, importação em falta
+- [x] Centro de notificações (sino) na plataforma
+- [x] Anti-spam, digest diário, horário de silêncio
+- [x] Job periódico de verificação
+- [ ] Regras de alerta por unidade (hoje por tipo; destinatários filtrados pelo acesso à unidade)
 
 ### Sprint 8 — Relatórios e dashboard STOCK
 - [ ] Stock actual (qtd/valor), consumo, rotação, cobertura, produtos parados

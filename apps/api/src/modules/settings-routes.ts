@@ -3,7 +3,20 @@ import { z } from 'zod';
 import { protect } from '../core/auth';
 import { getSettings, updateSettings } from '../core/settings';
 
-const schema = z.object({ negativeStockPolicy: z.enum(['ALLOW', 'BLOCK']) }).partial();
+const time = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora inválida (HH:MM)')
+  .nullable()
+  .or(z.literal('').transform(() => null));
+
+const schema = z
+  .object({
+    negativeStockPolicy: z.enum(['ALLOW', 'BLOCK']),
+    smsQuietStart: time,
+    smsQuietEnd: time,
+    smsDigest: z.boolean(),
+  })
+  .partial();
 
 export async function settingsRoutes(app: FastifyInstance) {
   app.get('/settings', protect(), async (req) => ({ data: await getSettings(req.auth.tenantId) }));
