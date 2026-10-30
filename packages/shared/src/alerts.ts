@@ -10,7 +10,10 @@ export const ALERT_TYPES = [
 export type AlertType = (typeof ALERT_TYPES)[number];
 
 /** Valores iniciais de cada regra (o tenant altera em Definições → Alertas). */
-export const ALERT_DEFAULTS: Record<AlertType, { enabled: boolean; sms: boolean; threshold: number | null }> = {
+export const ALERT_DEFAULTS: Record<
+  AlertType,
+  { enabled: boolean; sms: boolean; threshold: number | null }
+> = {
   STOCK_BELOW_MIN: { enabled: true, sms: true, threshold: null },
   STOCK_OUT: { enabled: true, sms: true, threshold: null },
   STOCK_ABOVE_MAX: { enabled: true, sms: false, threshold: null },

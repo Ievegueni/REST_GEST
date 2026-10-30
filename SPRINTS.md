@@ -53,7 +53,7 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Serviço de movimentos com transacção e lock
 - [x] Custo médio ponderado
 - [x] Entradas, consumos, quebras (com motivo), ajustes, estornos
-- [ ] Motivos de quebra como lista configurável (hoje texto livre) — antes dos relatórios do Sprint 8
+- [x] Motivos de quebra como lista configurável (Sprint 8)
 - [x] Lotes/validades e saída FEFO
 - [x] Regra de stock negativo configurável
 - [x] Ecrã de stock actual e kardex por produto
@@ -86,14 +86,14 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [ ] Regras de alerta por unidade (hoje por tipo; destinatários filtrados pelo acesso à unidade)
 
 ### Sprint 8 — Relatórios e dashboard STOCK
-- [ ] Stock actual (qtd/valor), consumo, rotação, cobertura, produtos parados
-- [ ] Quebras/desperdício, desvios de inventário
-- [ ] Compras por fornecedor e evolução de preços
-- [ ] Custo teórico das vendas e margem por artigo
-- [ ] Curva ABC, comparativo entre unidades
-- [ ] Sugestão de reposição → gerar encomenda
-- [ ] Exportação PDF e Excel
-- [ ] Dashboard principal
+- [x] Stock actual (qtd/valor), consumo, rotação, cobertura, produtos parados
+- [x] Quebras/desperdício, desvios de inventário
+- [x] Compras por fornecedor e evolução de preços
+- [x] Custo teórico das vendas e margem por artigo
+- [x] Curva ABC, comparativo entre unidades
+- [x] Sugestão de reposição → gerar encomenda
+- [x] Exportação PDF e Excel
+- [x] Dashboard principal
 
 ### Sprint 9 — Estabilização e go-live Palace (STOCK)
 - [ ] Revisão de segurança e performance (índices, queries lentas)

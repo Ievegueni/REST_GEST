@@ -92,6 +92,7 @@ model Tenant {
   alerts                 Alert[]
   notifications          Notification[]
   smsLogs                SmsLog[]
+  wasteReasons           WasteReason[]
 }
 
 model Unit {
@@ -957,6 +958,18 @@ model SmsLog {
   alert  Alert? @relation(fields: [tenantId, alertId], references: [tenantId, id], onDelete: Restrict)
 
   @@index([tenantId, status, createdAt])
+}
+
+/// Motivos de quebra/desperdício (lista do tenant; o movimento guarda o nome).
+model WasteReason {
+  id       String  @id @default(cuid())
+  tenantId String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  name     String
+  active   Boolean @default(true)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, name])
 }
 
 // ---------- Utilizadores e permissões ----------

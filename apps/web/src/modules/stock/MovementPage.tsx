@@ -19,6 +19,8 @@ export function MovementPage() {
   const canAdjust = useCan('stock.adjust');
   const { locations } = useLocations();
   const { data: products } = useApi<ProductRow[]>('/products?active=true');
+  const { data: reasons } = useApi<{ name: string; active: boolean }[]>('/waste-reasons');
+  const wasteReasons = reasons?.filter((r) => r.active) ?? [];
   const [locationId, setLocationId] = useState('');
   const [type, setType] = useState<Type>('PURCHASE_IN');
   const [occurredAt, setOccurredAt] = useState(nowLocal);
@@ -110,12 +112,28 @@ export function MovementPage() {
         </label>
         <label className="space-y-1 text-sm">
           <span>{NEEDS_REASON.includes(type) ? t('stock.reasonRequired') : t('stock.reason')}</span>
-          <input
-            className={inputCls}
-            required={NEEDS_REASON.includes(type)}
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
+          {type === 'WASTE' && wasteReasons.length ? (
+            <select
+              className={inputCls}
+              required
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            >
+              <option value="">—</option>
+              {wasteReasons.map((r) => (
+                <option key={r.name} value={r.name}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              className={inputCls}
+              required={NEEDS_REASON.includes(type)}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+          )}
         </label>
       </div>
       <ProductLines

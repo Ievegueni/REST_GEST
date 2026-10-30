@@ -10,6 +10,7 @@ export function PurchasesLayout() {
         items={[
           { to: '/compras', label: t('purchases.orders') },
           { to: '/compras/recepcoes', label: t('purchases.receipts') },
+          { to: '/compras/reposicao', label: t('replenishment.title') },
         ]}
       />
       <Outlet />

@@ -4,8 +4,8 @@ import { useSession } from '../features/session';
 import { NotificationBell } from '../modules/alerts/NotificationBell';
 import { t, type TKey } from '../i18n';
 
-export const NAV: { to: string; label: TKey; feature?: Feature; placeholder?: boolean }[] = [
-  { to: '/', label: 'nav.dashboard', placeholder: true },
+export const NAV: { to: string; label: TKey; feature?: Feature }[] = [
+  { to: '/', label: 'nav.dashboard' },
   { to: '/catalogo/produtos', label: 'nav.catalog', feature: 'stock' },
   { to: '/fornecedores', label: 'nav.suppliers', feature: 'stock' },
   { to: '/stock', label: 'nav.stock', feature: 'stock' },
@@ -13,7 +13,7 @@ export const NAV: { to: string; label: TKey; feature?: Feature; placeholder?: bo
   { to: '/fichas', label: 'nav.recipes', feature: 'recipes' },
   { to: '/vendas', label: 'nav.salesImport', feature: 'sales_import' },
   { to: '/alertas', label: 'nav.alerts', feature: 'alerts_sms' },
-  { to: '/relatorios', label: 'nav.reports', feature: 'reports_stock', placeholder: true },
+  { to: '/relatorios', label: 'nav.reports', feature: 'reports_stock' },
   { to: '/definicoes/plano', label: 'nav.settings' },
 ];
 

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { Prisma } from '@prisma/client';
+import { z } from 'zod';
 import { assertUnitAccess, canAccessUnit, protect } from '../../core/auth';
 import { AppError } from '../../core/errors';
 import { idParam } from '../../core/schemas';
@@ -10,6 +11,35 @@ export async function stockRoutes(app: FastifyInstance) {
   const view = protect({ feature: 'stock', permission: 'stock.view' });
   const move = protect({ feature: 'stock', permission: 'stock.move' });
   const adjust = protect({ feature: 'stock', permission: 'stock.adjust' });
+
+  // ---- Motivos de quebra (lista do tenant)
+  app.get('/waste-reasons', protect({ feature: 'stock' }), async (req) => ({
+    data: await req.auth.db.wasteReason.findMany({ orderBy: { name: 'asc' } }),
+  }));
+  const reasonSchema = z.object({
+    name: z.string().trim().min(1).max(100),
+    active: z.boolean().default(true),
+  });
+  app.post(
+    '/waste-reasons',
+    protect({ feature: 'stock', permission: 'settings.manage' }),
+    async (req, reply) =>
+      reply
+        .status(201)
+        .send({
+          data: await req.auth.db.wasteReason.create({ data: reasonSchema.parse(req.body) }),
+        }),
+  );
+  app.patch(
+    '/waste-reasons/:id',
+    protect({ feature: 'stock', permission: 'settings.manage' }),
+    async (req) => ({
+      data: await req.auth.db.wasteReason.update({
+        where: { id: idParam.parse(req.params).id },
+        data: reasonSchema.partial().parse(req.body),
+      }),
+    }),
+  );
 
   /** Movimentos manuais: entradas sem documento, consumos, quebras e ajustes. */
   app.post('/stock/movements', move, async (req, reply) => {
@@ -23,6 +53,16 @@ export async function stockRoutes(app: FastifyInstance) {
     const db = req.auth.db;
     const location = await db.stockLocation.findUniqueOrThrow({ where: { id: body.locationId } });
     assertUnitAccess(req.auth, location.unitId);
+
+    // Quebras: se o tenant definiu motivos, o motivo tem de ser um deles (relatórios por motivo).
+    if (body.items.some((i) => i.type === 'WASTE')) {
+      const reasons = await db.wasteReason.findMany({ where: { active: true } });
+      const names = new Set(reasons.map((r) => r.name));
+      const bad = body.items.find(
+        (i) => i.type === 'WASTE' && reasons.length && !names.has((i.reason ?? body.reason)!),
+      );
+      if (bad) throw new AppError('VALIDATION_ERROR', 'Escolha um motivo de quebra da lista');
+    }
 
     const movements = await db.$transaction((tx) =>
       postMovements(

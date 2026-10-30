@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import type { Feature } from '@restgest/shared';
-import { Layout, NAV } from './components/Layout';
+import { Layout } from './components/Layout';
 import { FeatureGate } from './features/session';
-import { t } from './i18n';
 import { AdminLayout } from './modules/admin/AdminLayout';
 import { NewTenantPage } from './modules/admin/NewTenantPage';
 import { TenantDetailPage } from './modules/admin/TenantDetailPage';
@@ -42,6 +41,9 @@ import { ImportsPage } from './modules/sales/ImportsPage';
 import { SalesImportPage } from './modules/sales/ImportPage';
 import { MappingsPage } from './modules/sales/MappingsPage';
 import { ProfilesPage } from './modules/sales/ProfilesPage';
+import { DashboardPage } from './modules/reports/DashboardPage';
+import { ReportsPage } from './modules/reports/ReportsPage';
+import { ReplenishmentPage } from './modules/purchases/ReplenishmentPage';
 import { OrdersPage } from './modules/purchases/OrdersPage';
 import { OrderPage } from './modules/purchases/OrderPage';
 import { ReceiptsPage } from './modules/purchases/ReceiptsPage';
@@ -100,10 +102,13 @@ export function App() {
           <Route path="recepcoes" element={<ReceiptsPage />} />
           <Route path="recepcoes/nova" element={<NewReceiptPage />} />
           <Route path="recepcoes/:id" element={<ReceiptPage />} />
+          <Route path="reposicao" element={<ReplenishmentPage />} />
         </Route>
         <Route path="/fornecedores" element={gate('stock', <SuppliersPage />)} />
         <Route path="/fornecedores/:id" element={gate('stock', <SupplierPage />)} />
 
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/relatorios" element={gate('reports_stock', <ReportsPage />)} />
         <Route path="/alertas" element={gate('alerts_sms', <AlertsPage />)} />
         <Route path="/definicoes" element={<SettingsLayout />}>
           <Route index element={<Navigate to="plano" replace />} />
@@ -113,18 +118,6 @@ export function App() {
           <Route path="stock" element={<StockSettingsPage />} />
           <Route path="alertas" element={gate('alerts_sms', <AlertSettingsPage />)} />
         </Route>
-
-        {NAV.filter((n) => n.placeholder).map((n) => {
-          const page = (
-            <>
-              <h1 className="mb-2 text-xl font-semibold">{t(n.label)}</h1>
-              <p className="text-slate-500">{t('common.comingSoon')}</p>
-            </>
-          );
-          return (
-            <Route key={n.to} path={n.to} element={n.feature ? gate(n.feature, page) : page} />
-          );
-        })}
       </Route>
     </Routes>
   );
