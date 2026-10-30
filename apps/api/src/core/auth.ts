@@ -100,3 +100,11 @@ export function protect(opts: { feature?: Feature; permission?: Permission } = {
     ],
   };
 }
+
+/** Features efectivas de um tenant fora de um pedido (jobs). */
+export async function tenantFeatures(tenantId: string) {
+  const t = await prisma.tenant.findUniqueOrThrow({ where: { id: tenantId } });
+  return t.status === 'ACTIVE'
+    ? effectiveFeatures(t.plan, t.featureOverrides as FeatureOverrides)
+    : new Set<Feature>();
+}

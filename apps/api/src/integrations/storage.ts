@@ -11,6 +11,7 @@ import { env } from '../core/env';
 import { AppError } from '../core/errors';
 
 export const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 const LOCAL_DIR = path.resolve(process.cwd(), '.uploads');
 
 export type StoredFile = { url: string; name: string };
@@ -24,9 +25,10 @@ const safeName = (s: string) =>
 export async function storeFile(
   tenantId: string,
   file: { buffer: Buffer; filename: string; mimetype: string },
+  allowed: string[] = ALLOWED_MIME,
 ): Promise<StoredFile> {
-  if (!ALLOWED_MIME.includes(file.mimetype)) {
-    throw new AppError('VALIDATION_ERROR', 'Tipo de ficheiro não permitido (PDF, JPG, PNG, WEBP)');
+  if (!allowed.includes(file.mimetype)) {
+    throw new AppError('VALIDATION_ERROR', 'Tipo de ficheiro não permitido');
   }
   if (env.CLOUDINARY_URL) return uploadCloudinary(tenantId, file);
   if (env.NODE_ENV === 'production')

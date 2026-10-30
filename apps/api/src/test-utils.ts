@@ -38,6 +38,12 @@ export async function deleteTenants(ids: string[]) {
   await prisma.auditLog.deleteMany({ where });
   await prisma.refreshToken.deleteMany({ where });
   await prisma.passwordReset.deleteMany({ where });
+  await prisma.salesImport.deleteMany({ where });
+  await prisma.importProfile.deleteMany({ where });
+  await prisma.posItemMapping.deleteMany({ where });
+  await prisma.categoryOutputLocation.deleteMany({ where });
+  await prisma.recipeLine.deleteMany({ where });
+  await prisma.saleItem.deleteMany({ where });
   await prisma.inventoryCount.deleteMany({ where });
   await prisma.transfer.deleteMany({ where });
   await prisma.goodsReceipt.deleteMany({ where });
@@ -77,14 +83,19 @@ export async function clientFor(app: import('fastify').FastifyInstance, email: s
     app.inject({ method, url, payload, headers: { authorization: `Bearer ${token}` } });
 }
 
-/** Corpo multipart com um ficheiro, para app.inject. */
+/** Corpo multipart com um ficheiro (e campos opcionais), para app.inject. */
 export function multipart(
   filename: string,
   content: Buffer,
   contentType = 'application/octet-stream',
+  fields: Record<string, string> = {},
 ) {
   const boundary = '----restgest';
   const payload = Buffer.concat([
+    // campos antes do ficheiro: o @fastify/multipart só os expõe em file.fields se vierem primeiro
+    ...Object.entries(fields).map(([k, v]) =>
+      Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="${k}"\r\n\r\n${v}\r\n`),
+    ),
     Buffer.from(
       `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${contentType}\r\n\r\n`,
     ),

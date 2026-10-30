@@ -20,6 +20,8 @@ import { purchaseRoutes } from './modules/purchases/routes';
 import { transferRoutes } from './modules/transfers/routes';
 import { inventoryRoutes } from './modules/inventory/routes';
 import { fileRoutes } from './modules/files/routes';
+import { recipeRoutes } from './modules/recipes/routes';
+import { salesImportRoutes } from './modules/sales-import/routes';
 
 export async function buildApp() {
   const app = Fastify({
@@ -56,6 +58,8 @@ export async function buildApp() {
       await api.register(transferRoutes);
       await api.register(inventoryRoutes);
       await api.register(fileRoutes);
+      await api.register(recipeRoutes);
+      await api.register(salesImportRoutes);
     },
     { prefix: '/api' },
   );

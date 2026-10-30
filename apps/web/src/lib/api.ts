@@ -65,8 +65,14 @@ export async function api<T>(
 }
 
 /** Envia um ficheiro (multipart). */
-export async function apiUpload<T>(path: string, file: File): Promise<T> {
+export async function apiUpload<T>(
+  path: string,
+  file: File,
+  fields: Record<string, string> = {},
+): Promise<T> {
   const form = new FormData();
+  // campos antes do ficheiro (o servidor só os lê se vierem primeiro)
+  for (const [k, v] of Object.entries(fields)) form.append(k, v);
   form.append('file', file);
   const res = await send(path, { method: 'POST', body: form });
   if (!res.ok) return fail(res);

@@ -76,6 +76,13 @@ model Tenant {
   transferLines          TransferLine[]
   inventoryCounts        InventoryCount[]
   inventoryLines         InventoryCountLine[]
+  saleItems              SaleItem[]
+  recipeLines            RecipeLine[]
+  outputLocations        CategoryOutputLocation[]
+  importProfiles         ImportProfile[]
+  posMappings            PosItemMapping[]
+  salesImports           SalesImport[]
+  salesImportLines       SalesImportLine[]
 }
 
 model Unit {
@@ -87,11 +94,13 @@ model Unit {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant    Tenant          @relation(fields: [tenantId], references: [id])
-  locations StockLocation[]
-  userUnits UserUnit[]
-  costs     StockCost[]
-  orders    PurchaseOrder[]
+  tenant          Tenant                   @relation(fields: [tenantId], references: [id])
+  locations       StockLocation[]
+  userUnits       UserUnit[]
+  costs           StockCost[]
+  orders          PurchaseOrder[]
+  outputLocations CategoryOutputLocation[]
+  salesImports    SalesImport[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -116,15 +125,16 @@ model StockLocation {
   updatedAt DateTime     @updatedAt
 
   limits           ProductLocationLimit[]
-  tenant           Tenant                 @relation(fields: [tenantId], references: [id])
-  unit             Unit                   @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  tenant           Tenant                   @relation(fields: [tenantId], references: [id])
+  unit             Unit                     @relation(fields: [tenantId, unitId], references: [tenantId, id])
   stockMovements   StockMovement[]
   stockBalances    StockBalance[]
   stockLotBalances StockLotBalance[]
   receipts         GoodsReceipt[]
-  transfersOut     Transfer[]             @relation("TransferFrom")
-  transfersIn      Transfer[]             @relation("TransferTo")
+  transfersOut     Transfer[]               @relation("TransferFrom")
+  transfersIn      Transfer[]               @relation("TransferTo")
   inventoryCounts  InventoryCount[]
+  outputFor        CategoryOutputLocation[]
 
   @@unique([tenantId, unitId, name])
   @@unique([tenantId, id])
@@ -154,11 +164,12 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant          Tenant           @relation(fields: [tenantId], references: [id])
-  parent          Category?        @relation("CategoryTree", fields: [tenantId, parentId], references: [tenantId, id], onDelete: Restrict)
-  children        Category[]       @relation("CategoryTree")
+  tenant          Tenant                   @relation(fields: [tenantId], references: [id])
+  parent          Category?                @relation("CategoryTree", fields: [tenantId, parentId], references: [tenantId, id], onDelete: Restrict)
+  children        Category[]               @relation("CategoryTree")
   products        Product[]
   inventoryCounts InventoryCount[]
+  outputLocations CategoryOutputLocation[]
 
   @@unique([tenantId, parentId, name])
   @@unique([tenantId, id])
@@ -179,6 +190,7 @@ model MeasureUnit {
   conversions         ProductUnitConversion[]
   poLines             PurchaseOrderLine[]
   receiptLines        GoodsReceiptLine[]
+  recipeLines         RecipeLine[]
 
   @@unique([tenantId, symbol])
   @@unique([tenantId, id])
@@ -222,6 +234,7 @@ model Product {
   receiptLines     GoodsReceiptLine[]
   transferLines    TransferLine[]
   inventoryLines   InventoryCountLine[]
+  recipeLines      RecipeLine[]
 
   @@unique([tenantId, code])
   @@unique([tenantId, id])
@@ -655,6 +668,183 @@ model InventoryCountLine {
 
   @@unique([countId, productId])
   @@index([tenantId, countId])
+}
+
+// ---------- Fichas técnicas ----------
+
+/// Artigo de venda (prato, cocktail, bebida) ou sub-receita (isSubRecipe, não vendido).
+model SaleItem {
+  id          String   @id @default(cuid())
+  tenantId    String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  code        String
+  name        String
+  /// preço de venda, AOA (como no POS)
+  salePrice   Int?
+  isSubRecipe Boolean  @default(false)
+  /// quantidade produzida pela ficha (sub-receitas: ex. 2 L de molho; vendidos: 1)
+  yieldQty    Decimal  @default(1) @db.Decimal(14, 3)
+  yieldUnit   String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant     Tenant            @relation(fields: [tenantId], references: [id])
+  lines      RecipeLine[]      @relation("RecipeOf")
+  usedIn     RecipeLine[]      @relation("SubRecipe")
+  mappings   PosItemMapping[]
+  importRows SalesImportLine[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, id])
+}
+
+/// Ingrediente: produto (qty na unitId, por defeito unidade de consumo) ou sub-receita (qty em unidades do rendimento).
+model RecipeLine {
+  id          String  @id @default(cuid())
+  tenantId    String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  saleItemId  String
+  productId   String?
+  subRecipeId String?
+  unitId      String?
+  qty         Decimal @db.Decimal(14, 3)
+  /// % de perda: bruto = qty / (1 − perda%)
+  lossPct     Decimal @default(0) @db.Decimal(5, 2)
+
+  tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  saleItem  SaleItem     @relation("RecipeOf", fields: [tenantId, saleItemId], references: [tenantId, id], onDelete: Cascade)
+  product   Product?     @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Restrict)
+  subRecipe SaleItem?    @relation("SubRecipe", fields: [tenantId, subRecipeId], references: [tenantId, id], onDelete: Restrict)
+  unit      MeasureUnit? @relation(fields: [tenantId, unitId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, saleItemId])
+}
+
+/// Local de onde saem os produtos de uma categoria (e subcategorias) numa unidade.
+model CategoryOutputLocation {
+  tenantId   String @default(dbgenerated("current_setting('app.tenant_id')"))
+  categoryId String
+  unitId     String
+  locationId String
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id])
+  category Category      @relation(fields: [tenantId, categoryId], references: [tenantId, id], onDelete: Cascade)
+  unit     Unit          @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  location StockLocation @relation(fields: [tenantId, locationId], references: [tenantId, id])
+
+  @@id([categoryId, unitId])
+  @@index([tenantId])
+}
+
+// ---------- Importação de vendas (POS) ----------
+
+enum ImportKind {
+  SALES_BY_ITEM
+  PAYMENTS
+}
+
+model ImportProfile {
+  id               String     @id @default(cuid())
+  tenantId         String     @default(dbgenerated("current_setting('app.tenant_id')"))
+  name             String
+  /// sistema de origem (ex.: Winrest); os mapeamentos de artigos são por sistema
+  posName          String
+  kind             ImportKind @default(SALES_BY_ITEM)
+  sheetName        String?
+  headerRow        Int        @default(1)
+  /// { itemCode, itemName, qty, amount, date } → texto do cabeçalho no ficheiro
+  columns          Json
+  /// DD/MM/YYYY, YYYY-MM-DD, MM/DD/YYYY (células de data Excel são lidas directamente)
+  dateFormat       String     @default("DD/MM/YYYY")
+  decimalSeparator String     @default(",")
+  active           Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  tenant  Tenant        @relation(fields: [tenantId], references: [id])
+  imports SalesImport[]
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, id])
+}
+
+model PosItemMapping {
+  id         String   @id @default(cuid())
+  tenantId   String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  posName    String
+  posCode    String
+  posLabel   String?
+  saleItemId String?
+  /// artigo sem impacto em stock (ex.: taxa de serviço)
+  ignore     Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  saleItem SaleItem? @relation(fields: [tenantId, saleItemId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, posName, posCode])
+}
+
+enum SalesImportStatus {
+  PROCESSING
+  READY
+  FAILED
+  CONFIRMED
+  CANCELLED
+}
+
+model SalesImport {
+  id            String            @id @default(cuid())
+  tenantId      String            @default(dbgenerated("current_setting('app.tenant_id')"))
+  number        Int
+  unitId        String
+  profileId     String
+  fileName      String
+  fileUrl       String?
+  fileHash      String
+  status        SalesImportStatus @default(PROCESSING)
+  periodFrom    DateTime?         @db.Date
+  periodTo      DateTime?         @db.Date
+  rowCount      Int               @default(0)
+  totalAmount   Int               @default(0)
+  /// erros de parse (linha → mensagem) ou motivo da falha
+  errors        Json?
+  createdById   String
+  createdAt     DateTime          @default(now())
+  confirmedAt   DateTime?
+  confirmedById String?
+  cancelledAt   DateTime?
+  cancelledById String?
+
+  tenant  Tenant            @relation(fields: [tenantId], references: [id])
+  unit    Unit              @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  profile ImportProfile     @relation(fields: [tenantId, profileId], references: [tenantId, id])
+  lines   SalesImportLine[]
+
+  @@unique([tenantId, number])
+  @@unique([tenantId, id])
+  @@index([tenantId, unitId, periodFrom, periodTo])
+  @@index([tenantId, fileHash])
+}
+
+model SalesImportLine {
+  id         String    @id @default(cuid())
+  tenantId   String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  importId   String
+  rowNumber  Int
+  posCode    String
+  posLabel   String?
+  qty        Decimal   @db.Decimal(14, 3)
+  amount     Int
+  saleDate   DateTime  @db.Date
+  /// preenchidos quando a linha é lançada em stock (ou ignorada)
+  saleItemId String?
+  postedAt   DateTime?
+
+  tenant   Tenant      @relation(fields: [tenantId], references: [id])
+  import   SalesImport @relation(fields: [tenantId, importId], references: [tenantId, id], onDelete: Cascade)
+  saleItem SaleItem?   @relation(fields: [tenantId, saleItemId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, importId, posCode])
 }
 
 // ---------- Utilizadores e permissões ----------

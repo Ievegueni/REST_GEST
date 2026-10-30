@@ -31,6 +31,15 @@ import { TransferPage } from './modules/stock/TransferPage';
 import { InventoriesPage } from './modules/stock/InventoriesPage';
 import { InventoryPage } from './modules/stock/InventoryPage';
 import { PurchasesLayout } from './modules/purchases/PurchasesLayout';
+import { RecipesLayout } from './modules/recipes/RecipesLayout';
+import { SaleItemsPage } from './modules/recipes/SaleItemsPage';
+import { SaleItemPage } from './modules/recipes/SaleItemPage';
+import { OutputLocationsPage } from './modules/recipes/OutputLocationsPage';
+import { SalesLayout } from './modules/sales/SalesLayout';
+import { ImportsPage } from './modules/sales/ImportsPage';
+import { SalesImportPage } from './modules/sales/ImportPage';
+import { MappingsPage } from './modules/sales/MappingsPage';
+import { ProfilesPage } from './modules/sales/ProfilesPage';
 import { OrdersPage } from './modules/purchases/OrdersPage';
 import { OrderPage } from './modules/purchases/OrderPage';
 import { ReceiptsPage } from './modules/purchases/ReceiptsPage';
@@ -71,6 +80,17 @@ export function App() {
           <Route path="transferencias/:id" element={<TransferPage />} />
           <Route path="inventarios" element={<InventoriesPage />} />
           <Route path="inventarios/:id" element={<InventoryPage />} />
+        </Route>
+        <Route path="/fichas" element={gate('recipes', <RecipesLayout />)}>
+          <Route index element={<SaleItemsPage />} />
+          <Route path="locais" element={<OutputLocationsPage />} />
+          <Route path=":id" element={<SaleItemPage />} />
+        </Route>
+        <Route path="/vendas" element={gate('sales_import', <SalesLayout />)}>
+          <Route index element={<ImportsPage />} />
+          <Route path="mapeamento" element={<MappingsPage />} />
+          <Route path="perfis" element={<ProfilesPage />} />
+          <Route path=":id" element={<SalesImportPage />} />
         </Route>
         <Route path="/compras" element={gate('purchases', <PurchasesLayout />)}>
           <Route index element={<OrdersPage />} />

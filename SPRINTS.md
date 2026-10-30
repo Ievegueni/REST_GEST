@@ -67,13 +67,13 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [ ] Transferir para unidades a que o utilizador não tem acesso (hoje o destino limita-se às unidades acessíveis)
 
 ### Sprint 6 — Fichas técnicas e importação de vendas
-- [ ] Artigos de venda, fichas técnicas, sub-receitas, % perda
-- [ ] Local de saída por defeito por categoria
-- [ ] Custo teórico e margem por artigo
-- [ ] Perfis de importação configuráveis (mapeamento de colunas)
-- [ ] Upload → parse em worker → pré-visualização → confirmação
-- [ ] Mapeamento artigo POS ↔ ficha técnica; pendentes com alerta
-- [ ] Anti-duplicação (hash + período) e anulação de importação
+- [x] Artigos de venda, fichas técnicas, sub-receitas, % perda
+- [x] Local de saída por defeito por categoria
+- [x] Custo teórico e margem por artigo
+- [x] Perfis de importação configuráveis (mapeamento de colunas)
+- [x] Upload → parse em worker → pré-visualização → confirmação
+- [x] Mapeamento artigo POS ↔ ficha técnica; pendentes com alerta
+- [x] Anti-duplicação (hash + período) e anulação de importação
 - [ ] **Quando houver ficheiro Winrest:** criar perfis pré-definidos `winrest_vendas_artigo` e `winrest_pagamentos`
 
 ### Sprint 7 — Alertas e SMS

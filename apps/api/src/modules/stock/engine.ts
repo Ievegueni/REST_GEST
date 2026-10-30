@@ -26,7 +26,7 @@ export type MovementInput = {
   productId: string;
   locationId: string;
   type: MovementType;
-  /** positiva; só INVENTORY_ADJUST aceita sinal (+ sobra, − falta) */
+  /** positiva; INVENTORY_ADJUST (+ sobra, − falta) e SALE_OUT (− = devolução) aceitam sinal */
   qty: number | Decimal;
   /** unidade em que qty/unitCost vêm (omisso = unidade de stock) */
   unitId?: string | null;
@@ -99,7 +99,8 @@ export async function postMovements(tx: Tx, inputs: MovementInput[], meta: Movem
       factor = c.factor;
     }
     const raw = new D(i.qty);
-    if (raw.isZero() || (i.type !== 'INVENTORY_ADJUST' && raw.lt(0))) {
+    // INVENTORY_ADJUST e SALE_OUT aceitam sinal (venda negativa = devolução no POS)
+    if (raw.isZero() || (i.type !== 'INVENTORY_ADJUST' && i.type !== 'SALE_OUT' && raw.lt(0))) {
       throw new AppError('VALIDATION_ERROR', 'Quantidade inválida', { productId: p.id });
     }
     const sign = IN_TYPES.includes(i.type) ? 1 : OUT_TYPES.includes(i.type) ? -1 : 1;

@@ -10,6 +10,7 @@ const schema = z.object({
     .string()
     .optional()
     .transform((v) => v || undefined),
+  RUN_WORKERS: z.enum(['true', 'false']).default('true'),
   APP_URL: z.string().default('http://localhost:5173'),
 });
 
