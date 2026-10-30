@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Convenção: tabelas de negócio têm
+//   tenantId String @default(dbgenerated("current_setting('app.tenant_id')"))
+// O valor é sempre injectado por tenantDb(); o default só existe para o tipo ficar
+// opcional nos inputs e para falhar (NOT NULL / setting inexistente) se alguém escrever sem tenant.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Core ----------
+
+enum Plan {
+  STOCK
+  COMPLETO
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+/// Sem tenantId: é a própria raiz do tenant.
+model Tenant {
+  id               String       @id @default(cuid())
+  name             String
+  nif              String?
+  plan             Plan         @default(STOCK)
+  featureOverrides Json         @default("{}")
+  status           TenantStatus @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  units     Unit[]
+  locations StockLocation[]
+  users     User[]
+  roles     Role[]
+  userUnits UserUnit[]
+  auditLogs AuditLog[]
+}
+
+model Unit {
+  id        String   @id @default(cuid())
+  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  name      String
+  address   String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  locations StockLocation[]
+  userUnits UserUnit[]
+
+  @@unique([tenantId, name])
+}
+
+enum LocationType {
+  WAREHOUSE
+  BAR
+  KITCHEN
+  COLD_ROOM
+  OTHER
+}
+
+model StockLocation {
+  id        String       @id @default(cuid())
+  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  unitId    String
+  name      String
+  type      LocationType @default(OTHER)
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  unit   Unit   @relation(fields: [unitId], references: [id])
+
+  @@unique([tenantId, unitId, name])
+}
+
+// ---------- Utilizadores e permissões ----------
+
+model User {
+  id           String    @id @default(cuid())
+  tenantId     String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  email        String    @unique
+  name         String
+  phone        String?
+  passwordHash String
+  roleId       String
+  /// true = acesso a todas as unidades do tenant (dispensa UserUnit)
+  allUnits     Boolean   @default(false)
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  role      Role       @relation(fields: [roleId], references: [id])
+  userUnits UserUnit[]
+
+  @@index([tenantId])
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  tenantId    String       @default(dbgenerated("current_setting('app.tenant_id')"))
+  name        String
+  /// perfil base criado pela plataforma (não pode ser apagado)
+  isSystem    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  users       User[]
+  permissions Permission[]
+
+  @@unique([tenantId, name])
+}
+
+/// Catálogo global de permissões (sem tenantId).
+model Permission {
+  id    String @id @default(cuid())
+  code  String @unique
+  roles Role[]
+}
+
+model UserUnit {
+  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  userId    String
+  unitId    String
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unit   Unit   @relation(fields: [unitId], references: [id])
+
+  @@id([userId, unitId])
+  @@index([tenantId])
+}
+
+// ---------- Auditoria ----------
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  /// null = acção de Super Admin fora de tenant
+  tenantId  String?
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  before    Json?
+  after     Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, entity, entityId])
+  @@index([tenantId, createdAt])
+}

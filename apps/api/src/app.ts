@@ -1,0 +1,29 @@
+import Fastify from 'fastify';
+import helmet from '@fastify/helmet';
+import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
+import { env } from './core/env';
+import { registerErrorHandler } from './core/errors';
+import { prisma } from './core/prisma';
+
+export async function buildApp() {
+  const app = Fastify({
+    logger: {
+      level: env.NODE_ENV === 'test' ? 'silent' : 'info',
+      redact: ['req.headers.authorization', 'req.headers.cookie'],
+      ...(env.NODE_ENV === 'development' && { transport: { target: 'pino-pretty' } }),
+    },
+  });
+
+  await app.register(helmet);
+  await app.register(cors, { origin: env.APP_URL, credentials: true });
+  await app.register(rateLimit, { max: 300, timeWindow: '1 minute' });
+  registerErrorHandler(app);
+
+  app.get('/health', async () => {
+    await prisma.$queryRaw`SELECT 1`;
+    return { data: { status: 'ok' } };
+  });
+
+  return app;
+}
