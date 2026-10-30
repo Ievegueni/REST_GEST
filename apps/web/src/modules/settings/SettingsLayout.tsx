@@ -10,6 +10,7 @@ export function SettingsLayout() {
   const alertsFeature = useFeature('alerts_sms');
   const alertsManage = useCan('alerts.manage');
   const alerts = alertsFeature && alertsManage;
+  const payroll = useFeature('payroll');
   return (
     <>
       <h1 className="mb-4 text-xl font-semibold">{t('nav.settings')}</h1>
@@ -20,6 +21,7 @@ export function SettingsLayout() {
           ...(users ? [{ to: '/definicoes/utilizadores', label: t('settings.users') }] : []),
           ...(stock ? [{ to: '/definicoes/stock', label: t('settings.stock') }] : []),
           ...(alerts ? [{ to: '/definicoes/alertas', label: t('settings.alerts') }] : []),
+          ...(payroll ? [{ to: '/definicoes/salarios', label: t('payroll.settings') }] : []),
         ]}
       />
       <Outlet />

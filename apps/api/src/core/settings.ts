@@ -9,6 +9,9 @@ const SELECT = {
   smsQuietStart: true,
   smsQuietEnd: true,
   smsDigest: true,
+  payrollWeeklyHours: true,
+  payrollOvertimeRate: true,
+  payrollMonthDays: true,
 } as const;
 
 /** Definições operacionais do tenant (a linha Tenant está fora de tenantDb). */
@@ -26,6 +29,9 @@ export async function updateSettings(
     smsQuietStart?: string | null;
     smsQuietEnd?: string | null;
     smsDigest?: boolean;
+    payrollWeeklyHours?: number | null;
+    payrollOvertimeRate?: number | null;
+    payrollMonthDays?: number | null;
   },
   ip?: string,
 ) {

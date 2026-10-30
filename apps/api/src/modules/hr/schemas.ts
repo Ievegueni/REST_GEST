@@ -64,7 +64,14 @@ export const sensitiveSchema = z.object({
     .nullable()
     .optional(),
   allowances: z
-    .array(z.object({ name: z.string().trim().min(1).max(100), amount: money }))
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(100),
+        amount: money,
+        inssSubject: z.boolean().default(true),
+        irtExemptUpTo: money.default(0),
+      }),
+    )
     .max(30)
     .optional(),
 });

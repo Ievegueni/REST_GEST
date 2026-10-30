@@ -13,6 +13,7 @@ export const NAV: { to: string; label: TKey; feature?: Feature }[] = [
   { to: '/fichas', label: 'nav.recipes', feature: 'recipes' },
   { to: '/vendas', label: 'nav.salesImport', feature: 'sales_import' },
   { to: '/rh', label: 'nav.hr', feature: 'hr' },
+  { to: '/salarios', label: 'nav.payroll', feature: 'payroll' },
   { to: '/alertas', label: 'nav.alerts', feature: 'alerts_sms' },
   { to: '/relatorios', label: 'nav.reports', feature: 'reports_stock' },
   { to: '/definicoes/plano', label: 'nav.settings' },

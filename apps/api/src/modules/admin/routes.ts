@@ -3,6 +3,8 @@ import type { AccessTokenPayload } from '../../core/auth';
 import { env } from '../../core/env';
 import { AppError } from '../../core/errors';
 import { prisma } from '../../core/prisma';
+import { audit } from '../../core/audit';
+import { taxTableSchema } from './schemas';
 import * as service from './service';
 import {
   adminLoginSchema,
@@ -63,6 +65,44 @@ export async function adminRoutes(app: FastifyInstance) {
     r.addHook('preHandler', authenticateAdmin);
 
     r.get('/me', async (req) => ({ data: req.admin }));
+
+    // Tabelas de IRT/INSS (nacionais, versionadas por data de vigência)
+    r.get('/tax-tables', async () => ({
+      data: await prisma.taxTable.findMany({ orderBy: { validFrom: 'desc' } }),
+    }));
+    r.post('/tax-tables', async (req, reply) => {
+      const data = taxTableSchema.parse(req.body);
+      const t = await prisma.taxTable.create({ data });
+      await audit({
+        tenantId: null,
+        userId: req.admin.id,
+        action: 'admin.taxtable.create',
+        entity: 'TaxTable',
+        entityId: t.id,
+        after: JSON.parse(JSON.stringify(data)),
+      });
+      return reply.status(201).send({ data: t });
+    });
+    r.put<{ Params: { id: string } }>('/tax-tables/:id', async (req) => {
+      const data = taxTableSchema.parse(req.body);
+      if (
+        await prisma.payrollRun.count({
+          where: { taxTableId: req.params.id, status: { not: 'DRAFT' } },
+        })
+      ) {
+        throw new AppError('CONFLICT', 'Tabela usada em salários aprovados: crie uma nova versão');
+      }
+      const t = await prisma.taxTable.update({ where: { id: req.params.id }, data });
+      await audit({
+        tenantId: null,
+        userId: req.admin.id,
+        action: 'admin.taxtable.update',
+        entity: 'TaxTable',
+        entityId: t.id,
+        after: JSON.parse(JSON.stringify(data)),
+      });
+      return { data: t };
+    });
 
     r.get('/tenants', async () => ({ data: await service.listTenants() }));
 

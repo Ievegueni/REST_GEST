@@ -39,3 +39,33 @@ export const updateTenantSchema = z
   .partial();
 
 export const impersonateSchema = z.object({ userId: z.string().optional() }).default({});
+
+const pct = z.coerce.number().min(0).max(100);
+export const taxTableSchema = z.object({
+  validFrom: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .transform((v) => new Date(v)),
+  inssEmployeeRate: pct,
+  inssEmployerRate: pct,
+  irtBrackets: z
+    .array(
+      z.object({
+        upTo: z.coerce.number().min(0).nullable(),
+        fixed: z.coerce.number().min(0),
+        rate: pct,
+        excessOver: z.coerce.number().min(0),
+      }),
+    )
+    .min(1)
+    .refine(
+      (b) => b.filter((x) => x.upTo == null).length === 1,
+      'Exactamente um escalão sem limite superior (o último)',
+    ),
+  notes: z
+    .string()
+    .trim()
+    .max(1000)
+    .nullish()
+    .transform((v) => v || null),
+});

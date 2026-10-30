@@ -115,11 +115,11 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Férias e licenças
 
 ### Sprint 11 — Salários
-- [ ] Tabela de IRT e taxas INSS configuráveis e versionadas (validar valores em vigor)
-- [ ] Adiantamentos e descontos
-- [ ] Processamento mensal (RASCUNHO → APROVADO → PAGO)
-- [ ] Recibos PDF e mapa de salários Excel
-- [ ] Testes de cálculo
+- [x] Tabela de IRT e taxas INSS configuráveis e versionadas (Super Admin) — **valores reais por introduzir e validar**
+- [x] Adiantamentos e descontos
+- [x] Processamento mensal (RASCUNHO → APROVADO → PAGO)
+- [x] Recibos PDF e mapa de salários Excel
+- [x] Testes de cálculo
 
 ### Sprint 12 — Custos diários e fecho de caixa
 - [ ] Categorias de custo, custos diários, custos recorrentes

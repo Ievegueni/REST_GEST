@@ -2,7 +2,8 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ConfirmButton } from '../../components/ConfirmButton';
 import { buttonCls, ErrorBox, inputBase, inputCls, secondaryCls } from '../../components/ui';
-import { useCan } from '../../features/session';
+import { useCan, useFeature } from '../../features/session';
+import { Deductions } from './Deductions';
 import { t } from '../../i18n';
 import { api, apiOpen, apiUpload } from '../../lib/api';
 import { formatDate } from '../../lib/format';
@@ -33,6 +34,9 @@ function EmployeeForm({ employee: e, reload }: { employee: Employee | null; relo
   const navigate = useNavigate();
   const manage = useCan('hr.manage');
   const sensitive = useCan('hr.sensitive');
+  const payrollPerm = useCan('payroll.process');
+  const payrollFeature = useFeature('payroll');
+  const canPayroll = payrollPerm && payrollFeature;
   const { data: units } = useApi<Unit[]>('/units');
   const { data: positions } = useApi<Position[]>('/positions');
   const year = new Date().getFullYear();
@@ -354,6 +358,41 @@ function EmployeeForm({ employee: e, reload }: { employee: Employee | null; relo
                       )
                     }
                   />
+                  <label className="flex items-center gap-1 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={a.inssSubject ?? true}
+                      onChange={(x) =>
+                        setSv(
+                          'allowances',
+                          s.allowances.map((y, j) =>
+                            j === i ? { ...y, inssSubject: x.target.checked } : y,
+                          ),
+                        )
+                      }
+                    />
+
+                    {t('payroll.inssSubject')}
+                  </label>
+
+                  <input
+                    aria-label={t('payroll.irtExempt')}
+                    title={t('payroll.irtExempt')}
+                    placeholder={t('payroll.irtExempt')}
+                    className={`${inputBase} w-40`}
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={a.irtExemptUpTo ?? 0}
+                    onChange={(x) =>
+                      setSv(
+                        'allowances',
+                        s.allowances.map((y, j) =>
+                          j === i ? { ...y, irtExemptUpTo: Number(x.target.value) } : y,
+                        ),
+                      )
+                    }
+                  />
                   <button
                     type="button"
                     className="text-red-600 hover:underline"
@@ -371,7 +410,12 @@ function EmployeeForm({ employee: e, reload }: { employee: Employee | null; relo
               <button
                 type="button"
                 className={secondaryCls}
-                onClick={() => setSv('allowances', [...s.allowances, { name: '', amount: 0 }])}
+                onClick={() =>
+                  setSv('allowances', [
+                    ...s.allowances,
+                    { name: '', amount: 0, inssSubject: true, irtExemptUpTo: 0 },
+                  ])
+                }
               >
                 {t('common.add')}
               </button>
@@ -384,6 +428,7 @@ function EmployeeForm({ employee: e, reload }: { employee: Employee | null; relo
       </form>
 
       {e && sensitive && e.documents && <Documents employee={e} reload={reload} />}
+      {e && canPayroll && <Deductions employeeId={e.id} />}
     </div>
   );
 }

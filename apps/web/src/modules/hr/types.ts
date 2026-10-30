@@ -21,7 +21,7 @@ export type Employee = {
   socialSecurityNo?: string | null;
   bankName?: string | null;
   iban?: string | null;
-  allowances?: { name: string; amount: number }[];
+  allowances?: { name: string; amount: number; inssSubject?: boolean; irtExemptUpTo?: number }[];
   documents?: {
     id: string;
     name: string;

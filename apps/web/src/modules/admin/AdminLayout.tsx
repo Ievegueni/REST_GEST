@@ -32,6 +32,12 @@ export function AdminLayout() {
           {t('app.name')} · {t('admin.title')}
         </Link>
         <div className="flex items-center gap-3 text-sm">
+          <Link to="/admin" className="hover:underline">
+            {t('admin.tenants')}
+          </Link>
+          <Link to="/admin/tabelas-fiscais" className="hover:underline">
+            {t('taxTables.title')}
+          </Link>
           <span>{admin.name}</span>
           <button onClick={logout} className="text-slate-400 hover:underline">
             {t('auth.logout')}

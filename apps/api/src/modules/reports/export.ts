@@ -118,3 +118,8 @@ export async function toPdf(r: Report, subtitle: string, tenantName: string) {
   } as never);
   return Buffer.from(await doc.getBuffer());
 }
+
+/** PDF a partir de uma definição pdfmake (fontes standard, sem acesso externo). */
+export async function renderPdf(definition: object) {
+  return Buffer.from(await pdfmake.createPdf(definition as never).getBuffer());
+}

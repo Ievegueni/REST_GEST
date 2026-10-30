@@ -49,6 +49,10 @@ model Tenant {
   smsQuietEnd         String?
   /// true = um SMS-resumo diário em vez de um SMS por alerta
   smsDigest           Boolean             @default(false)
+  /// parâmetros de salários (sem valores por defeito no código)
+  payrollWeeklyHours  Int?
+  payrollOvertimeRate Decimal?            @db.Decimal(5, 2)
+  payrollMonthDays    Int?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 
@@ -101,6 +105,9 @@ model Tenant {
   shifts                 Shift[]
   attendance             Attendance[]
   leaves                 Leave[]
+  deductions             EmployeeDeduction[]
+  payrollRuns            PayrollRun[]
+  payrollLines           PayrollLine[]
 }
 
 model Unit {
@@ -120,6 +127,7 @@ model Unit {
   outputLocations CategoryOutputLocation[]
   salesImports    SalesImport[]
   employees       Employee[]
+  payrollRuns     PayrollRun[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -1048,14 +1056,16 @@ model Employee {
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 
-  tenant     Tenant              @relation(fields: [tenantId], references: [id])
-  unit       Unit                @relation(fields: [tenantId, unitId], references: [tenantId, id])
-  position   Position?           @relation(fields: [tenantId, positionId], references: [tenantId, id], onDelete: Restrict)
-  allowances EmployeeAllowance[]
-  documents  EmployeeDocument[]
-  shifts     Shift[]
-  attendance Attendance[]
-  leaves     Leave[]
+  tenant       Tenant              @relation(fields: [tenantId], references: [id])
+  unit         Unit                @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  position     Position?           @relation(fields: [tenantId, positionId], references: [tenantId, id], onDelete: Restrict)
+  allowances   EmployeeAllowance[]
+  documents    EmployeeDocument[]
+  shifts       Shift[]
+  attendance   Attendance[]
+  leaves       Leave[]
+  deductions   EmployeeDeduction[]
+  payrollLines PayrollLine[]
 
   @@unique([tenantId, number])
   @@unique([tenantId, id])
@@ -1064,11 +1074,15 @@ model Employee {
 
 /// Subsídio fixo mensal (sensível).
 model EmployeeAllowance {
-  id         String @id @default(cuid())
-  tenantId   String @default(dbgenerated("current_setting('app.tenant_id')"))
-  employeeId String
-  name       String
-  amount     Int
+  id            String  @id @default(cuid())
+  tenantId      String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  employeeId    String
+  name          String
+  amount        Int
+  /// entra na base do INSS
+  inssSubject   Boolean @default(true)
+  /// parte isenta de IRT (AOA), conforme a lei para este tipo de subsídio
+  irtExemptUpTo Int     @default(0)
 
   tenant   Tenant   @relation(fields: [tenantId], references: [id])
   employee Employee @relation(fields: [tenantId, employeeId], references: [tenantId, id], onDelete: Cascade)
@@ -1174,6 +1188,113 @@ model Leave {
   employee Employee @relation(fields: [tenantId, employeeId], references: [tenantId, id], onDelete: Cascade)
 
   @@index([tenantId, employeeId, startDate])
+}
+
+// ---------- Salários ----------
+
+/// Tabela fiscal nacional versionada por data de vigência (gerida pelo Super Admin; sem tenantId).
+/// Nenhum valor legal fixo no código: os valores são introduzidos e validados com a legislação em vigor.
+model TaxTable {
+  id               String   @id @default(cuid())
+  validFrom        DateTime @unique @db.Date
+  /// taxa INSS do trabalhador, % (ex.: 3)
+  inssEmployeeRate Decimal  @db.Decimal(5, 2)
+  /// taxa INSS da entidade empregadora, % (ex.: 8)
+  inssEmployerRate Decimal  @db.Decimal(5, 2)
+  /// escalões IRT: [{ upTo: number|null, fixed: number, rate: number (%), excessOver: number }]
+  irtBrackets      Json
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  runs PayrollRun[]
+}
+
+enum DeductionType {
+  ADVANCE
+  OTHER
+}
+
+/// Adiantamento ou desconto, abatido em prestações nos processamentos.
+model EmployeeDeduction {
+  id                String        @id @default(cuid())
+  tenantId          String        @default(dbgenerated("current_setting('app.tenant_id')"))
+  employeeId        String
+  type              DeductionType
+  description       String
+  date              DateTime      @db.Date
+  amount            Int
+  installmentAmount Int
+  remaining         Int
+  createdById       String
+  createdAt         DateTime      @default(now())
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [tenantId, employeeId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, employeeId])
+}
+
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+model PayrollRun {
+  id           String        @id @default(cuid())
+  tenantId     String        @default(dbgenerated("current_setting('app.tenant_id')"))
+  unitId       String
+  year         Int
+  month        Int
+  status       PayrollStatus @default(DRAFT)
+  taxTableId   String
+  /// parâmetros usados (horas semanais, multiplicador, dias do mês)
+  params       Json
+  totalGross   Int           @default(0)
+  totalNet     Int           @default(0)
+  totalCost    Int           @default(0)
+  createdById  String
+  approvedById String?
+  approvedAt   DateTime?
+  paidAt       DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id])
+  unit     Unit          @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  taxTable TaxTable      @relation(fields: [taxTableId], references: [id])
+  lines    PayrollLine[]
+
+  @@unique([tenantId, unitId, year, month])
+  @@unique([tenantId, id])
+}
+
+model PayrollLine {
+  id               String @id @default(cuid())
+  tenantId         String @default(dbgenerated("current_setting('app.tenant_id')"))
+  runId            String
+  employeeId       String
+  baseSalary       Int
+  allowances       Int
+  overtime         Int
+  absenceDeduction Int
+  gross            Int
+  inssBase         Int
+  inssEmployee     Int
+  inssEmployer     Int
+  irtBase          Int
+  irt              Int
+  deductions       Int
+  net              Int
+  /// detalhe para o recibo (dias, horas extra, subsídios, descontos aplicados)
+  details          Json
+
+  tenant   Tenant     @relation(fields: [tenantId], references: [id])
+  run      PayrollRun @relation(fields: [tenantId, runId], references: [tenantId, id], onDelete: Cascade)
+  employee Employee   @relation(fields: [tenantId, employeeId], references: [tenantId, id])
+
+  @@unique([runId, employeeId])
+  @@index([tenantId, employeeId])
 }
 
 // ---------- Utilizadores e permissões ----------

@@ -15,6 +15,9 @@ const schema = z
     smsQuietStart: time,
     smsQuietEnd: time,
     smsDigest: z.boolean(),
+    payrollWeeklyHours: z.coerce.number().int().min(1).max(80).nullable(),
+    payrollOvertimeRate: z.coerce.number().min(1).max(5).nullable(),
+    payrollMonthDays: z.coerce.number().int().min(20).max(31).nullable(),
   })
   .partial();
 
