@@ -126,7 +126,7 @@ export async function runLoop(input: LoopInput) {
 }
 
 /** Contexto variável (data, unidades, categorias) num bloco à parte do prompt fixo. */
-async function context(auth: AuthContext) {
+export async function context(auth: AuthContext) {
   const [units, cats] = await Promise.all([
     auth.db.unit.findMany({
       where: { active: true, ...(auth.unitIds !== 'all' && { id: { in: auth.unitIds } }) },

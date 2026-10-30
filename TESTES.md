@@ -153,3 +153,16 @@ Preparação: `ANTHROPIC_API_KEY` no `.env` da API (opcional `ANTHROPIC_MODEL`, 
 - [ ] Contador "N / limite pedidos este mês" aumenta; no `/admin` definir limite IA = pedidos já feitos → nova pergunta dá "Limite mensal … atingido".
 - [ ] `/admin` → tenant → "Uso este mês": pedidos IA, tokens e custo estimado (USD); SMS enviados e importações.
 
+## 16. Analisador IA — anomalias, previsão e relatório semanal (plano COMPLETO)
+Preparação: um mês de dados numa unidade (custos diários, vendas importadas ou quebras) e, ontem, um valor muito acima do habitual (ex.: custo diário 5× maior).
+- [ ] Definições → Alertas: aparece "Anomalia detectada (IA)" com limiar 3 (z-score); alterar e gravar.
+- [ ] Analisador IA → Relatórios automáticos → "Verificar anomalias de ontem" (perfil com Definições) → relatório da unidade com a métrica anómala, valor e média; alerta no sino.
+- [ ] Sem chave da Anthropic: o relatório de anomalias é gerado na mesma, com a lista simples; com chave: texto explicado e priorizado pela IA.
+- [ ] Carregar outra vez → não duplica o relatório nem o alerta.
+- [ ] Desligar a regra "Anomalia detectada (IA)" → verificar não gera nada.
+- [ ] "Gerar relatório da semana passada" (precisa de chave) → um relatório por unidade com Resumo, Números, Pontos de atenção e Recomendações; notificação "Relatório semanal IA" no sino.
+- [ ] Abrir relatório → "PDF" descarrega e abre com acentos correctos.
+- [ ] Utilizador só com acesso a uma unidade não vê relatórios das outras.
+- [ ] Chat: "Quanto devo encomendar para o Bar para os próximos 7 dias?" → resposta com base na previsão (consumo previsto, stock, pendentes).
+- [ ] Em produção (`RUN_WORKERS=true`): anomalias correm às 06:30 todos os dias e o relatório semanal às segundas às 07:00 (hora de Luanda); cada execução conta para o limite mensal de pedidos IA.
+

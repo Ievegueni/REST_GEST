@@ -149,10 +149,11 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [ ] Testar com chave real da Anthropic (`ANTHROPIC_API_KEY`)
 
 ### Sprint 16 — Analisador IA (parte 2)
-- [ ] Detecção de anomalias (job diário, estatística no backend + explicação IA)
-- [ ] Previsão de consumo/compras
-- [ ] Relatório semanal automático por unidade (PDF + notificação)
-- [ ] Activação do plano COMPLETO para o Palace
+- [x] Detecção de anomalias (job diário 06:30, z-score vs. 28 dias no backend + explicação IA; alerta `AI_ANOMALY` com limiar configurável)
+- [x] Previsão de consumo/compras (ferramenta `get_consumption_forecast` no chat, média ponderada por dia da semana)
+- [x] Relatório semanal automático por unidade (segunda 07:00; PDF + notificação)
+- [ ] SMS resumido do relatório semanal (opcional — não feito)
+- [ ] Activação do plano COMPLETO para o Palace (tarefa do Super Admin)
 
 ---
 

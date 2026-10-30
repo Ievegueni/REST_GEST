@@ -47,7 +47,7 @@ export function zonedMidnight(dayStr: string) {
   return new Date(guess.getTime() - offset * 60_000);
 }
 
-const addDays = (d: string, n: number) => {
+export const addDays = (d: string, n: number) => {
   const x = new Date(`${d}T00:00:00Z`);
   x.setUTCDate(x.getUTCDate() + n);
   return x.toISOString().slice(0, 10);

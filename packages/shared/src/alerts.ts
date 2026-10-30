@@ -9,6 +9,7 @@ export const ALERT_TYPES = [
   'CASH_DIFFERENCE',
   'PAYABLE_DUE',
   'PAYABLE_OVERDUE',
+  'AI_ANOMALY',
 ] as const;
 export type AlertType = (typeof ALERT_TYPES)[number];
 
@@ -27,6 +28,7 @@ export const ALERT_DEFAULTS: Record<
   CASH_DIFFERENCE: { enabled: true, sms: true, threshold: null },
   PAYABLE_DUE: { enabled: true, sms: false, threshold: 3 }, // dias
   PAYABLE_OVERDUE: { enabled: true, sms: true, threshold: null },
+  AI_ANOMALY: { enabled: true, sms: false, threshold: 3 }, // z-score
 };
 
 /** Perfis base destinatários por defeito (Administrador + Gerente da unidade + Ecónomo). */

@@ -906,6 +906,7 @@ enum AlertType {
   CASH_DIFFERENCE
   PAYABLE_DUE
   PAYABLE_OVERDUE
+  AI_ANOMALY
 }
 
 enum AlertStatus {

@@ -1,11 +1,12 @@
 import { Fragment, useState, type FormEvent, type ReactNode } from 'react';
+import { Tabs } from '../../components/Tabs';
 import { buttonCls, ErrorBox, inputCls } from '../../components/ui';
 import { useCan } from '../../features/session';
 import { t } from '../../i18n';
 import { api } from '../../lib/api';
 import { useApi } from '../../lib/useApi';
 
-type Chart = {
+export type Chart = {
   kind: 'bar' | 'line';
   title: string;
   labels: string[];
@@ -23,7 +24,7 @@ function inline(s: string) {
     .split(/(\*\*[^*]+\*\*)/)
     .map((p, i) => (p.startsWith('**') ? <strong key={i}>{p.slice(2, -2)}</strong> : p));
 }
-function Markdown({ text }: { text: string }) {
+export function Markdown({ text }: { text: string }) {
   const out: ReactNode[] = [];
   let list: string[] = [];
   const flush = () => {
@@ -58,7 +59,7 @@ function Markdown({ text }: { text: string }) {
   return <div className="space-y-2">{out}</div>;
 }
 
-function ChartView({ chart }: { chart: Chart }) {
+export function ChartView({ chart }: { chart: Chart }) {
   const all = chart.series.flatMap((s) => s.values);
   const max = Math.max(1, ...all.map(Math.abs));
   const fmt = (v: number) => v.toLocaleString('pt-AO');
@@ -157,6 +158,7 @@ export function AiPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
+      <AiTabs />
       <div className="flex items-baseline justify-between">
         <h1 className="text-xl font-semibold">{t('ai.title')}</h1>
         {status && (
@@ -233,3 +235,12 @@ export function AiPage() {
     </div>
   );
 }
+
+export const AiTabs = () => (
+  <Tabs
+    items={[
+      { to: '/analisador', label: t('ai.tab.chat') },
+      { to: '/analisador/relatorios', label: t('ai.tab.reports') },
+    ]}
+  />
+);

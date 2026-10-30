@@ -63,6 +63,7 @@ import { PayablesPage } from './modules/payables/PayablesPage';
 import { PayablePage } from './modules/payables/PayablePage';
 import { ResultsPage } from './modules/financial/ResultsPage';
 import { AiPage } from './modules/ai/AiPage';
+import { AiReportsPage } from './modules/ai/AiReportsPage';
 import { OrdersPage } from './modules/purchases/OrdersPage';
 import { OrderPage } from './modules/purchases/OrderPage';
 import { ReceiptsPage } from './modules/purchases/ReceiptsPage';
@@ -144,6 +145,7 @@ export function App() {
         <Route path="/caixa/:id" element={gate('cash_closing', <CashSessionPage />)} />
         <Route path="/resultados" element={gate('financial_results', <ResultsPage />)} />
         <Route path="/analisador" element={gate('ai_analyzer', <AiPage />)} />
+        <Route path="/analisador/relatorios" element={gate('ai_analyzer', <AiReportsPage />)} />
         <Route path="/contas-a-pagar" element={gate('payables', <PayablesPage />)} />
         <Route path="/contas-a-pagar/:id" element={gate('payables', <PayablePage />)} />
         <Route path="/salarios" element={gate('payroll', <PayrollPage />)} />

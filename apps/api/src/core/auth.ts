@@ -1,6 +1,7 @@
 import type { FastifyRequest } from 'fastify';
 import {
   effectiveFeatures,
+  PERMISSIONS,
   type Feature,
   type FeatureOverrides,
   type Permission,
@@ -107,4 +108,21 @@ export async function tenantFeatures(tenantId: string) {
   return t.status === 'ACTIVE'
     ? effectiveFeatures(t.plan, t.featureOverrides as FeatureOverrides)
     : new Set<Feature>();
+}
+
+/** Contexto de sistema para jobs (sem utilizador): todas as permissões, unidades indicadas. */
+export async function systemAuth(
+  tenantId: string,
+  unitIds: AuthContext['unitIds'] = 'all',
+): Promise<AuthContext> {
+  const t = await prisma.tenant.findUniqueOrThrow({ where: { id: tenantId } });
+  return {
+    userId: 'system',
+    tenantId,
+    plan: t.plan,
+    permissions: new Set(PERMISSIONS),
+    features: await tenantFeatures(tenantId),
+    unitIds,
+    db: tenantDb(tenantId),
+  };
 }

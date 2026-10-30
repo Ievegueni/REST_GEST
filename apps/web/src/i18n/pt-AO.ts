@@ -721,6 +721,7 @@ export const ptAO = {
   'payableStatus.CANCELLED': 'Cancelada',
   'alertType.PAYABLE_DUE': 'Conta a pagar a vencer',
   'alertType.PAYABLE_OVERDUE': 'Conta a pagar vencida',
+  'alertType.AI_ANOMALY': 'Anomalia detectada (IA)',
 
   'results.revenue': 'Receita',
   'results.cogs': 'CMV vendas',
@@ -752,4 +753,15 @@ export const ptAO = {
   'ai.send': 'Perguntar',
   'ai.thinking': 'A analisar os dados…',
   'ai.clear': 'Nova conversa',
+  'ai.tab.chat': 'Conversa',
+  'ai.tab.reports': 'Relatórios automáticos',
+  'ai.reports.kind': 'Tipo de relatório',
+  'ai.reports.all': 'Todos os relatórios',
+  'ai.reports.ANOMALIES': 'Anomalias detectadas',
+  'ai.reports.WEEKLY': 'Relatório semanal',
+  'ai.reports.allUnits': 'Todas as unidades',
+  'ai.reports.empty': 'Ainda não há relatórios. As anomalias são verificadas todos os dias às 06:30 e o relatório semanal é gerado às segundas às 07:00.',
+  'ai.reports.runAnomalies': 'Verificar anomalias de ontem',
+  'ai.reports.runWeekly': 'Gerar relatório da semana passada',
+  'ai.reports.created': '{n} relatório(s) gerado(s).',
 } as const;

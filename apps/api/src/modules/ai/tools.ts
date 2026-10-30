@@ -8,6 +8,7 @@ import { z } from 'zod';
 import type { AuthContext } from '../../core/auth';
 import { filtersSchema, period, scopeUnits, type Report } from '../reports/common';
 import { REPORTS, type ReportName } from '../reports/definitions';
+import { suggest } from '../reports/replenishment';
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const filters = z.object({
@@ -197,6 +198,33 @@ export const TOOLS: Record<string, ToolDef> = {
         count: sessions.length,
         totalDifference: diffs.reduce((a, b) => a + b, 0),
         sessionsWithDifference: diffs.filter((d) => d !== 0).length,
+      };
+    },
+  },
+  get_consumption_forecast: {
+    description:
+      'Previsão de consumo e de compras de uma unidade: consumo previsto nos próximos N dias (média dos últimos dias, ponderada por dia da semana), stock actual, encomendas pendentes e quantidade a encomendar.',
+    input: z.object({
+      unitId: z.string().describe('Id da unidade (obrigatório)'),
+      coverageDays: z.number().int().min(1).max(90).default(7).describe('Dias a prever'),
+      lookbackDays: z.number().int().min(7).max(180).default(28).describe('Histórico usado'),
+    }),
+    feature: 'purchases',
+    permissions: ['purchases.manage', 'reports.view'],
+    run: async (auth, input: { unitId: string; coverageDays: number; lookbackDays: number }) => {
+      const rows = await suggest(auth, input);
+      return {
+        ...input,
+        products: rows.slice(0, MAX_ROWS).map((r) => ({
+          name: r.name,
+          stockUnit: r.stockUnit,
+          onHand: r.onHand,
+          pending: r.pending,
+          forecast: r.forecast,
+          need: r.need,
+          supplier: r.supplier?.name ?? null,
+        })),
+        ...(rows.length > MAX_ROWS && { truncated: `${rows.length - MAX_ROWS} produtos omitidos` }),
       };
     },
   },
