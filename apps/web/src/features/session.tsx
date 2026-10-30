@@ -9,6 +9,8 @@ export type Session = {
   tenant: { id: string; name: string; plan: Plan };
   features: Feature[];
   units: { id: string; name: string }[];
+  /** sessão aberta por um Super Admin */
+  impersonated: boolean;
 };
 
 type SessionState = {
@@ -19,6 +21,8 @@ type SessionState = {
   setUnitId: (id: string) => void;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  startImpersonation: (accessToken: string) => Promise<void>;
+  endImpersonation: () => void;
 };
 
 export const SessionContext = createContext<SessionState | null>(null);
@@ -56,6 +60,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     },
     logout: async () => {
       await api('/auth/logout', { method: 'POST' }).catch(() => undefined);
+      setAccessToken(null);
+      setSession(null);
+    },
+    startImpersonation: async (accessToken) => {
+      setAccessToken(accessToken);
+      await load();
+    },
+    endImpersonation: () => {
       setAccessToken(null);
       setSession(null);
     },

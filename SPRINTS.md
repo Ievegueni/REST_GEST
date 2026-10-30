@@ -31,12 +31,12 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Testes de isolamento de tenant e de bloqueio por feature
 
 ### Sprint 2 — Super Admin
-- [ ] Área `/admin` separada
-- [ ] CRUD de tenants, suspensão
-- [ ] **Selector de plano STOCK/COMPLETO + overrides de features**
-- [ ] Limites por tenant (unidades, utilizadores, SMS, IA)
-- [ ] Criação do primeiro admin do tenant
-- [ ] Impersonation com auditoria
+- [x] Área `/admin` separada
+- [x] CRUD de tenants, suspensão
+- [x] **Selector de plano STOCK/COMPLETO + overrides de features**
+- [x] Limites por tenant (unidades, utilizadores, SMS, IA) — `assertWithinLimit` pronto; aplicar em Sprint 3 (unidades/utilizadores), 7 (SMS) e 15 (IA)
+- [x] Criação do primeiro admin do tenant
+- [x] Impersonation com auditoria
 
 ### Sprint 3 — Estrutura e catálogo
 - [ ] CRUD de unidades e locais de stock

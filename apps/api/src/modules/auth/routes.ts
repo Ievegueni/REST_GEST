@@ -23,7 +23,10 @@ export async function authRoutes(app: FastifyInstance) {
     reply.setCookie(COOKIE, refresh, { ...cookieOpts, maxAge: service.REFRESH_TTL_MS / 1000 });
     return {
       data: {
-        accessToken: app.jwt.sign({ sub: user.id, tid: user.tenantId }, { expiresIn: '15m' }),
+        accessToken: app.jwt.sign(
+          { typ: 'user', sub: user.id, tid: user.tenantId },
+          { expiresIn: '15m' },
+        ),
       },
     };
   };
@@ -66,6 +69,12 @@ export async function authRoutes(app: FastifyInstance) {
 
   app.get('/me', { preHandler: authenticate }, async (req) => {
     const session = await service.getSession(req.auth.userId);
-    return { data: { ...session, features: [...req.auth.features] } };
+    return {
+      data: {
+        ...session,
+        features: [...req.auth.features],
+        impersonated: Boolean(req.auth.impersonatorId),
+      },
+    };
   });
 }

@@ -32,6 +32,11 @@ model Tenant {
   plan             Plan         @default(STOCK)
   featureOverrides Json         @default("{}")
   status           TenantStatus @default(ACTIVE)
+  /// Limites contratados (null = sem limite)
+  maxUnits         Int?
+  maxUsers         Int?
+  smsMonthlyLimit  Int?
+  aiMonthlyLimit   Int?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -83,6 +88,18 @@ model StockLocation {
   unit   Unit   @relation(fields: [unitId], references: [id])
 
   @@unique([tenantId, unitId, name])
+}
+
+// ---------- Super Admin (COMUNICA) — fora de qualquer tenant ----------
+
+model SuperAdmin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // ---------- Utilizadores e permissões ----------

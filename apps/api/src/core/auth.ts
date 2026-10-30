@@ -18,9 +18,12 @@ export type AuthContext = {
   /** 'all' = acesso a todas as unidades do tenant */
   unitIds: 'all' | string[];
   db: TenantDb;
+  /** id do SuperAdmin quando a sessão é uma impersonation */
+  impersonatorId?: string;
 };
 
-export type AccessTokenPayload = { sub: string; tid: string };
+export type AccessTokenPayload =
+  { typ: 'user'; sub: string; tid: string; imp?: string } | { typ: 'admin'; sub: string };
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -45,6 +48,7 @@ export async function authenticate(req: FastifyRequest) {
   } catch {
     throw new AppError('UNAUTHORIZED', 'Sessão inválida ou expirada');
   }
+  if (payload.typ !== 'user') throw new AppError('UNAUTHORIZED', 'Sessão inválida ou expirada');
   const user = await prisma.user.findFirst({
     where: { id: payload.sub, tenantId: payload.tid, active: true },
     include: { tenant: true, role: { include: { permissions: true } }, userUnits: true },
@@ -60,24 +64,23 @@ export async function authenticate(req: FastifyRequest) {
     features: effectiveFeatures(user.tenant.plan, user.tenant.featureOverrides as FeatureOverrides),
     unitIds: user.allUnits ? 'all' : user.userUnits.map((u) => u.unitId),
     db: tenantDb(user.tenantId),
+    impersonatorId: payload.imp,
   };
 }
 
-export const requirePermission =
-  (permission: Permission) => async (req: FastifyRequest) => {
-    if (!req.auth.permissions.has(permission)) {
-      throw new AppError('FORBIDDEN', 'Sem permissão para esta operação', { permission });
-    }
-  };
+export const requirePermission = (permission: Permission) => async (req: FastifyRequest) => {
+  if (!req.auth.permissions.has(permission)) {
+    throw new AppError('FORBIDDEN', 'Sem permissão para esta operação', { permission });
+  }
+};
 
-export const requireFeature =
-  (feature: Feature) => async (req: FastifyRequest) => {
-    if (!req.auth.features.has(feature)) {
-      throw new AppError('FEATURE_NOT_IN_PLAN', 'Funcionalidade não incluída no plano', {
-        feature,
-      });
-    }
-  };
+export const requireFeature = (feature: Feature) => async (req: FastifyRequest) => {
+  if (!req.auth.features.has(feature)) {
+    throw new AppError('FEATURE_NOT_IN_PLAN', 'Funcionalidade não incluída no plano', {
+      feature,
+    });
+  }
+};
 
 export function canAccessUnit(auth: AuthContext, unitId: string) {
   return auth.unitIds === 'all' || auth.unitIds.includes(unitId);

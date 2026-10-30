@@ -1,5 +1,6 @@
 import type { FastifyError, FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
+import { Prisma } from '@prisma/client';
 import { ErrorCode, type ApiError } from '@restgest/shared';
 
 const STATUS: Record<ErrorCode, number> = {
@@ -34,6 +35,12 @@ export function registerErrorHandler(app: FastifyInstance) {
     }
     if (err instanceof ZodError) {
       return reply.status(400).send(body('VALIDATION_ERROR', 'Dados inválidos', err.issues));
+    }
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === 'P2002')
+        return reply.status(409).send(body('CONFLICT', 'Registo duplicado', err.meta));
+      if (err.code === 'P2025')
+        return reply.status(404).send(body('NOT_FOUND', 'Recurso não encontrado'));
     }
     if (err.statusCode === 429) {
       return reply.status(429).send(body('RATE_LIMITED', err.message));

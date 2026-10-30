@@ -1,4 +1,4 @@
-import { Navigate, NavLink, Outlet } from 'react-router-dom';
+import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import type { Feature } from '@restgest/shared';
 import { useSession } from '../features/session';
 import { t, type TKey } from '../i18n';
@@ -15,7 +15,8 @@ export const NAV: { to: string; label: TKey; feature?: Feature }[] = [
 
 /** Área autenticada: redirecciona para login sem sessão. */
 export function Layout() {
-  const { session, loading, unitId, setUnitId, logout } = useSession();
+  const { session, loading, unitId, setUnitId, logout, endImpersonation } = useSession();
+  const navigate = useNavigate();
 
   if (loading) return <p className="p-6 text-slate-500">{t('common.loading')}</p>;
   if (!session) return <Navigate to="/login" replace />;
@@ -45,6 +46,20 @@ export function Layout() {
         </nav>
       </aside>
       <div className="flex flex-1 flex-col">
+        {session.impersonated && (
+          <div className="flex items-center justify-center gap-3 bg-amber-100 px-4 py-1.5 text-sm text-amber-900">
+            {t('impersonation.banner')} <strong>{session.tenant.name}</strong>
+            <button
+              className="underline"
+              onClick={() => {
+                navigate('/admin');
+                endImpersonation();
+              }}
+            >
+              {t('impersonation.end')}
+            </button>
+          </div>
+        )}
         <header className="flex h-14 items-center justify-end gap-3 border-b bg-white px-6">
           <label htmlFor="unit" className="text-sm text-slate-500">
             {t('units.label')}

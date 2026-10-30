@@ -13,6 +13,7 @@ function renderAt(path: string, plan: Plan | null) {
     tenant: { id: 't', name: 'Demo', plan },
     features: [...effectiveFeatures(plan)],
     units: [{ id: 'u1', name: 'Centro' }],
+    impersonated: false,
   };
   const value = {
     session,
@@ -21,6 +22,8 @@ function renderAt(path: string, plan: Plan | null) {
     setUnitId: () => {},
     login: async () => {},
     logout: async () => {},
+    startImpersonation: async () => {},
+    endImpersonation: () => {},
   };
   return render(
     <SessionContext.Provider value={value}>

@@ -3,7 +3,8 @@ import { Link, Navigate } from 'react-router-dom';
 import { useSession } from '../../features/session';
 import { t } from '../../i18n';
 import { ApiError } from '../../lib/api';
-import { AuthCard, buttonCls, Field } from './AuthCard';
+import { buttonCls, Field } from '../../components/ui';
+import { AuthCard } from './AuthCard';
 
 export function LoginPage() {
   const { session, login } = useSession();
@@ -43,7 +44,7 @@ export function LoginPage() {
         onChange={setPassword}
         autoComplete="current-password"
       />
-      <button className={buttonCls} disabled={busy}>
+      <button className={`${buttonCls} w-full`} disabled={busy}>
         {t('auth.login')}
       </button>
       <Link

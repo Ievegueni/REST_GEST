@@ -6,6 +6,10 @@ import { ForgotPasswordPage } from './modules/auth/ForgotPasswordPage';
 import { LoginPage } from './modules/auth/LoginPage';
 import { ResetPasswordPage } from './modules/auth/ResetPasswordPage';
 import { PlanPage } from './modules/settings/PlanPage';
+import { AdminLayout } from './modules/admin/AdminLayout';
+import { NewTenantPage } from './modules/admin/NewTenantPage';
+import { TenantDetailPage } from './modules/admin/TenantDetailPage';
+import { TenantsPage } from './modules/admin/TenantsPage';
 
 export function App() {
   return (
@@ -13,6 +17,11 @@ export function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<TenantsPage />} />
+        <Route path="tenants/novo" element={<NewTenantPage />} />
+        <Route path="tenants/:id" element={<TenantDetailPage />} />
+      </Route>
       <Route element={<Layout />}>
         <Route path="/definicoes/plano" element={<PlanPage />} />
         {NAV.filter((n) => n.to !== '/definicoes/plano').map((n) => {

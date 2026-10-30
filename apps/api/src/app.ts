@@ -8,6 +8,7 @@ import { env } from './core/env';
 import { registerErrorHandler } from './core/errors';
 import { prisma } from './core/prisma';
 import { authRoutes } from './modules/auth/routes';
+import { adminRoutes } from './modules/admin/routes';
 
 export async function buildApp() {
   const app = Fastify({
@@ -32,6 +33,7 @@ export async function buildApp() {
         return { data: { status: 'ok' } };
       });
       await api.register(authRoutes);
+      await api.register(adminRoutes, { prefix: '/admin' });
     },
     { prefix: '/api' },
   );

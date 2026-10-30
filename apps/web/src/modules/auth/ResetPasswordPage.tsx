@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { t } from '../../i18n';
 import { api, ApiError } from '../../lib/api';
-import { AuthCard, buttonCls, Field } from './AuthCard';
+import { buttonCls, Field } from '../../components/ui';
+import { AuthCard } from './AuthCard';
 
 export function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -44,7 +45,7 @@ export function ResetPasswordPage() {
             onChange={setConfirm}
             autoComplete="new-password"
           />
-          <button className={buttonCls}>{t('auth.resetSave')}</button>
+          <button className={`${buttonCls} w-full`}>{t('auth.resetSave')}</button>
         </>
       )}
       <Link to="/login" className="block text-center text-sm text-slate-500 hover:underline">

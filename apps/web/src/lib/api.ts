@@ -44,7 +44,13 @@ export async function api<T>(
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   };
   let res = await raw(path, init);
-  if (res.status === 401 && accessToken && !path.startsWith('/auth/') && (await refresh())) {
+  if (
+    res.status === 401 &&
+    accessToken &&
+    !path.startsWith('/auth/') &&
+    !path.startsWith('/admin') &&
+    (await refresh())
+  ) {
     res = await raw(path, init);
   }
   const json = await res.json().catch(() => ({}));

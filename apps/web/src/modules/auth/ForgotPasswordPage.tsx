@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { t } from '../../i18n';
 import { api, ApiError } from '../../lib/api';
-import { AuthCard, buttonCls, Field } from './AuthCard';
+import { buttonCls, Field } from '../../components/ui';
+import { AuthCard } from './AuthCard';
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -33,7 +34,7 @@ export function ForgotPasswordPage() {
             onChange={setEmail}
             autoComplete="email"
           />
-          <button className={buttonCls}>{t('auth.forgotSend')}</button>
+          <button className={`${buttonCls} w-full`}>{t('auth.forgotSend')}</button>
         </>
       )}
       <Link to="/login" className="block text-center text-sm text-slate-500 hover:underline">
