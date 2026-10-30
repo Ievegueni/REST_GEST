@@ -38,6 +38,12 @@ export async function deleteTenants(ids: string[]) {
   await prisma.auditLog.deleteMany({ where });
   await prisma.refreshToken.deleteMany({ where });
   await prisma.passwordReset.deleteMany({ where });
+  await prisma.$executeRaw`DELETE FROM "StockMovement" WHERE "tenantId" = ANY(${ids}) AND "reversalOfId" IS NOT NULL`;
+  await prisma.stockMovement.deleteMany({ where });
+  await prisma.stockLotBalance.deleteMany({ where });
+  await prisma.stockBalance.deleteMany({ where });
+  await prisma.stockCost.deleteMany({ where });
+  await prisma.lot.deleteMany({ where });
   await prisma.supplierProduct.deleteMany({ where });
   await prisma.productLocationLimit.deleteMany({ where });
   await prisma.productUnitConversion.deleteMany({ where });

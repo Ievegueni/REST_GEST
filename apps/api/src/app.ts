@@ -14,6 +14,8 @@ import { catalogRoutes } from './modules/catalog/routes';
 import { supplierRoutes } from './modules/suppliers/routes';
 import { unitRoutes } from './modules/units/routes';
 import { userRoutes } from './modules/users/routes';
+import { stockRoutes } from './modules/stock/routes';
+import { settingsRoutes } from './modules/settings-routes';
 
 export async function buildApp() {
   const app = Fastify({
@@ -44,6 +46,8 @@ export async function buildApp() {
       await api.register(userRoutes);
       await api.register(catalogRoutes);
       await api.register(supplierRoutes);
+      await api.register(stockRoutes);
+      await api.register(settingsRoutes);
     },
     { prefix: '/api' },
   );

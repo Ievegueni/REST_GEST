@@ -7,7 +7,7 @@ export const NAV: { to: string; label: TKey; feature?: Feature; placeholder?: bo
   { to: '/', label: 'nav.dashboard', placeholder: true },
   { to: '/catalogo/produtos', label: 'nav.catalog', feature: 'stock' },
   { to: '/fornecedores', label: 'nav.suppliers', feature: 'stock' },
-  { to: '/stock', label: 'nav.stock', feature: 'stock', placeholder: true },
+  { to: '/stock', label: 'nav.stock', feature: 'stock' },
   { to: '/compras', label: 'nav.purchases', feature: 'purchases', placeholder: true },
   { to: '/fichas', label: 'nav.recipes', feature: 'recipes', placeholder: true },
   { to: '/vendas', label: 'nav.salesImport', feature: 'sales_import', placeholder: true },

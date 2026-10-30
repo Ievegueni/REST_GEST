@@ -21,6 +21,11 @@ import { PlanPage } from './modules/settings/PlanPage';
 import { SettingsLayout } from './modules/settings/SettingsLayout';
 import { UnitsPage } from './modules/settings/UnitsPage';
 import { UsersPage } from './modules/settings/UsersPage';
+import { StockSettingsPage } from './modules/settings/StockSettingsPage';
+import { BalancesPage } from './modules/stock/BalancesPage';
+import { KardexPage } from './modules/stock/KardexPage';
+import { MovementPage } from './modules/stock/MovementPage';
+import { StockLayout } from './modules/stock/StockLayout';
 import { SupplierPage } from './modules/suppliers/SupplierPage';
 import { SuppliersPage } from './modules/suppliers/SuppliersPage';
 
@@ -48,6 +53,11 @@ export function App() {
           <Route path="unidades-medida" element={<MeasureUnitsPage />} />
           <Route path="importar" element={<ImportPage />} />
         </Route>
+        <Route path="/stock" element={gate('stock', <StockLayout />)}>
+          <Route index element={<BalancesPage />} />
+          <Route path="movimento" element={<MovementPage />} />
+          <Route path="produto/:id" element={<KardexPage />} />
+        </Route>
         <Route path="/fornecedores" element={gate('stock', <SuppliersPage />)} />
         <Route path="/fornecedores/:id" element={gate('stock', <SupplierPage />)} />
 
@@ -56,6 +66,7 @@ export function App() {
           <Route path="plano" element={<PlanPage />} />
           <Route path="unidades" element={<UnitsPage />} />
           <Route path="utilizadores" element={<UsersPage />} />
+          <Route path="stock" element={<StockSettingsPage />} />
         </Route>
 
         {NAV.filter((n) => n.placeholder).map((n) => {

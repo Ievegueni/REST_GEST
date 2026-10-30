@@ -19,6 +19,12 @@ enum Plan {
   COMPLETO
 }
 
+enum NegativeStockPolicy {
+  /// permite stock negativo (gera alerta)
+  ALLOW
+  BLOCK
+}
+
 enum TenantStatus {
   ACTIVE
   SUSPENDED
@@ -26,19 +32,20 @@ enum TenantStatus {
 
 /// Sem tenantId: é a própria raiz do tenant.
 model Tenant {
-  id               String       @id @default(cuid())
-  name             String
-  nif              String?
-  plan             Plan         @default(STOCK)
-  featureOverrides Json         @default("{}")
-  status           TenantStatus @default(ACTIVE)
+  id                  String              @id @default(cuid())
+  name                String
+  nif                 String?
+  plan                Plan                @default(STOCK)
+  featureOverrides    Json                @default("{}")
+  status              TenantStatus        @default(ACTIVE)
   /// Limites contratados (null = sem limite)
-  maxUnits         Int?
-  maxUsers         Int?
-  smsMonthlyLimit  Int?
-  aiMonthlyLimit   Int?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  maxUnits            Int?
+  maxUsers            Int?
+  smsMonthlyLimit     Int?
+  aiMonthlyLimit      Int?
+  negativeStockPolicy NegativeStockPolicy @default(ALLOW)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
 
   units                  Unit[]
   locations              StockLocation[]
@@ -55,6 +62,11 @@ model Tenant {
   productLocationLimits  ProductLocationLimit[]
   suppliers              Supplier[]
   supplierProducts       SupplierProduct[]
+  lots                   Lot[]
+  stockMovements         StockMovement[]
+  stockBalances          StockBalance[]
+  stockLotBalances       StockLotBalance[]
+  stockCosts             StockCost[]
 }
 
 model Unit {
@@ -69,6 +81,7 @@ model Unit {
   tenant    Tenant          @relation(fields: [tenantId], references: [id])
   locations StockLocation[]
   userUnits UserUnit[]
+  costs     StockCost[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -92,9 +105,12 @@ model StockLocation {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  limits ProductLocationLimit[]
-  tenant Tenant                 @relation(fields: [tenantId], references: [id])
-  unit   Unit                   @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  limits           ProductLocationLimit[]
+  tenant           Tenant                 @relation(fields: [tenantId], references: [id])
+  unit             Unit                   @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  stockMovements   StockMovement[]
+  stockBalances    StockBalance[]
+  stockLotBalances StockLotBalance[]
 
   @@unique([tenantId, unitId, name])
   @@unique([tenantId, id])
@@ -180,6 +196,11 @@ model Product {
   conversions      ProductUnitConversion[]
   locationLimits   ProductLocationLimit[]
   supplierProducts SupplierProduct[]
+  lots             Lot[]
+  movements        StockMovement[]
+  balances         StockBalance[]
+  lotBalances      StockLotBalance[]
+  costs            StockCost[]
 
   @@unique([tenantId, code])
   @@unique([tenantId, id])
@@ -257,6 +278,129 @@ model SupplierProduct {
   @@index([tenantId, productId])
 }
 
+// ---------- Stock ----------
+
+enum MovementType {
+  PURCHASE_IN
+  SALE_OUT
+  CONSUMPTION
+  WASTE
+  TRANSFER_OUT
+  TRANSFER_IN
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  INVENTORY_ADJUST
+  RETURN_SUPPLIER
+}
+
+model Lot {
+  id         String    @id @default(cuid())
+  tenantId   String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  productId  String
+  code       String
+  expiryDate DateTime? @db.Date
+  createdAt  DateTime  @default(now())
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id])
+  product   Product           @relation(fields: [tenantId, productId], references: [tenantId, id])
+  movements StockMovement[]
+  balances  StockLotBalance[]
+
+  @@unique([tenantId, productId, code])
+  @@unique([tenantId, id])
+}
+
+/// Livro de movimentos IMUTÁVEL. Quantidade com sinal na unidade de stock (+ entra, − sai).
+/// Correcções = novo movimento com reversalOfId (estorno), nunca UPDATE/DELETE.
+model StockMovement {
+  id           String       @id @default(cuid())
+  tenantId     String       @default(dbgenerated("current_setting('app.tenant_id')"))
+  productId    String
+  locationId   String
+  lotId        String?
+  type         MovementType
+  qty          Decimal      @db.Decimal(14, 3)
+  /// custo por unidade de stock (taxa, com casas decimais)
+  unitCost     Decimal      @db.Decimal(18, 4)
+  /// qty × unitCost em AOA (inteiro, com sinal)
+  totalCost    Int
+  /// saldo do local após este movimento (ordem de registo)
+  balanceAfter Decimal      @db.Decimal(14, 3)
+  reason       String?
+  /// documento de origem (ex.: GoodsReceipt, Transfer, SalesImport, InventoryCount)
+  refType      String?
+  refId        String?
+  reversalOfId String?
+  userId       String?
+  occurredAt   DateTime
+  createdAt    DateTime     @default(now())
+
+  tenant     Tenant         @relation(fields: [tenantId], references: [id])
+  product    Product        @relation(fields: [tenantId, productId], references: [tenantId, id])
+  location   StockLocation  @relation(fields: [tenantId, locationId], references: [tenantId, id])
+  lot        Lot?           @relation(fields: [tenantId, lotId], references: [tenantId, id], onDelete: Restrict)
+  user       User?          @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Restrict)
+  reversalOf StockMovement? @relation("Reversal", fields: [tenantId, reversalOfId], references: [tenantId, id], onDelete: Restrict)
+  reversedBy StockMovement? @relation("Reversal")
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, reversalOfId])
+  @@index([tenantId, productId, locationId, occurredAt])
+  @@index([tenantId, productId, locationId, createdAt])
+  @@index([tenantId, refType, refId])
+}
+
+/// Saldo por local (derivado do livro, mantido na mesma transacção).
+model StockBalance {
+  tenantId   String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  productId  String
+  locationId String
+  qty        Decimal  @default(0) @db.Decimal(14, 3)
+  updatedAt  DateTime @updatedAt
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id])
+  product  Product       @relation(fields: [tenantId, productId], references: [tenantId, id])
+  location StockLocation @relation(fields: [tenantId, locationId], references: [tenantId, id])
+
+  @@id([productId, locationId])
+  @@index([tenantId, locationId])
+}
+
+model StockLotBalance {
+  tenantId   String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  productId  String
+  locationId String
+  lotId      String
+  qty        Decimal  @default(0) @db.Decimal(14, 3)
+  updatedAt  DateTime @updatedAt
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id])
+  product  Product       @relation(fields: [tenantId, productId], references: [tenantId, id])
+  location StockLocation @relation(fields: [tenantId, locationId], references: [tenantId, id])
+  lot      Lot           @relation(fields: [tenantId, lotId], references: [tenantId, id])
+
+  @@id([lotId, locationId])
+  @@index([tenantId, productId, locationId])
+}
+
+/// Custo médio ponderado por produto e unidade (estabelecimento). A linha é o lock dos movimentos.
+model StockCost {
+  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  productId String
+  unitId    String
+  /// quantidade total na unidade (soma dos locais)
+  qty       Decimal  @default(0) @db.Decimal(14, 3)
+  avgCost   Decimal  @default(0) @db.Decimal(18, 4)
+  updatedAt DateTime @updatedAt
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  product Product @relation(fields: [tenantId, productId], references: [tenantId, id])
+  unit    Unit    @relation(fields: [tenantId, unitId], references: [tenantId, id])
+
+  @@id([productId, unitId])
+  @@index([tenantId])
+}
+
 // ---------- Utilizadores e permissões ----------
 
 model User {
@@ -279,6 +423,7 @@ model User {
   userUnits      UserUnit[]
   refreshTokens  RefreshToken[]
   passwordResets PasswordReset[]
+  movements      StockMovement[]
 
   @@unique([tenantId, id])
 }

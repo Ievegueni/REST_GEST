@@ -66,7 +66,11 @@ export async function catalogRoutes(app: FastifyInstance) {
       },
       orderBy: { name: 'asc' },
       take: 1000,
-      include: { category: { select: { name: true } }, stockUnit: { select: { symbol: true } } },
+      include: {
+        category: { select: { name: true } },
+        stockUnit: { select: { symbol: true } },
+        conversions: { select: { unitId: true, factor: true, unit: { select: { symbol: true } } } },
+      },
     });
     return { data };
   });

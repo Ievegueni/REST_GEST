@@ -69,7 +69,14 @@ export async function saveProduct(
       [],
   });
 
-  // ponytail: a unidade de stock só deve mudar antes de haver movimentos — validar no Sprint 4.
+  if (current && data.stockUnitId && data.stockUnitId !== current.stockUnitId) {
+    if (await db.stockMovement.count({ where: { productId: current.id } })) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'A unidade de stock não pode mudar depois de haver movimentos',
+      );
+    }
+  }
   const productId = await db.$transaction(async (tx) => {
     const p = id
       ? await tx.product.update({ where: { id }, data })

@@ -36,6 +36,8 @@ export type ProductRow = {
   tracksLots: boolean;
   category: { name: string };
   stockUnit: { symbol: string };
+  stockUnitId?: string;
+  conversions?: { unitId: string; factor: string; unit: { symbol: string } }[];
 };
 export type Product = {
   id: string;
@@ -95,3 +97,48 @@ export function categoryTree(cats: Category[]) {
   walk(null, 0, '');
   return out;
 }
+
+export type MovementType =
+  | 'PURCHASE_IN'
+  | 'SALE_OUT'
+  | 'CONSUMPTION'
+  | 'WASTE'
+  | 'TRANSFER_OUT'
+  | 'TRANSFER_IN'
+  | 'ADJUSTMENT_IN'
+  | 'ADJUSTMENT_OUT'
+  | 'INVENTORY_ADJUST'
+  | 'RETURN_SUPPLIER';
+
+export type BalanceRow = {
+  product: {
+    id: string;
+    code: string;
+    name: string;
+    category: { name: string };
+    stockUnit: { symbol: string };
+  };
+  location: { id: string; name: string; unitId: string; unit: { name: string } };
+  qty: string;
+  avgCost: string;
+  value: number;
+  minQty: string | null;
+  maxQty: string | null;
+  belowMin: boolean;
+};
+
+export type Movement = {
+  id: string;
+  type: MovementType;
+  qty: string;
+  unitCost: string;
+  totalCost: number;
+  balanceAfter: string;
+  reason: string | null;
+  refType: string | null;
+  reversalOfId: string | null;
+  occurredAt: string;
+  lot: { code: string; expiryDate: string | null } | null;
+  user: { name: string } | null;
+  reversedBy: { id: string } | null;
+};

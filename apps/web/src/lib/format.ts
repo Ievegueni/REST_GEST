@@ -6,3 +6,7 @@ export const formatMoney = (v: number | null | undefined) =>
   v == null ? '—' : `${nf.format(v)} Kz`;
 export const formatQty = (v: string | number | null | undefined) =>
   v == null || v === '' ? '—' : qf.format(Number(v));
+const cf = new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 });
+/** custo unitário (taxa com decimais) */
+export const formatCost = (v: string | number | null | undefined) =>
+  v == null ? '—' : `${cf.format(Number(v))} Kz`;

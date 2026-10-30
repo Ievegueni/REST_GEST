@@ -49,14 +49,15 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [ ] Perfis personalizados (o tenant criar/editar perfis) — por fazer
 
 ### Sprint 4 — Núcleo de stock
-- [ ] `StockMovement` (imutável) + `StockBalance`
-- [ ] Serviço de movimentos com transacção e lock
-- [ ] Custo médio ponderado
-- [ ] Entradas, consumos, quebras (com motivo), ajustes, estornos
-- [ ] Lotes/validades e saída FEFO
-- [ ] Regra de stock negativo configurável
-- [ ] Ecrã de stock actual e kardex por produto
-- [ ] Testes de custeio e concorrência
+- [x] `StockMovement` (imutável) + `StockBalance`
+- [x] Serviço de movimentos com transacção e lock
+- [x] Custo médio ponderado
+- [x] Entradas, consumos, quebras (com motivo), ajustes, estornos
+- [ ] Motivos de quebra como lista configurável (hoje texto livre) — antes dos relatórios do Sprint 8
+- [x] Lotes/validades e saída FEFO
+- [x] Regra de stock negativo configurável
+- [x] Ecrã de stock actual e kardex por produto
+- [x] Testes de custeio e concorrência
 
 ### Sprint 5 — Compras, transferências e inventário
 - [ ] Encomendas a fornecedor
