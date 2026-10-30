@@ -5,6 +5,7 @@ const schema = z.object({
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
+  JWT_SECRET: z.string().min(32),
   APP_URL: z.string().default('http://localhost:5173'),
 });
 

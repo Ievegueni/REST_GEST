@@ -22,13 +22,13 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Seed de tenant de demonstração genérico
 
 ### Sprint 1 — Auth, perfis e feature flags
-- [ ] Login, JWT + refresh token, logout, recuperação de senha
-- [ ] Perfis base e permissões `modulo.accao`; `requirePermission`
-- [ ] Acesso de utilizadores por unidade
-- [ ] Mapa de features por plano (`packages/shared/features.ts`)
-- [ ] `requireFeature` (API), `<FeatureGate>` e `useFeature` (web)
-- [ ] Página Definições → Plano (só leitura no tenant)
-- [ ] Testes de isolamento de tenant e de bloqueio por feature
+- [x] Login, JWT + refresh token, logout, recuperação de senha (entrega do link por SMS no Sprint 7; em dev vai para o log)
+- [x] Perfis base e permissões `modulo.accao`; `requirePermission`
+- [x] Acesso de utilizadores por unidade
+- [x] Mapa de features por plano (`packages/shared/features.ts`)
+- [x] `requireFeature` (API), `<FeatureGate>` e `useFeature` (web)
+- [x] Página Definições → Plano (só leitura no tenant)
+- [x] Testes de isolamento de tenant e de bloqueio por feature
 
 ### Sprint 2 — Super Admin
 - [ ] Área `/admin` separada

@@ -35,12 +35,14 @@ model Tenant {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
-  units     Unit[]
-  locations StockLocation[]
-  users     User[]
-  roles     Role[]
-  userUnits UserUnit[]
-  auditLogs AuditLog[]
+  units          Unit[]
+  locations      StockLocation[]
+  users          User[]
+  roles          Role[]
+  userUnits      UserUnit[]
+  auditLogs      AuditLog[]
+  refreshTokens  RefreshToken[]
+  passwordResets PasswordReset[]
 }
 
 model Unit {
@@ -69,7 +71,7 @@ enum LocationType {
 
 model StockLocation {
   id        String       @id @default(cuid())
-  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  tenantId  String       @default(dbgenerated("current_setting('app.tenant_id')"))
   unitId    String
   name      String
   type      LocationType @default(OTHER)
@@ -100,21 +102,23 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  tenant    Tenant     @relation(fields: [tenantId], references: [id])
-  role      Role       @relation(fields: [roleId], references: [id])
-  userUnits UserUnit[]
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  role           Role            @relation(fields: [roleId], references: [id])
+  userUnits      UserUnit[]
+  refreshTokens  RefreshToken[]
+  passwordResets PasswordReset[]
 
   @@index([tenantId])
 }
 
 model Role {
-  id          String       @id @default(cuid())
-  tenantId    String       @default(dbgenerated("current_setting('app.tenant_id')"))
-  name        String
+  id        String   @id @default(cuid())
+  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  name      String
   /// perfil base criado pela plataforma (não pode ser apagado)
-  isSystem    Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  isSystem  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   tenant      Tenant       @relation(fields: [tenantId], references: [id])
   users       User[]
@@ -142,6 +146,37 @@ model UserUnit {
 
   @@id([userId, unitId])
   @@index([tenantId])
+}
+
+/// Token opaco; só o hash SHA-256 é guardado. Rodado em cada refresh.
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tenantId  String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  tenantId  String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
 }
 
 // ---------- Auditoria ----------

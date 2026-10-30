@@ -6,7 +6,7 @@ afterAll(() => app.close());
 
 describe('app', () => {
   it('GET /health', async () => {
-    const res = await app.inject('/health');
+    const res = await app.inject('/api/health');
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ data: { status: 'ok' } });
   });

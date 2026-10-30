@@ -2,9 +2,12 @@ import Fastify from 'fastify';
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
+import cookie from '@fastify/cookie';
+import jwt from '@fastify/jwt';
 import { env } from './core/env';
 import { registerErrorHandler } from './core/errors';
 import { prisma } from './core/prisma';
+import { authRoutes } from './modules/auth/routes';
 
 export async function buildApp() {
   const app = Fastify({
@@ -18,12 +21,20 @@ export async function buildApp() {
   await app.register(helmet);
   await app.register(cors, { origin: env.APP_URL, credentials: true });
   await app.register(rateLimit, { max: 300, timeWindow: '1 minute' });
+  await app.register(cookie);
+  await app.register(jwt, { secret: env.JWT_SECRET });
   registerErrorHandler(app);
 
-  app.get('/health', async () => {
-    await prisma.$queryRaw`SELECT 1`;
-    return { data: { status: 'ok' } };
-  });
+  await app.register(
+    async (api) => {
+      api.get('/health', async () => {
+        await prisma.$queryRaw`SELECT 1`;
+        return { data: { status: 'ok' } };
+      });
+      await api.register(authRoutes);
+    },
+    { prefix: '/api' },
+  );
 
   return app;
 }
