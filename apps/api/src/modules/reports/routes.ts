@@ -12,13 +12,21 @@ import { createOrders, suggest } from './replenishment';
 export async function reportRoutes(app: FastifyInstance) {
   const reports = protect({ feature: 'reports_stock', permission: 'reports.view' });
 
-  app.get('/reports', reports, async () => ({
-    data: Object.entries(REPORTS).map(([name, r]) => ({ name, title: r.title, period: r.period })),
+  /** Relatórios disponíveis no plano do tenant. */
+  const allowed = (req: { auth: { features: Set<string> } }, r: (typeof REPORTS)[ReportName]) =>
+    !('feature' in r) || req.auth.features.has(r.feature);
+
+  app.get('/reports', reports, async (req) => ({
+    data: Object.entries(REPORTS)
+      .filter(([, r]) => allowed(req, r))
+      .map(([name, r]) => ({ name, title: r.title, period: r.period })),
   }));
 
   app.get<{ Params: { name: string } }>('/reports/:name', reports, async (req, reply) => {
     const def = REPORTS[req.params.name as ReportName];
     if (!def) throw new AppError('NOT_FOUND', 'Relatório desconhecido');
+    if (!allowed(req, def))
+      throw new AppError('FEATURE_NOT_IN_PLAN', 'Funcionalidade não incluída no plano');
     const { format = 'json', ...rest } = req.query as Record<string, string>;
     const f = filtersSchema.parse(rest);
     const report = await def.run(req.auth, f);

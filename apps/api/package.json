@@ -12,7 +12,8 @@
     "db:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
     "db:seed": "tsx --env-file=../../.env prisma/seed.ts",
     "postinstall": "prisma generate",
-    "admin:create": "tsx --env-file=../../.env prisma/create-super-admin.ts"
+    "admin:create": "tsx --env-file=../../.env prisma/create-super-admin.ts",
+    "db:new": "sh scripts/new-migration.sh"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.5",

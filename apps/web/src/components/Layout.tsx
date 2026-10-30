@@ -16,6 +16,7 @@ export const NAV: { to: string; label: TKey; feature?: Feature }[] = [
   { to: '/salarios', label: 'nav.payroll', feature: 'payroll' },
   { to: '/custos', label: 'nav.costs', feature: 'daily_costs' },
   { to: '/caixa', label: 'nav.cash', feature: 'cash_closing' },
+  { to: '/contas-a-pagar', label: 'nav.payables', feature: 'payables' },
   { to: '/alertas', label: 'nav.alerts', feature: 'alerts_sms' },
   { to: '/relatorios', label: 'nav.reports', feature: 'reports_stock' },
   { to: '/definicoes/plano', label: 'nav.settings' },

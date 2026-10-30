@@ -117,6 +117,8 @@ model Tenant {
   cashSessions           CashSession[]
   cashAmounts            CashSessionAmount[]
   cashMovements          CashMovement[]
+  payables               Payable[]
+  payablePayments        PayablePayment[]
 }
 
 model Unit {
@@ -140,6 +142,7 @@ model Unit {
   dailyCosts      DailyCost[]
   recurringCosts  RecurringCost[]
   cashSessions    CashSession[]
+  payables        Payable[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -331,6 +334,7 @@ model Supplier {
   preferredProducts Product[]         @relation("PreferredSupplier")
   orders            PurchaseOrder[]
   receipts          GoodsReceipt[]
+  payables          Payable[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -575,6 +579,7 @@ model GoodsReceipt {
   location StockLocation      @relation(fields: [tenantId, locationId], references: [tenantId, id])
   order    PurchaseOrder?     @relation(fields: [tenantId, orderId], references: [tenantId, id], onDelete: Restrict)
   lines    GoodsReceiptLine[]
+  payable  Payable?
 
   @@unique([tenantId, number])
   @@unique([tenantId, id])
@@ -897,6 +902,8 @@ enum AlertType {
   POS_UNMAPPED
   SALES_IMPORT_MISSING
   CASH_DIFFERENCE
+  PAYABLE_DUE
+  PAYABLE_OVERDUE
 }
 
 enum AlertStatus {
@@ -1335,9 +1342,10 @@ model PaymentMethod {
   isCash   Boolean @default(false)
   active   Boolean @default(true)
 
-  tenant  Tenant              @relation(fields: [tenantId], references: [id])
-  costs   DailyCost[]
-  amounts CashSessionAmount[]
+  tenant          Tenant              @relation(fields: [tenantId], references: [id])
+  costs           DailyCost[]
+  amounts         CashSessionAmount[]
+  payablePayments PayablePayment[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -1473,6 +1481,66 @@ model CashMovement {
   session CashSession @relation(fields: [tenantId, sessionId], references: [tenantId, id], onDelete: Cascade)
 
   @@index([tenantId, sessionId])
+}
+
+// ---------- Contas a pagar ----------
+
+enum PayableStatus {
+  OPEN
+  PARTIAL
+  PAID
+  CANCELLED
+}
+
+model Payable {
+  id             String        @id @default(cuid())
+  tenantId       String        @default(dbgenerated("current_setting('app.tenant_id')"))
+  supplierId     String
+  unitId         String
+  /// recepção de origem (geração automática)
+  receiptId      String?
+  documentNumber String?
+  description    String?
+  issueDate      DateTime      @db.Date
+  dueDate        DateTime      @db.Date
+  amount         Int
+  paidAmount     Int           @default(0)
+  status         PayableStatus @default(OPEN)
+  createdById    String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id])
+  supplier Supplier         @relation(fields: [tenantId, supplierId], references: [tenantId, id])
+  unit     Unit             @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  receipt  GoodsReceipt?    @relation(fields: [tenantId, receiptId], references: [tenantId, id], onDelete: Restrict)
+  payments PayablePayment[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, receiptId])
+  @@index([tenantId, status, dueDate])
+  @@index([tenantId, supplierId])
+}
+
+model PayablePayment {
+  id              String   @id @default(cuid())
+  tenantId        String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  payableId       String
+  date            DateTime @db.Date
+  amount          Int
+  paymentMethodId String?
+  reference       String?
+  attachmentUrl   String?
+  attachmentName  String?
+  createdById     String
+  createdAt       DateTime @default(now())
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  payable       Payable        @relation(fields: [tenantId, payableId], references: [tenantId, id], onDelete: Cascade)
+  paymentMethod PaymentMethod? @relation(fields: [tenantId, paymentMethodId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, payableId])
+  @@index([tenantId, date])
 }
 
 // ---------- Utilizadores e permissões ----------

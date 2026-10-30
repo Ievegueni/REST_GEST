@@ -7,6 +7,7 @@ import { ALERT_DEFAULTS, DEFAULT_ALERT_ROLES } from '@restgest/shared';
 import { env } from '../../core/env';
 import { tenantDb, type TenantDb } from '../../core/prisma';
 import { normalizePhone } from '../../integrations/futurix-sms';
+import { tenantFeatures } from '../../core/auth';
 
 type Db = TenantDb;
 const D = Prisma.Decimal;
@@ -385,6 +386,43 @@ export async function evaluateMissingImports(db: Db, tenantId: string, now = new
   }
 }
 
+/** Contas a pagar a vencer (limiar em dias) e vencidas. */
+export async function evaluatePayables(db: Db, tenantId: string, now = new Date()) {
+  const rules = await getRules(db);
+  const days = rules.get('PAYABLE_DUE')!.threshold ?? 0;
+  const today = new Date(now.toISOString().slice(0, 10));
+  const open = await db.payable.findMany({
+    where: {
+      status: { in: ['OPEN', 'PARTIAL'] },
+      dueDate: { lte: new Date(today.getTime() + days * 86_400_000) },
+    },
+    include: { supplier: { select: { name: true } } },
+  });
+  const active = { due: new Set<string>(), overdue: new Set<string>() };
+  const fmt = (d: Date) => d.toISOString().slice(0, 10).split('-').reverse().join('/');
+  const kz = (v: number) => `${new Intl.NumberFormat('pt-AO').format(v)} Kz`;
+  for (const p of open) {
+    const overdue = p.dueDate < today;
+    const type = overdue ? 'PAYABLE_OVERDUE' : 'PAYABLE_DUE';
+    const key = `${type}|${p.id}`;
+    (overdue ? active.overdue : active.due).add(key);
+    const doc = p.documentNumber ? ` (${p.documentNumber})` : '';
+    await raise(
+      db,
+      tenantId,
+      {
+        type,
+        key,
+        unitId: p.unitId,
+        message: `${overdue ? 'Conta a pagar vencida' : 'Conta a pagar a vencer'}: ${p.supplier.name}${doc}, ${kz(p.amount - p.paidAmount)} em ${fmt(p.dueDate)}`,
+      },
+      rules,
+    );
+  }
+  await syncType(db, 'PAYABLE_DUE', active.due);
+  await syncType(db, 'PAYABLE_OVERDUE', active.overdue);
+}
+
 /** Varrimento completo de um tenant (job periódico). */
 export async function sweepTenant(tenantId: string) {
   const db = tenantDb(tenantId);
@@ -395,4 +433,5 @@ export async function sweepTenant(tenantId: string) {
   await evaluateExpiry(db, tenantId);
   await evaluatePosUnmapped(db, tenantId);
   await evaluateMissingImports(db, tenantId);
+  if ((await tenantFeatures(tenantId)).has('payables')) await evaluatePayables(db, tenantId);
 }

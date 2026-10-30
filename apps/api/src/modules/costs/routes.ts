@@ -20,11 +20,9 @@ export async function costRoutes(app: FastifyInstance) {
     data: await req.auth.db.costCategory.findMany({ orderBy: { name: 'asc' } }),
   }));
   app.post('/cost-categories', manage, async (req, reply) =>
-    reply
-      .status(201)
-      .send({
-        data: await req.auth.db.costCategory.create({ data: categorySchema.parse(req.body) }),
-      }),
+    reply.status(201).send({
+      data: await req.auth.db.costCategory.create({ data: categorySchema.parse(req.body) }),
+    }),
   );
   app.patch('/cost-categories/:id', manage, async (req) => ({
     data: await req.auth.db.costCategory.update({
@@ -38,11 +36,9 @@ export async function costRoutes(app: FastifyInstance) {
   }));
   const settings = protect({ permission: 'settings.manage' });
   app.post('/payment-methods', settings, async (req, reply) =>
-    reply
-      .status(201)
-      .send({
-        data: await req.auth.db.paymentMethod.create({ data: paymentMethodSchema.parse(req.body) }),
-      }),
+    reply.status(201).send({
+      data: await req.auth.db.paymentMethod.create({ data: paymentMethodSchema.parse(req.body) }),
+    }),
   );
   app.patch('/payment-methods/:id', settings, async (req) => ({
     data: await req.auth.db.paymentMethod.update({
@@ -76,13 +72,11 @@ export async function costRoutes(app: FastifyInstance) {
   app.post('/daily-costs', manage, async (req, reply) => {
     const data = dailyCostSchema.parse(req.body);
     assertUnitAccess(req.auth, data.unitId);
-    return reply
-      .status(201)
-      .send({
-        data: await req.auth.db.dailyCost.create({
-          data: { ...data, createdById: req.auth.userId },
-        }),
-      });
+    return reply.status(201).send({
+      data: await req.auth.db.dailyCost.create({
+        data: { ...data, createdById: req.auth.userId },
+      }),
+    });
   });
   app.put('/daily-costs/:id', manage, async (req) => {
     const { id } = idParam.parse(req.params);

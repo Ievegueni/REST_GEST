@@ -130,10 +130,10 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Diferenças com justificação e alerta; validação pelo gerente
 
 ### Sprint 13 — Contas a pagar
-- [ ] Geração automática a partir das recepções
-- [ ] Lançamento manual, pagamentos parciais, comprovativos
-- [ ] Alertas de vencimento
-- [ ] Antiguidade de saldos e previsão de pagamentos
+- [x] Geração automática a partir das recepções
+- [x] Lançamento manual, pagamentos parciais, comprovativos
+- [x] Alertas de vencimento
+- [x] Antiguidade de saldos e previsão de pagamentos
 
 ### Sprint 14 — Resultados financeiros
 - [ ] Resultado diário/mensal por unidade e consolidado

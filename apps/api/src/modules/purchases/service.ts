@@ -6,6 +6,7 @@ import { AppError } from '../../core/errors';
 import { nextNumber } from '../../core/sequence';
 import { postMovements, reverseMovements, type Tx } from '../stock/engine';
 import type { orderSchema, receiptSchema } from './schemas';
+import { cancelForReceipt, createFromReceipt } from '../payables/service';
 
 const D = Prisma.Decimal;
 
@@ -182,6 +183,8 @@ export async function createReceipt(auth: AuthContext, input: z.infer<typeof rec
       await refreshOrderStatus(tx, input.orderId);
     }
     await updateSupplierPrices(tx, input.supplierId, lines, receivedAt);
+    if (auth.features.has('payables'))
+      await createFromReceipt(tx, { ...r, unitId: location.unitId });
     return r.id;
   });
   return getReceipt(auth, id);
@@ -241,6 +244,7 @@ export async function cancelReceipt(auth: AuthContext, id: string, ip?: string) 
       });
     }
     if (r.orderId) await refreshOrderStatus(tx, r.orderId);
+    await cancelForReceipt(tx, id);
     await tx.goodsReceipt.update({
       where: { id },
       data: { status: 'CANCELLED', cancelledAt: new Date(), cancelledById: auth.userId },

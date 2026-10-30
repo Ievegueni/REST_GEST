@@ -119,3 +119,13 @@ Preparação: Definições → Caixa: criar meios de pagamento (Numerário marca
 - [ ] Utilizador com perfil Caixa não consegue validar; Gerente valida → sessão validada sem botões de edição; reabrir deixa de ser possível.
 - [ ] Gerente reabre uma sessão fechada (não validada) → volta a editável.
 - [ ] Importação dos pagamentos do POS: **pendente** (ficheiro Winrest).
+
+## 13. Contas a pagar (plano COMPLETO)
+- [ ] Fornecedor com prazo de 30 dias; registar uma recepção com data de factura → em Contas a pagar aparece a conta com vencimento = data da factura + 30 dias.
+- [ ] No plano STOCK, recepções não geram contas a pagar.
+- [ ] Pagamento parcial com comprovativo → estado "Parcial"; pagamento acima do saldo → recusado; pagamento do resto → "Paga".
+- [ ] Anular a recepção de uma conta com pagamentos → recusado; apagar os pagamentos e anular → conta "Cancelada".
+- [ ] Conta manual sem vencimento → usa o prazo do fornecedor; cancelar conta manual.
+- [ ] Lista: filtro "Só em aberto", por fornecedor; vencidas a vermelho; total em dívida.
+- [ ] Alertas: conta a vencer dentro do limiar e conta vencida aparecem no sino (varrimento a cada 30 min, ou "Verificar agora" em Alertas); pagar → alerta resolve.
+- [ ] Relatórios "Contas a pagar: antiguidade" (colunas não vencido / 0–30 / 31–60 / 61–90 / +90) e "Previsão de pagamentos" por semana; exportar Excel/PDF.

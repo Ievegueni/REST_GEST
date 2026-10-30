@@ -59,6 +59,8 @@ import { CashSettingsPage } from './modules/settings/CashSettingsPage';
 import { CostCategoriesPage, DailyCostsPage, RecurringCostsPage } from './modules/costs/CostsPage';
 import { CashSessionsPage } from './modules/cash/CashSessionsPage';
 import { CashSessionPage } from './modules/cash/CashSessionPage';
+import { PayablesPage } from './modules/payables/PayablesPage';
+import { PayablePage } from './modules/payables/PayablePage';
 import { OrdersPage } from './modules/purchases/OrdersPage';
 import { OrderPage } from './modules/purchases/OrderPage';
 import { ReceiptsPage } from './modules/purchases/ReceiptsPage';
@@ -138,6 +140,8 @@ export function App() {
         <Route path="/custos/categorias" element={gate('daily_costs', <CostCategoriesPage />)} />
         <Route path="/caixa" element={gate('cash_closing', <CashSessionsPage />)} />
         <Route path="/caixa/:id" element={gate('cash_closing', <CashSessionPage />)} />
+        <Route path="/contas-a-pagar" element={gate('payables', <PayablesPage />)} />
+        <Route path="/contas-a-pagar/:id" element={gate('payables', <PayablePage />)} />
         <Route path="/salarios" element={gate('payroll', <PayrollPage />)} />
         <Route path="/salarios/:id" element={gate('payroll', <RunPage />)} />
         <Route path="/alertas" element={gate('alerts_sms', <AlertsPage />)} />

@@ -3,6 +3,7 @@
  * pelo Excel e pelo PDF. Valores ao custo médio (AOA); quantidades na unidade de stock.
  */
 import { Prisma, type MovementType } from '@prisma/client';
+import type { Feature } from '@restgest/shared';
 import type { AuthContext } from '../../core/auth';
 import { averageCosts, loadRecipeBook, theoreticalCost } from '../recipes/book';
 import {
@@ -643,6 +644,105 @@ async function abc(auth: AuthContext, f: Filters): Promise<Report> {
   };
 }
 
+// ---------- 11–12. Contas a pagar ----------
+const AGING = [
+  ['notDue', 'Não vencido'],
+  ['d30', '0–30 dias'],
+  ['d60', '31–60 dias'],
+  ['d90', '61–90 dias'],
+  ['d90plus', '+90 dias'],
+] as const;
+
+async function openPayables(auth: AuthContext, f: Filters) {
+  const units = scopeUnits(auth, f);
+  return auth.db.payable.findMany({
+    where: { status: { in: ['OPEN', 'PARTIAL'] }, ...(units && { unitId: { in: units } }) },
+    include: { supplier: { select: { name: true } } },
+  });
+}
+
+/** Dívida por fornecedor e antiguidade (dias desde o vencimento) à data de hoje. */
+async function payablesAging(auth: AuthContext, f: Filters): Promise<Report> {
+  const today = new Date(period({ ...f, from: undefined }).to);
+  const acc = new Map<string, Row>();
+  for (const p of await openPayables(auth, f)) {
+    const late = Math.floor((today.getTime() - p.dueDate.getTime()) / 86_400_000);
+    const bucket =
+      late <= 0
+        ? 'notDue'
+        : late <= 30
+          ? 'd30'
+          : late <= 60
+            ? 'd60'
+            : late <= 90
+              ? 'd90'
+              : 'd90plus';
+    const r = acc.get(p.supplierId) ?? {
+      supplier: p.supplier.name,
+      notDue: 0,
+      d30: 0,
+      d60: 0,
+      d90: 0,
+      d90plus: 0,
+      total: 0,
+    };
+    const due = p.amount - p.paidAmount;
+    r[bucket] = Number(r[bucket]) + due;
+    r.total = Number(r.total) + due;
+    acc.set(p.supplierId, r);
+  }
+  const rows = [...acc.values()].sort((a, b) => Number(b.total) - Number(a.total));
+  const keys = [...AGING.map(([k]) => k), 'total'];
+  return {
+    title: 'Contas a pagar — dívida por fornecedor e antiguidade',
+    columns: [
+      col('supplier', 'Fornecedor'),
+      ...AGING.map(([k, l]) => col(k, l, 'money')),
+      col('total', 'Total', 'money'),
+    ],
+    rows,
+    totals: Object.fromEntries([['supplier', 'Total'], ...keys.map((k) => [k, sum(rows, k)])]),
+    notes: 'Antiguidade contada a partir da data de vencimento.',
+  };
+}
+
+/** Previsão de pagamentos por semana de vencimento (vencidas na primeira linha). */
+async function payablesForecast(auth: AuthContext, f: Filters): Promise<Report> {
+  const today = period({ ...f, from: undefined }).to;
+  const monday = (d: string) => {
+    const x = new Date(`${d}T00:00:00Z`);
+    x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
+    return x.toISOString().slice(0, 10);
+  };
+  const acc = new Map<string, { week: string; count: number; amount: number }>();
+  for (const p of await openPayables(auth, f)) {
+    const due = p.dueDate.toISOString().slice(0, 10);
+    const week = due < today ? 'Vencidas' : monday(due);
+    const r = acc.get(week) ?? { week, count: 0, amount: 0 };
+    r.count++;
+    r.amount += p.amount - p.paidAmount;
+    acc.set(week, r);
+  }
+  const rows = [...acc.values()]
+    .sort((a, b) =>
+      a.week === 'Vencidas' ? -1 : b.week === 'Vencidas' ? 1 : a.week.localeCompare(b.week),
+    )
+    .map((r) => ({
+      ...r,
+      week: r.week === 'Vencidas' ? r.week : `Semana de ${r.week.split('-').reverse().join('/')}`,
+    }));
+  return {
+    title: 'Previsão de pagamentos',
+    columns: [
+      col('week', 'Vencimento'),
+      col('count', 'Contas', 'int'),
+      col('amount', 'Valor', 'money'),
+    ],
+    rows,
+    totals: { week: 'Total', count: sum(rows, 'count'), amount: sum(rows, 'amount') },
+  };
+}
+
 export const REPORTS = {
   stock: { title: 'Stock actual', run: stock, period: false },
   consumption: { title: 'Consumo', run: consumption, period: true },
@@ -658,5 +758,25 @@ export const REPORTS = {
   'sales-margin': { title: 'Custo das vendas e margem', run: salesMargin, period: true },
   'units-comparison': { title: 'Comparativo entre unidades', run: unitsComparison, period: true },
   abc: { title: 'Curva ABC', run: abc, period: true },
-} as const;
+  'payables-aging': {
+    title: 'Contas a pagar: antiguidade',
+    run: payablesAging,
+    period: false,
+    feature: 'payables',
+  },
+  'payables-forecast': {
+    title: 'Previsão de pagamentos',
+    run: payablesForecast,
+    period: false,
+    feature: 'payables',
+  },
+} as const satisfies Record<
+  string,
+  {
+    title: string;
+    run: (a: AuthContext, f: Filters) => Promise<Report>;
+    period: boolean;
+    feature?: Feature;
+  }
+>;
 export type ReportName = keyof typeof REPORTS;

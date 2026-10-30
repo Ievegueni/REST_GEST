@@ -38,6 +38,7 @@ export async function deleteTenants(ids: string[]) {
   await prisma.auditLog.deleteMany({ where });
   await prisma.refreshToken.deleteMany({ where });
   await prisma.passwordReset.deleteMany({ where });
+  await prisma.payable.deleteMany({ where });
   await prisma.cashMovement.deleteMany({ where });
   await prisma.cashSessionAmount.deleteMany({ where });
   await prisma.dailyCost.deleteMany({ where });

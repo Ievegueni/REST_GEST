@@ -53,15 +53,13 @@ export async function cashRoutes(app: FastifyInstance) {
     ),
   }));
   app.post('/cash-sessions/:id/movements', close, async (req, reply) =>
-    reply
-      .status(201)
-      .send({
-        data: await service.addMovement(
-          req.auth,
-          idParam.parse(req.params).id,
-          movementSchema.parse(req.body),
-        ),
-      }),
+    reply.status(201).send({
+      data: await service.addMovement(
+        req.auth,
+        idParam.parse(req.params).id,
+        movementSchema.parse(req.body),
+      ),
+    }),
   );
   app.delete<{ Params: { id: string; movementId: string } }>(
     '/cash-sessions/:id/movements/:movementId',
