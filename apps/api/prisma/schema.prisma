@@ -429,6 +429,8 @@ model StockMovement {
   @@index([tenantId, productId, locationId, occurredAt])
   @@index([tenantId, productId, locationId, createdAt])
   @@index([tenantId, refType, refId])
+  /// relatórios por período (consumo, quebras, resultados, anomalias)
+  @@index([tenantId, occurredAt])
 }
 
 /// Saldo por local (derivado do livro, mantido na mesma transacção).

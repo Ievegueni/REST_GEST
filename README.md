@@ -21,3 +21,6 @@ pnpm test && pnpm typecheck && pnpm lint
 ```sh
 SUPER_ADMIN_PASSWORD='...' pnpm --filter @restgest/api admin:create email@comunica.ao "Nome"
 ```
+
+## Deploy
+Ver [`deploy/DEPLOY.md`](deploy/DEPLOY.md) (PM2 com API + worker, Nginx, SSL, backups). Bateria de testes manuais: [`TESTES.md`](TESTES.md).

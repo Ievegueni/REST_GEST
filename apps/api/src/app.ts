@@ -34,6 +34,7 @@ import { aiRoutes } from './modules/ai/routes';
 
 export async function buildApp() {
   const app = Fastify({
+    trustProxy: env.TRUST_PROXY === 'true',
     logger: {
       level: env.NODE_ENV === 'test' ? 'silent' : 'info',
       redact: ['req.headers.authorization', 'req.headers.cookie'],

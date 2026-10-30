@@ -96,8 +96,9 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Dashboard principal
 
 ### Sprint 9 — Estabilização e go-live Palace (STOCK)
-- [ ] Revisão de segurança e performance (índices, queries lentas)
-- [ ] Deploy produção (VPS, PM2, Nginx, SSL), backups diários
+- [x] Revisão de segurança e performance (`trustProxy` atrás do Nginx, API só em 127.0.0.1, índice de movimentos por período; login já limitado a 10/min)
+- [x] Ficheiros de deploy: PM2 (API + worker separados), Nginx, backup diário com retenção 30 dias e cópia remota (`deploy/`)
+- [ ] Deploy na VPS real, SSL e cron de backups (precisa de acesso à VPS e domínio)
 - [ ] Criar tenant Palace (Lounge + Beach) pelo Super Admin
 - [ ] Carga inicial: produtos, fornecedores, fichas técnicas, inventário inicial
 - [ ] Formação de utilizadores

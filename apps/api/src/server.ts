@@ -4,4 +4,4 @@ import { startWorkers } from './jobs/queue';
 
 const app = await buildApp();
 if (env.RUN_WORKERS === 'true') await startWorkers(app.log);
-await app.listen({ port: env.PORT, host: '0.0.0.0' });
+await app.listen({ port: env.PORT, host: env.HOST });

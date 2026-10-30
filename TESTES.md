@@ -166,3 +166,11 @@ Preparação: um mês de dados numa unidade (custos diários, vendas importadas 
 - [ ] Chat: "Quanto devo encomendar para o Bar para os próximos 7 dias?" → resposta com base na previsão (consumo previsto, stock, pendentes).
 - [ ] Em produção (`RUN_WORKERS=true`): anomalias correm às 06:30 todos os dias e o relatório semanal às segundas às 07:00 (hora de Luanda); cada execução conta para o limite mensal de pedidos IA.
 
+## 9. Deploy (na VPS, seguindo `deploy/DEPLOY.md`)
+- [ ] `pnpm build` sem erros; `pm2 status` com `restgest-api` e `restgest-worker` online.
+- [ ] `https://<domínio>/api/health` → ok; HTTP redirecciona para HTTPS; recarregar uma rota interna (ex.: `/stock`) não dá 404.
+- [ ] Upload de anexo de 5 MB funciona; 6 MB → recusado com mensagem.
+- [ ] 11 tentativas de login erradas num minuto → "demasiados pedidos" só para esse IP (outro dispositivo continua a entrar).
+- [ ] `backup.sh` corrido à mão cria o `.dump` e copia para o remoto; restaurar numa base de teste e abrir a app contra ela.
+- [ ] Portas 5432/6379 não acessíveis de fora da VPS.
+

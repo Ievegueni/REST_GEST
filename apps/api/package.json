@@ -6,6 +6,7 @@
     "dev": "tsx watch --env-file=../../.env src/server.ts",
     "build": "tsup",
     "start": "node --env-file=../../.env dist/server.js",
+    "start:worker": "node --env-file=../../.env dist/worker.js",
     "test": "vitest run",
     "typecheck": "tsc -p .",
     "db:migrate": "dotenv -e ../../.env -- prisma migrate dev",
@@ -45,7 +46,8 @@
   },
   "tsup": {
     "entry": [
-      "src/server.ts"
+      "src/server.ts",
+      "src/worker.ts"
     ],
     "format": [
       "esm"
