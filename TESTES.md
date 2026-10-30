@@ -106,3 +106,16 @@ Preparação: no `/admin` → **Tabelas IRT/INSS**, criar uma tabela com os valo
 - [ ] "Marcar como pago".
 - [ ] Recibos (PDF): um por página, com NIF/INSS do funcionário e assinaturas. Mapa (Excel) com totais.
 - [ ] Alterar no `/admin` uma tabela já usada em salários aprovados → recusado ("crie uma nova versão").
+
+## 12. Custos diários e fecho de caixa (plano COMPLETO)
+Preparação: Definições → Caixa: criar meios de pagamento (Numerário marcado como numerário, TPA, Multicaixa Express, Transferência) e o limite de diferença; Custos → Categorias: criar algumas categorias.
+- [ ] Custos diários: registar custo com comprovativo (PDF/imagem) → "ver" abre o ficheiro; total do mês; apagar.
+- [ ] Recorrentes: renda no dia 5 → "Gerar em atraso" cria o custo uma só vez no mês (carregar duas vezes).
+- [ ] Caixa: abrir sessão com fundo de 20 000; abrir outra para o mesmo dia/turno → recusado.
+- [ ] Valores do sistema por meio de pagamento; sangria, entrada e pagamento pela caixa (com categoria) → o pagamento aparece em Custos diários como "pago pela caixa" e não se apaga lá.
+- [ ] Contagem por notas → "Usar total como numerário contado".
+- [ ] Numerário esperado = fundo + vendas em numerário + entradas − sangrias − pagamentos (conferir à mão).
+- [ ] Fechar com diferença acima do limite sem justificação → recusado; com justificação → fecha e aparece alerta "Diferença de caixa" no sino.
+- [ ] Utilizador com perfil Caixa não consegue validar; Gerente valida → sessão validada sem botões de edição; reabrir deixa de ser possível.
+- [ ] Gerente reabre uma sessão fechada (não validada) → volta a editável.
+- [ ] Importação dos pagamentos do POS: **pendente** (ficheiro Winrest).

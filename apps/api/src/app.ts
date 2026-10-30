@@ -26,6 +26,8 @@ import { alertRoutes } from './modules/alerts/routes';
 import { reportRoutes } from './modules/reports/routes';
 import { hrRoutes } from './modules/hr/routes';
 import { payrollRoutes } from './modules/payroll/routes';
+import { costRoutes } from './modules/costs/routes';
+import { cashRoutes } from './modules/cash/routes';
 
 export async function buildApp() {
   const app = Fastify({
@@ -68,6 +70,8 @@ export async function buildApp() {
       await api.register(reportRoutes);
       await api.register(hrRoutes);
       await api.register(payrollRoutes);
+      await api.register(costRoutes);
+      await api.register(cashRoutes);
     },
     { prefix: '/api' },
   );

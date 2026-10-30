@@ -11,6 +11,7 @@ export function SettingsLayout() {
   const alertsManage = useCan('alerts.manage');
   const alerts = alertsFeature && alertsManage;
   const payroll = useFeature('payroll');
+  const cash = useFeature('cash_closing');
   return (
     <>
       <h1 className="mb-4 text-xl font-semibold">{t('nav.settings')}</h1>
@@ -22,6 +23,7 @@ export function SettingsLayout() {
           ...(stock ? [{ to: '/definicoes/stock', label: t('settings.stock') }] : []),
           ...(alerts ? [{ to: '/definicoes/alertas', label: t('settings.alerts') }] : []),
           ...(payroll ? [{ to: '/definicoes/salarios', label: t('payroll.settings') }] : []),
+          ...(cash ? [{ to: '/definicoes/caixa', label: t('cash.settings') }] : []),
         ]}
       />
       <Outlet />

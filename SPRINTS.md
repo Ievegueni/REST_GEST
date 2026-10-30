@@ -122,11 +122,12 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Testes de cálculo
 
 ### Sprint 12 — Custos diários e fecho de caixa
-- [ ] Categorias de custo, custos diários, custos recorrentes
-- [ ] Sessões de caixa por unidade/turno, fundo de caixa
-- [ ] Valores do sistema (importação POS pagamentos ou manual) vs. contados
-- [ ] Sangrias, pagamentos pela caixa
-- [ ] Diferenças com justificação e alerta; validação pelo gerente
+- [x] Categorias de custo, custos diários, custos recorrentes
+- [x] Sessões de caixa por unidade/turno, fundo de caixa
+- [x] Valores do sistema (manual) vs. contados
+- [ ] Importação dos pagamentos do POS (perfil `winrest_pagamentos`) — quando houver ficheiro Winrest
+- [x] Sangrias, pagamentos pela caixa
+- [x] Diferenças com justificação e alerta; validação pelo gerente
 
 ### Sprint 13 — Contas a pagar
 - [ ] Geração automática a partir das recepções

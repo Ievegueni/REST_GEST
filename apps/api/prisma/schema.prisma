@@ -53,6 +53,8 @@ model Tenant {
   payrollWeeklyHours  Int?
   payrollOvertimeRate Decimal?            @db.Decimal(5, 2)
   payrollMonthDays    Int?
+  /// diferença de caixa (AOA) acima da qual a justificação é obrigatória e há alerta
+  cashDifferenceLimit Int?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 
@@ -108,6 +110,13 @@ model Tenant {
   deductions             EmployeeDeduction[]
   payrollRuns            PayrollRun[]
   payrollLines           PayrollLine[]
+  costCategories         CostCategory[]
+  paymentMethods         PaymentMethod[]
+  dailyCosts             DailyCost[]
+  recurringCosts         RecurringCost[]
+  cashSessions           CashSession[]
+  cashAmounts            CashSessionAmount[]
+  cashMovements          CashMovement[]
 }
 
 model Unit {
@@ -128,6 +137,9 @@ model Unit {
   salesImports    SalesImport[]
   employees       Employee[]
   payrollRuns     PayrollRun[]
+  dailyCosts      DailyCost[]
+  recurringCosts  RecurringCost[]
+  cashSessions    CashSession[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -884,6 +896,7 @@ enum AlertType {
   INVENTORY_VARIANCE
   POS_UNMAPPED
   SALES_IMPORT_MISSING
+  CASH_DIFFERENCE
 }
 
 enum AlertStatus {
@@ -1295,6 +1308,171 @@ model PayrollLine {
 
   @@unique([runId, employeeId])
   @@index([tenantId, employeeId])
+}
+
+// ---------- Custos diários e fecho de caixa ----------
+
+model CostCategory {
+  id       String  @id @default(cuid())
+  tenantId String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  name     String
+  active   Boolean @default(true)
+
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  costs     DailyCost[]
+  recurring RecurringCost[]
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, id])
+}
+
+/// Meio de pagamento (numerário, TPA, Multicaixa Express, transferência…), configurável por tenant.
+model PaymentMethod {
+  id       String  @id @default(cuid())
+  tenantId String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  name     String
+  /// numerário: contado fisicamente, entra no saldo de caixa (sangrias, pagamentos)
+  isCash   Boolean @default(false)
+  active   Boolean @default(true)
+
+  tenant  Tenant              @relation(fields: [tenantId], references: [id])
+  costs   DailyCost[]
+  amounts CashSessionAmount[]
+
+  @@unique([tenantId, name])
+  @@unique([tenantId, id])
+}
+
+model DailyCost {
+  id              String   @id @default(cuid())
+  tenantId        String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  unitId          String
+  date            DateTime @db.Date
+  categoryId      String
+  description     String?
+  amount          Int
+  paymentMethodId String?
+  attachmentUrl   String?
+  attachmentName  String?
+  /// pago pela caixa (movimento EXPENSE)
+  cashSessionId   String?
+  recurringCostId String?
+  createdById     String
+  createdAt       DateTime @default(now())
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  unit          Unit           @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  category      CostCategory   @relation(fields: [tenantId, categoryId], references: [tenantId, id])
+  paymentMethod PaymentMethod? @relation(fields: [tenantId, paymentMethodId], references: [tenantId, id], onDelete: Restrict)
+  cashSession   CashSession?   @relation(fields: [tenantId, cashSessionId], references: [tenantId, id], onDelete: Restrict)
+  recurring     RecurringCost? @relation(fields: [tenantId, recurringCostId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, unitId, date])
+}
+
+/// Custo mensal gerado automaticamente no dia indicado (ex.: renda).
+model RecurringCost {
+  id                 String   @id @default(cuid())
+  tenantId           String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  unitId             String
+  categoryId         String
+  description        String
+  amount             Int
+  dayOfMonth         Int
+  active             Boolean  @default(true)
+  /// "YYYY-MM" do último custo gerado (idempotência)
+  lastGeneratedMonth String?
+  createdAt          DateTime @default(now())
+
+  tenant   Tenant       @relation(fields: [tenantId], references: [id])
+  unit     Unit         @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  category CostCategory @relation(fields: [tenantId, categoryId], references: [tenantId, id])
+  costs    DailyCost[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, active])
+}
+
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+  VALIDATED
+}
+
+model CashSession {
+  id            String            @id @default(cuid())
+  tenantId      String            @default(dbgenerated("current_setting('app.tenant_id')"))
+  unitId        String
+  businessDate  DateTime          @db.Date
+  /// turno (vazio = fecho diário único)
+  shift         String            @default("")
+  openingFloat  Int
+  status        CashSessionStatus @default(OPEN)
+  /// contagem por notas opcional: { "5000": 3, "1000": 7 }
+  denominations Json?
+  /// diferença total (contado − esperado), calculada no fecho
+  difference    Int?
+  justification String?
+  notes         String?
+  openedById    String
+  openedAt      DateTime          @default(now())
+  closedById    String?
+  closedAt      DateTime?
+  validatedById String?
+  validatedAt   DateTime?
+
+  tenant    Tenant              @relation(fields: [tenantId], references: [id])
+  unit      Unit                @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  amounts   CashSessionAmount[]
+  movements CashMovement[]
+  costs     DailyCost[]
+
+  @@unique([tenantId, unitId, businessDate, shift])
+  @@unique([tenantId, id])
+}
+
+/// Valores por meio de pagamento: sistema (POS ou manual) vs contado.
+model CashSessionAmount {
+  tenantId        String @default(dbgenerated("current_setting('app.tenant_id')"))
+  sessionId       String
+  paymentMethodId String
+  systemAmount    Int    @default(0)
+  countedAmount   Int?
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
+  session       CashSession   @relation(fields: [tenantId, sessionId], references: [tenantId, id], onDelete: Cascade)
+  paymentMethod PaymentMethod @relation(fields: [tenantId, paymentMethodId], references: [tenantId, id])
+
+  @@id([sessionId, paymentMethodId])
+  @@index([tenantId])
+}
+
+enum CashMovementType {
+  /// sangria (retirada para o cofre/banco)
+  WITHDRAWAL
+  /// entrada/reforço de caixa
+  DEPOSIT
+  /// pagamento feito com dinheiro da caixa (gera custo diário)
+  EXPENSE
+}
+
+model CashMovement {
+  id          String           @id @default(cuid())
+  tenantId    String           @default(dbgenerated("current_setting('app.tenant_id')"))
+  sessionId   String
+  type        CashMovementType
+  amount      Int
+  description String
+  /// custo diário gerado por um pagamento (EXPENSE)
+  dailyCostId String?          @unique
+  createdById String
+  createdAt   DateTime         @default(now())
+
+  tenant  Tenant      @relation(fields: [tenantId], references: [id])
+  session CashSession @relation(fields: [tenantId, sessionId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, sessionId])
 }
 
 // ---------- Utilizadores e permissões ----------

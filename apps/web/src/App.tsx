@@ -55,6 +55,10 @@ import { PayrollPage } from './modules/payroll/PayrollPage';
 import { RunPage } from './modules/payroll/RunPage';
 import { TaxTablesPage } from './modules/admin/TaxTablesPage';
 import { PayrollSettingsPage } from './modules/settings/PayrollSettingsPage';
+import { CashSettingsPage } from './modules/settings/CashSettingsPage';
+import { CostCategoriesPage, DailyCostsPage, RecurringCostsPage } from './modules/costs/CostsPage';
+import { CashSessionsPage } from './modules/cash/CashSessionsPage';
+import { CashSessionPage } from './modules/cash/CashSessionPage';
 import { OrdersPage } from './modules/purchases/OrdersPage';
 import { OrderPage } from './modules/purchases/OrderPage';
 import { ReceiptsPage } from './modules/purchases/ReceiptsPage';
@@ -129,6 +133,11 @@ export function App() {
           <Route path="licencas" element={<LeavesPage />} />
           <Route path="cargos" element={<PositionsPage />} />
         </Route>
+        <Route path="/custos" element={gate('daily_costs', <DailyCostsPage />)} />
+        <Route path="/custos/recorrentes" element={gate('daily_costs', <RecurringCostsPage />)} />
+        <Route path="/custos/categorias" element={gate('daily_costs', <CostCategoriesPage />)} />
+        <Route path="/caixa" element={gate('cash_closing', <CashSessionsPage />)} />
+        <Route path="/caixa/:id" element={gate('cash_closing', <CashSessionPage />)} />
         <Route path="/salarios" element={gate('payroll', <PayrollPage />)} />
         <Route path="/salarios/:id" element={gate('payroll', <RunPage />)} />
         <Route path="/alertas" element={gate('alerts_sms', <AlertsPage />)} />
@@ -140,6 +149,7 @@ export function App() {
           <Route path="stock" element={<StockSettingsPage />} />
           <Route path="alertas" element={gate('alerts_sms', <AlertSettingsPage />)} />
           <Route path="salarios" element={gate('payroll', <PayrollSettingsPage />)} />
+          <Route path="caixa" element={gate('cash_closing', <CashSettingsPage />)} />
         </Route>
       </Route>
     </Routes>

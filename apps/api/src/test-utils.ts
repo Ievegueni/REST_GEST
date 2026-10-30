@@ -38,6 +38,13 @@ export async function deleteTenants(ids: string[]) {
   await prisma.auditLog.deleteMany({ where });
   await prisma.refreshToken.deleteMany({ where });
   await prisma.passwordReset.deleteMany({ where });
+  await prisma.cashMovement.deleteMany({ where });
+  await prisma.cashSessionAmount.deleteMany({ where });
+  await prisma.dailyCost.deleteMany({ where });
+  await prisma.cashSession.deleteMany({ where });
+  await prisma.recurringCost.deleteMany({ where });
+  await prisma.costCategory.deleteMany({ where });
+  await prisma.paymentMethod.deleteMany({ where });
   await prisma.payrollRun.deleteMany({ where });
   await prisma.employeeDeduction.deleteMany({ where });
   await prisma.leave.deleteMany({ where });
@@ -94,7 +101,7 @@ export async function clientFor(app: import('fastify').FastifyInstance, email: s
     payload: { email, password: 'password123' },
   });
   const token = res.json().data.accessToken as string;
-  return (method: 'GET' | 'POST' | 'PATCH' | 'PUT', url: string, payload?: object) =>
+  return (method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE', url: string, payload?: object) =>
     app.inject({ method, url, payload, headers: { authorization: `Bearer ${token}` } });
 }
 

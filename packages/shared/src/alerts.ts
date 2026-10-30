@@ -6,6 +6,7 @@ export const ALERT_TYPES = [
   'INVENTORY_VARIANCE',
   'POS_UNMAPPED',
   'SALES_IMPORT_MISSING',
+  'CASH_DIFFERENCE',
 ] as const;
 export type AlertType = (typeof ALERT_TYPES)[number];
 
@@ -21,6 +22,7 @@ export const ALERT_DEFAULTS: Record<
   INVENTORY_VARIANCE: { enabled: true, sms: true, threshold: 5 }, // %
   POS_UNMAPPED: { enabled: true, sms: false, threshold: null },
   SALES_IMPORT_MISSING: { enabled: true, sms: false, threshold: null },
+  CASH_DIFFERENCE: { enabled: true, sms: true, threshold: null },
 };
 
 /** Perfis base destinatários por defeito (Administrador + Gerente da unidade + Ecónomo). */

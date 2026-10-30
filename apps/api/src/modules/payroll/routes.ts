@@ -47,13 +47,11 @@ export async function payrollRoutes(app: FastifyInstance) {
     if (!canAccessUnit(req.auth, e.unitId))
       throw new AppError('FORBIDDEN', 'Sem acesso a esta unidade');
     const data = deductionSchema.parse(req.body);
-    return reply
-      .status(201)
-      .send({
-        data: await req.auth.db.employeeDeduction.create({
-          data: { ...data, employeeId: id, createdById: req.auth.userId },
-        }),
-      });
+    return reply.status(201).send({
+      data: await req.auth.db.employeeDeduction.create({
+        data: { ...data, employeeId: id, createdById: req.auth.userId },
+      }),
+    });
   });
   app.delete<{ Params: { id: string } }>('/deductions/:id', view, async (req) => {
     const d = await req.auth.db.employeeDeduction.findUniqueOrThrow({
