@@ -82,3 +82,11 @@ export async function apiDownload(path: string, filename: string) {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+/** Abre um anexo: URLs da própria API precisam do token; externas abrem directamente. */
+export async function apiOpen(url: string) {
+  if (!url.startsWith('/api/')) return void window.open(url, '_blank', 'noopener');
+  const res = await send(url.slice(4), { method: 'GET' });
+  if (!res.ok) return fail(res);
+  window.open(URL.createObjectURL(await res.blob()), '_blank', 'noopener');
+}

@@ -67,6 +67,15 @@ model Tenant {
   stockBalances          StockBalance[]
   stockLotBalances       StockLotBalance[]
   stockCosts             StockCost[]
+  sequences              DocumentSequence[]
+  purchaseOrders         PurchaseOrder[]
+  poLines                PurchaseOrderLine[]
+  receipts               GoodsReceipt[]
+  receiptLines           GoodsReceiptLine[]
+  transfers              Transfer[]
+  transferLines          TransferLine[]
+  inventoryCounts        InventoryCount[]
+  inventoryLines         InventoryCountLine[]
 }
 
 model Unit {
@@ -82,6 +91,7 @@ model Unit {
   locations StockLocation[]
   userUnits UserUnit[]
   costs     StockCost[]
+  orders    PurchaseOrder[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -111,6 +121,10 @@ model StockLocation {
   stockMovements   StockMovement[]
   stockBalances    StockBalance[]
   stockLotBalances StockLotBalance[]
+  receipts         GoodsReceipt[]
+  transfersOut     Transfer[]             @relation("TransferFrom")
+  transfersIn      Transfer[]             @relation("TransferTo")
+  inventoryCounts  InventoryCount[]
 
   @@unique([tenantId, unitId, name])
   @@unique([tenantId, id])
@@ -140,10 +154,11 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant   Tenant     @relation(fields: [tenantId], references: [id])
-  parent   Category?  @relation("CategoryTree", fields: [tenantId, parentId], references: [tenantId, id], onDelete: Restrict)
-  children Category[] @relation("CategoryTree")
-  products Product[]
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  parent          Category?        @relation("CategoryTree", fields: [tenantId, parentId], references: [tenantId, id], onDelete: Restrict)
+  children        Category[]       @relation("CategoryTree")
+  products        Product[]
+  inventoryCounts InventoryCount[]
 
   @@unique([tenantId, parentId, name])
   @@unique([tenantId, id])
@@ -162,6 +177,8 @@ model MeasureUnit {
   purchaseProducts    Product[]               @relation("PurchaseUnit")
   consumptionProducts Product[]               @relation("ConsumptionUnit")
   conversions         ProductUnitConversion[]
+  poLines             PurchaseOrderLine[]
+  receiptLines        GoodsReceiptLine[]
 
   @@unique([tenantId, symbol])
   @@unique([tenantId, id])
@@ -201,6 +218,10 @@ model Product {
   balances         StockBalance[]
   lotBalances      StockLotBalance[]
   costs            StockCost[]
+  poLines          PurchaseOrderLine[]
+  receiptLines     GoodsReceiptLine[]
+  transferLines    TransferLine[]
+  inventoryLines   InventoryCountLine[]
 
   @@unique([tenantId, code])
   @@unique([tenantId, id])
@@ -256,6 +277,8 @@ model Supplier {
   tenant            Tenant            @relation(fields: [tenantId], references: [id])
   products          SupplierProduct[]
   preferredProducts Product[]         @relation("PreferredSupplier")
+  orders            PurchaseOrder[]
+  receipts          GoodsReceipt[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -399,6 +422,239 @@ model StockCost {
 
   @@id([productId, unitId])
   @@index([tenantId])
+}
+
+// ---------- Documentos ----------
+
+/// Numeração sequencial por tenant e tipo de documento (PO, GR, TR, INV).
+model DocumentSequence {
+  tenantId String @default(dbgenerated("current_setting('app.tenant_id')"))
+  key      String
+  value    Int    @default(0)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@id([tenantId, key])
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  PARTIAL
+  RECEIVED
+  CANCELLED
+}
+
+model PurchaseOrder {
+  id           String              @id @default(cuid())
+  tenantId     String              @default(dbgenerated("current_setting('app.tenant_id')"))
+  number       Int
+  supplierId   String
+  unitId       String
+  status       PurchaseOrderStatus @default(DRAFT)
+  expectedDate DateTime?           @db.Date
+  notes        String?
+  createdById  String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  tenant   Tenant              @relation(fields: [tenantId], references: [id])
+  supplier Supplier            @relation(fields: [tenantId, supplierId], references: [tenantId, id])
+  unit     Unit                @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  lines    PurchaseOrderLine[]
+  receipts GoodsReceipt[]
+
+  @@unique([tenantId, number])
+  @@unique([tenantId, id])
+  @@index([tenantId, status])
+}
+
+model PurchaseOrderLine {
+  id          String  @id @default(cuid())
+  tenantId    String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  orderId     String
+  productId   String
+  /// unidade de medida da encomenda (ex.: caixa)
+  unitId      String
+  qty         Decimal @db.Decimal(14, 3)
+  /// preço por unidade da encomenda, AOA
+  unitPrice   Int?
+  /// recebido, na mesma unidade da encomenda
+  receivedQty Decimal @default(0) @db.Decimal(14, 3)
+
+  tenant       Tenant             @relation(fields: [tenantId], references: [id])
+  order        PurchaseOrder      @relation(fields: [tenantId, orderId], references: [tenantId, id], onDelete: Cascade)
+  product      Product            @relation(fields: [tenantId, productId], references: [tenantId, id])
+  unit         MeasureUnit        @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  receiptLines GoodsReceiptLine[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, orderId])
+}
+
+enum DocumentStatus {
+  POSTED
+  CANCELLED
+}
+
+model GoodsReceipt {
+  id             String         @id @default(cuid())
+  tenantId       String         @default(dbgenerated("current_setting('app.tenant_id')"))
+  number         Int
+  supplierId     String
+  locationId     String
+  orderId        String?
+  invoiceNumber  String?
+  invoiceDate    DateTime?      @db.Date
+  receivedAt     DateTime
+  attachmentUrl  String?
+  attachmentName String?
+  notes          String?
+  /// soma das linhas, AOA
+  totalAmount    Int
+  status         DocumentStatus @default(POSTED)
+  createdById    String
+  cancelledAt    DateTime?
+  cancelledById  String?
+  createdAt      DateTime       @default(now())
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id])
+  supplier Supplier           @relation(fields: [tenantId, supplierId], references: [tenantId, id])
+  location StockLocation      @relation(fields: [tenantId, locationId], references: [tenantId, id])
+  order    PurchaseOrder?     @relation(fields: [tenantId, orderId], references: [tenantId, id], onDelete: Restrict)
+  lines    GoodsReceiptLine[]
+
+  @@unique([tenantId, number])
+  @@unique([tenantId, id])
+  @@index([tenantId, supplierId, receivedAt])
+}
+
+model GoodsReceiptLine {
+  id          String    @id @default(cuid())
+  tenantId    String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  receiptId   String
+  productId   String
+  orderLineId String?
+  unitId      String
+  qty         Decimal   @db.Decimal(14, 3)
+  /// preço por `unitId`, AOA
+  unitPrice   Int
+  total       Int
+  lotCode     String?
+  expiryDate  DateTime? @db.Date
+
+  tenant    Tenant             @relation(fields: [tenantId], references: [id])
+  receipt   GoodsReceipt       @relation(fields: [tenantId, receiptId], references: [tenantId, id], onDelete: Cascade)
+  product   Product            @relation(fields: [tenantId, productId], references: [tenantId, id])
+  unit      MeasureUnit        @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  orderLine PurchaseOrderLine? @relation(fields: [tenantId, orderLineId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, receiptId])
+}
+
+enum TransferStatus {
+  PENDING
+  SENT
+  RECEIVED
+  CANCELLED
+}
+
+model Transfer {
+  id             String         @id @default(cuid())
+  tenantId       String         @default(dbgenerated("current_setting('app.tenant_id')"))
+  number         Int
+  fromLocationId String
+  toLocationId   String
+  status         TransferStatus @default(PENDING)
+  notes          String?
+  createdById    String
+  sentAt         DateTime?
+  sentById       String?
+  receivedAt     DateTime?
+  receivedById   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  fromLocation StockLocation  @relation("TransferFrom", fields: [tenantId, fromLocationId], references: [tenantId, id])
+  toLocation   StockLocation  @relation("TransferTo", fields: [tenantId, toLocationId], references: [tenantId, id])
+  lines        TransferLine[]
+
+  @@unique([tenantId, number])
+  @@unique([tenantId, id])
+  @@index([tenantId, status])
+}
+
+/// Quantidades na unidade de stock.
+model TransferLine {
+  id          String   @id @default(cuid())
+  tenantId    String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  transferId  String
+  productId   String
+  qty         Decimal  @db.Decimal(14, 3)
+  sentQty     Decimal? @db.Decimal(14, 3)
+  receivedQty Decimal? @db.Decimal(14, 3)
+  /// custo unitário médio à saída
+  unitCost    Decimal? @db.Decimal(18, 4)
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  transfer Transfer @relation(fields: [tenantId, transferId], references: [tenantId, id], onDelete: Cascade)
+  product  Product  @relation(fields: [tenantId, productId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@index([tenantId, transferId])
+}
+
+enum InventoryStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+model InventoryCount {
+  id              String          @id @default(cuid())
+  tenantId        String          @default(dbgenerated("current_setting('app.tenant_id')"))
+  number          Int
+  locationId      String
+  /// contagem parcial por categoria (inclui subcategorias)
+  categoryId      String?
+  status          InventoryStatus @default(OPEN)
+  /// bloqueia movimentos no local enquanto aberta
+  blocksMovements Boolean         @default(false)
+  notes           String?
+  openedById      String
+  openedAt        DateTime        @default(now())
+  closedById      String?
+  closedAt        DateTime?
+
+  tenant   Tenant               @relation(fields: [tenantId], references: [id])
+  location StockLocation        @relation(fields: [tenantId, locationId], references: [tenantId, id])
+  category Category?            @relation(fields: [tenantId, categoryId], references: [tenantId, id], onDelete: Restrict)
+  lines    InventoryCountLine[]
+
+  @@unique([tenantId, number])
+  @@unique([tenantId, id])
+  @@index([tenantId, locationId, status])
+}
+
+model InventoryCountLine {
+  id          String    @id @default(cuid())
+  tenantId    String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  countId     String
+  productId   String
+  countedQty  Decimal?  @db.Decimal(14, 3)
+  countedById String?
+  countedAt   DateTime?
+  /// preenchidos no fecho
+  expectedQty Decimal?  @db.Decimal(14, 3)
+  unitCost    Decimal?  @db.Decimal(18, 4)
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id])
+  count   InventoryCount @relation(fields: [tenantId, countId], references: [tenantId, id], onDelete: Cascade)
+  product Product        @relation(fields: [tenantId, productId], references: [tenantId, id])
+
+  @@unique([countId, productId])
+  @@index([tenantId, countId])
 }
 
 // ---------- Utilizadores e permissões ----------

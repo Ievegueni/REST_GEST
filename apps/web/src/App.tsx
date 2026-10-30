@@ -26,6 +26,16 @@ import { BalancesPage } from './modules/stock/BalancesPage';
 import { KardexPage } from './modules/stock/KardexPage';
 import { MovementPage } from './modules/stock/MovementPage';
 import { StockLayout } from './modules/stock/StockLayout';
+import { TransfersPage } from './modules/stock/TransfersPage';
+import { TransferPage } from './modules/stock/TransferPage';
+import { InventoriesPage } from './modules/stock/InventoriesPage';
+import { InventoryPage } from './modules/stock/InventoryPage';
+import { PurchasesLayout } from './modules/purchases/PurchasesLayout';
+import { OrdersPage } from './modules/purchases/OrdersPage';
+import { OrderPage } from './modules/purchases/OrderPage';
+import { ReceiptsPage } from './modules/purchases/ReceiptsPage';
+import { NewReceiptPage } from './modules/purchases/NewReceiptPage';
+import { ReceiptPage } from './modules/purchases/ReceiptPage';
 import { SupplierPage } from './modules/suppliers/SupplierPage';
 import { SuppliersPage } from './modules/suppliers/SuppliersPage';
 
@@ -57,6 +67,17 @@ export function App() {
           <Route index element={<BalancesPage />} />
           <Route path="movimento" element={<MovementPage />} />
           <Route path="produto/:id" element={<KardexPage />} />
+          <Route path="transferencias" element={<TransfersPage />} />
+          <Route path="transferencias/:id" element={<TransferPage />} />
+          <Route path="inventarios" element={<InventoriesPage />} />
+          <Route path="inventarios/:id" element={<InventoryPage />} />
+        </Route>
+        <Route path="/compras" element={gate('purchases', <PurchasesLayout />)}>
+          <Route index element={<OrdersPage />} />
+          <Route path="encomendas/:id" element={<OrderPage />} />
+          <Route path="recepcoes" element={<ReceiptsPage />} />
+          <Route path="recepcoes/nova" element={<NewReceiptPage />} />
+          <Route path="recepcoes/:id" element={<ReceiptPage />} />
         </Route>
         <Route path="/fornecedores" element={gate('stock', <SuppliersPage />)} />
         <Route path="/fornecedores/:id" element={gate('stock', <SupplierPage />)} />

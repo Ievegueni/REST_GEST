@@ -38,6 +38,11 @@ export async function deleteTenants(ids: string[]) {
   await prisma.auditLog.deleteMany({ where });
   await prisma.refreshToken.deleteMany({ where });
   await prisma.passwordReset.deleteMany({ where });
+  await prisma.inventoryCount.deleteMany({ where });
+  await prisma.transfer.deleteMany({ where });
+  await prisma.goodsReceipt.deleteMany({ where });
+  await prisma.purchaseOrder.deleteMany({ where });
+  await prisma.documentSequence.deleteMany({ where });
   await prisma.$executeRaw`DELETE FROM "StockMovement" WHERE "tenantId" = ANY(${ids}) AND "reversalOfId" IS NOT NULL`;
   await prisma.stockMovement.deleteMany({ where });
   await prisma.stockLotBalance.deleteMany({ where });
@@ -70,4 +75,21 @@ export async function clientFor(app: import('fastify').FastifyInstance, email: s
   const token = res.json().data.accessToken as string;
   return (method: 'GET' | 'POST' | 'PATCH' | 'PUT', url: string, payload?: object) =>
     app.inject({ method, url, payload, headers: { authorization: `Bearer ${token}` } });
+}
+
+/** Corpo multipart com um ficheiro, para app.inject. */
+export function multipart(
+  filename: string,
+  content: Buffer,
+  contentType = 'application/octet-stream',
+) {
+  const boundary = '----restgest';
+  const payload = Buffer.concat([
+    Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${contentType}\r\n\r\n`,
+    ),
+    content,
+    Buffer.from(`\r\n--${boundary}--\r\n`),
+  ]);
+  return { payload, headers: { 'content-type': `multipart/form-data; boundary=${boundary}` } };
 }

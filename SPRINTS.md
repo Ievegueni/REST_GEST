@@ -60,10 +60,11 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Testes de custeio e concorrência
 
 ### Sprint 5 — Compras, transferências e inventário
-- [ ] Encomendas a fornecedor
-- [ ] Recepção de mercadoria (com/sem encomenda, anexo da factura)
-- [ ] Transferências entre locais e unidades (PENDENTE → ENVIADA → RECEBIDA)
-- [ ] Inventário: abertura, contagem (mobile-friendly), revisão de desvios, fecho com ajustes
+- [x] Encomendas a fornecedor
+- [x] Recepção de mercadoria (com/sem encomenda, anexo da factura)
+- [x] Transferências entre locais e unidades (PENDENTE → ENVIADA → RECEBIDA)
+- [x] Inventário: abertura, contagem (mobile-friendly), revisão de desvios, fecho com ajustes
+- [ ] Transferir para unidades a que o utilizador não tem acesso (hoje o destino limita-se às unidades acessíveis)
 
 ### Sprint 6 — Fichas técnicas e importação de vendas
 - [ ] Artigos de venda, fichas técnicas, sub-receitas, % perda

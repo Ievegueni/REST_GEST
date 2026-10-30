@@ -6,6 +6,10 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32),
+  CLOUDINARY_URL: z
+    .string()
+    .optional()
+    .transform((v) => v || undefined),
   APP_URL: z.string().default('http://localhost:5173'),
 });
 

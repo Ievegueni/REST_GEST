@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { ConfirmButton } from '../../components/ConfirmButton';
 import { ErrorBox, inputCls, secondaryCls, tableCls, tdCls, thCls } from '../../components/ui';
 import { useCan } from '../../features/session';
 import { t, type TKey } from '../../i18n';
@@ -52,8 +53,6 @@ function KardexTable({ productId, locationId }: { productId: string; locationId:
   const { data: first, error: loadError, reload } = useApi<Page>(base);
   const [more, setMore] = useState<Page[]>([]);
   const [error, setError] = useState('');
-  /** estorno pede segundo clique (acção irreversível) */
-  const [confirming, setConfirming] = useState<string | null>(null);
 
   const items = [...(first?.items ?? []), ...more.flatMap((p) => p.items)];
   const cursor = (more.at(-1) ?? first)?.nextCursor ?? null;
@@ -68,8 +67,6 @@ function KardexTable({ productId, locationId }: { productId: string; locationId:
   };
 
   const reverse = async (m: Movement) => {
-    if (confirming !== m.id) return setConfirming(m.id);
-    setConfirming(null);
     setError('');
     try {
       await api(`/stock/movements/${m.id}/reverse`, { method: 'POST' });
@@ -120,9 +117,12 @@ function KardexTable({ productId, locationId }: { productId: string; locationId:
               <td className={tdCls}>{m.user?.name}</td>
               <td className={tdCls}>
                 {canReverse && !m.refType && !m.reversalOfId && !m.reversedBy && (
-                  <button className="text-red-600 hover:underline" onClick={() => reverse(m)}>
-                    {confirming === m.id ? t('stock.confirmReverse') : t('stock.reverse')}
-                  </button>
+                  <ConfirmButton
+                    className="text-red-600 hover:underline"
+                    onConfirm={() => reverse(m)}
+                  >
+                    {t('stock.reverse')}
+                  </ConfirmButton>
                 )}
               </td>
             </tr>

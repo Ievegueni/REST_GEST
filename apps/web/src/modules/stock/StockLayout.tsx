@@ -5,6 +5,8 @@ import { t } from '../../i18n';
 
 export function StockLayout() {
   const move = useCan('stock.move');
+  const transfers = useCan('transfers.manage');
+  const inventory = useCan('inventory.count');
   return (
     <>
       <h1 className="mb-4 text-xl font-semibold">{t('nav.stock')}</h1>
@@ -12,6 +14,8 @@ export function StockLayout() {
         items={[
           { to: '/stock', label: t('stock.current') },
           ...(move ? [{ to: '/stock/movimento', label: t('stock.register') }] : []),
+          ...(transfers ? [{ to: '/stock/transferencias', label: t('transfers.title') }] : []),
+          ...(inventory ? [{ to: '/stock/inventarios', label: t('inventory.title') }] : []),
         ]}
       />
       <Outlet />

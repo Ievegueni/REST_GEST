@@ -222,7 +222,8 @@ describe('concorrência', () => {
     await Promise.all(Array.from({ length: 10 }, (_, i) => run([IN(p, 1, (i + 1) * 100)])));
     const c = await cost(p);
     expect(c.qty.toNumber()).toBe(10);
-    expect(c.avgCost.toNumber()).toBe(550);
+    // o custo médio é guardado a 4 casas: a ordem de chegada pode mexer na 4.ª casa
+    expect(c.avgCost.toNumber()).toBeCloseTo(550, 3);
     const balances = (
       await db.stockMovement.findMany({ where: { productId: p }, orderBy: { createdAt: 'asc' } })
     ).map((m) => m.balanceAfter.toNumber());

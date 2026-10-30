@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 
-export const inputCls = 'w-full rounded border px-3 py-2 text-sm';
+/** input sem largura (para larguras fixas como w-28) */
+export const inputBase = 'rounded border px-3 py-2 text-sm';
+export const inputCls = `${inputBase} w-full`;
 export const buttonCls =
   'rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50';
 

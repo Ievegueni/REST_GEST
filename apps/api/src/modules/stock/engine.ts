@@ -176,20 +176,24 @@ async function post(tx: Tx, parts: Part[], meta: MovementMeta) {
     throw new AppError('VALIDATION_ERROR', 'Data do movimento no futuro');
   }
 
-  // Locks por (produto, unidade), sempre pela mesma ordem → sem deadlocks.
-  const keys = [...new Set(parts.map((p) => `${p.productId}|${p.unitId}`))].sort();
-  const costs = new Map<string, CostRow>();
-  for (const key of keys) {
-    const [productId, unitId] = key.split('|') as [string, string];
-    await tx.$executeRaw`
-      INSERT INTO "StockCost" ("tenantId", "productId", "unitId", "qty", "avgCost", "updatedAt")
-      VALUES (${meta.tenantId}, ${productId}, ${unitId}, 0, 0, now())
-      ON CONFLICT DO NOTHING`;
-    const [row] = await tx.$queryRaw<CostRow[]>`
-      SELECT "qty", "avgCost" FROM "StockCost"
-      WHERE "tenantId" = ${meta.tenantId} AND "productId" = ${productId} AND "unitId" = ${unitId}
-      FOR UPDATE`;
-    costs.set(key, { qty: new D(row!.qty), avgCost: new D(row!.avgCost) });
+  const costs = await lockCosts(
+    tx,
+    meta.tenantId,
+    parts.map((p) => ({ productId: p.productId, unitId: p.unitId })),
+  );
+
+  if (meta.refType !== 'InventoryCount') {
+    const counting = await tx.inventoryCount.findFirst({
+      where: {
+        status: 'OPEN',
+        blocksMovements: true,
+        locationId: { in: [...new Set(parts.map((p) => p.locationId))] },
+      },
+      include: { location: { select: { name: true } } },
+    });
+    if (counting) {
+      throw new AppError('CONFLICT', `Local em contagem de inventário: ${counting.location.name}`);
+    }
   }
 
   const tenant = await tx.tenant.findUniqueOrThrow({ where: { id: meta.tenantId } });
@@ -279,6 +283,32 @@ async function post(tx: Tx, parts: Part[], meta: MovementMeta) {
     });
   }
   return created;
+}
+
+/**
+ * Bloqueia (SELECT … FOR UPDATE) o custo de cada (produto, unidade), sempre pela mesma ordem.
+ * Serializa todos os movimentos de um produto numa unidade. Reentrante na mesma transacção.
+ */
+export async function lockCosts(
+  tx: Tx,
+  tenantId: string,
+  pairs: { productId: string; unitId: string }[],
+) {
+  const keys = [...new Set(pairs.map((p) => `${p.productId}|${p.unitId}`))].sort();
+  const costs = new Map<string, CostRow>();
+  for (const key of keys) {
+    const [productId, unitId] = key.split('|') as [string, string];
+    await tx.$executeRaw`
+      INSERT INTO "StockCost" ("tenantId", "productId", "unitId", "qty", "avgCost", "updatedAt")
+      VALUES (${tenantId}, ${productId}, ${unitId}, 0, 0, now())
+      ON CONFLICT DO NOTHING`;
+    const [row] = await tx.$queryRaw<CostRow[]>`
+      SELECT "qty", "avgCost" FROM "StockCost"
+      WHERE "tenantId" = ${tenantId} AND "productId" = ${productId} AND "unitId" = ${unitId}
+      FOR UPDATE`;
+    costs.set(key, { qty: new D(row!.qty), avgCost: new D(row!.avgCost) });
+  }
+  return costs;
 }
 
 /** FEFO: reparte a saída pelos lotes com validade mais próxima; o resto fica sem lote. */
