@@ -10,6 +10,7 @@ docker compose up -d
 pnpm install
 pnpm --filter @restgest/api db:deploy
 pnpm --filter @restgest/api db:seed     # tenant: admin@demo.local · /admin: admin@comunica.local (senha demo1234)
+pnpm --filter @restgest/api db:mock     # opcional: 100 artigos + 60 dias de movimentos no "Restaurante Demo"
 pnpm dev                                # web http://localhost:5173
 # no fim do teste:
 pnpm dev:stop                           # termina TODOS os processos de desenvolvimento

@@ -118,7 +118,9 @@ export function StatCard(props: {
         <div className="text-sm leading-snug text-gray-500" title={props.label}>
           {props.label}
         </div>
-        <div className="truncate text-xl font-semibold tracking-tight tabular-nums 2xl:text-2xl">
+        <div
+          className={`font-semibold tracking-tight whitespace-nowrap tabular-nums ${props.value.length > 10 ? 'text-lg 2xl:text-xl' : 'text-xl 2xl:text-2xl'}`}
+        >
           {props.value}
         </div>
         {props.hint && <div className="mt-0.5 text-xs">{props.hint}</div>}
