@@ -12,13 +12,8 @@ export function AuthCard(props: {
   children: ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-night-900 px-4 py-12">
-      {/* luz suave atrás do cartão */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-1/2 left-1/2 size-[42rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/10 blur-3xl"
-      />
-      <div className="relative flex w-full max-w-md flex-col items-center">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-night-900 bg-[radial-gradient(ellipse_at_center,rgb(79_70_229/0.14),transparent_60%)] px-4 py-12">
+      <div className="flex w-full max-w-md min-w-0 flex-col items-center">
         <BrandMark size="lg" />
         <h1 className="mt-8 text-center text-2xl font-semibold tracking-tight text-white">
           {props.title}
