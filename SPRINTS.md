@@ -172,6 +172,8 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 ---
 
 ## Pendências
+- [x] Configuração da chave Futurix no Super Admin → Integrações (cifrada, com SMS de teste)
+- [ ] Confirmar com a Futurix o formato real da API (endpoint, autenticação, resposta) — `integrations/futurix-sms.ts`
 - [ ] Obter ficheiro de exportação Winrest (vendas por artigo + por método de pagamento)
 - [ ] Validar IRT/INSS em vigor
 - [ ] Definir nome comercial da plataforma

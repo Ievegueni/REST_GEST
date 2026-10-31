@@ -1723,3 +1723,13 @@ model AiReport {
   @@unique([tenantId, kind, unitId, periodFrom])
   @@index([tenantId, kind, createdAt])
 }
+
+/// Definições globais da plataforma (COMUNICA), geridas no Super Admin. Sem tenantId.
+/// Valores secretos (chaves de API) guardados cifrados (AES-256-GCM, core/crypto).
+model PlatformSetting {
+  key       String   @id
+  value     String
+  secret    Boolean  @default(false)
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+}

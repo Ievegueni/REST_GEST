@@ -78,7 +78,10 @@ export async function alertRoutes(app: FastifyInstance) {
 
   // ---- Regras e SMS
   app.get('/alert-rules', manage, async (req) => ({
-    data: { rules: [...(await getRules(req.auth.db)).values()], smsConfigured: smsConfigured() },
+    data: {
+      rules: [...(await getRules(req.auth.db)).values()],
+      smsConfigured: await smsConfigured(),
+    },
   }));
 
   app.put('/alert-rules', manage, async (req) => {
@@ -93,7 +96,9 @@ export async function alertRoutes(app: FastifyInstance) {
         });
       }
     });
-    return { data: { rules: [...(await getRules(db)).values()], smsConfigured: smsConfigured() } };
+    return {
+      data: { rules: [...(await getRules(db)).values()], smsConfigured: await smsConfigured() },
+    };
   });
 
   app.get('/sms-logs', manage, async (req) => {

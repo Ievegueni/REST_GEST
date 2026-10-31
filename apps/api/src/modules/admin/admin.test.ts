@@ -13,7 +13,7 @@ const tenantIds: string[] = [];
 let adm = ''; // cookie de sessão do Super Admin
 let newTenantId = '';
 
-const as = (method: 'GET' | 'POST' | 'PATCH', url: string, payload?: object) =>
+const as = (method: 'GET' | 'POST' | 'PATCH' | 'PUT', url: string, payload?: object) =>
   app.inject({ method, url, payload, cookies: { adm } });
 
 const tenantLogin = (email: string) =>
@@ -143,6 +143,59 @@ describe('gestão de tenants', () => {
     expect(d.month).toHaveProperty('aiCostUsd');
     // sem sessão de Super Admin → 401
     expect((await app.inject({ url: '/api/admin/dashboard' })).statusCode).toBe(401);
+  });
+
+  it('integração Futurix: chave cifrada, mascarada, sem chave na auditoria; teste de envio', async () => {
+    const before = (await as('GET', '/api/admin/integrations/futurix')).json().data;
+    expect(before.keySet).toBe(false);
+
+    const secretKey = 'fx_live_ABCDEFGH1234';
+    const put = await as('PUT', '/api/admin/integrations/futurix', {
+      url: 'http://127.0.0.1:9',
+      sender: 'RESTOGEST',
+      apiKey: secretKey,
+    });
+    expect(put.statusCode).toBe(200);
+    expect(put.json().data).toMatchObject({ keySet: true, keyHint: '••••1234', configured: true });
+    expect(JSON.stringify(put.json())).not.toContain(secretKey);
+
+    const row = await prisma.platformSetting.findUniqueOrThrow({
+      where: { key: 'futurix.apiKey' },
+    });
+    expect(row.secret).toBe(true);
+    expect(row.value).not.toContain(secretKey);
+    const log = await prisma.auditLog.findFirstOrThrow({
+      where: { action: 'admin.integrations.futurix' },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(JSON.stringify(log)).not.toContain(secretKey);
+
+    // omitir a chave mantém-na
+    await as('PUT', '/api/admin/integrations/futurix', {
+      url: 'http://127.0.0.1:9',
+      sender: 'OUTRO',
+    });
+    expect((await as('GET', '/api/admin/integrations/futurix')).json().data).toMatchObject({
+      keySet: true,
+      sender: 'OUTRO',
+    });
+
+    expect(
+      (await as('POST', '/api/admin/integrations/futurix/test', { to: '123' })).statusCode,
+    ).toBe(400);
+    const test = (
+      await as('POST', '/api/admin/integrations/futurix/test', { to: '923456789' })
+    ).json().data;
+    expect(test).toMatchObject({ to: '+244923456789', ok: false }); // servidor inexistente
+
+    // null apaga
+    await as('PUT', '/api/admin/integrations/futurix', {
+      url: 'http://127.0.0.1:9',
+      sender: 'OUTRO',
+      apiKey: null,
+    });
+    expect((await as('GET', '/api/admin/integrations/futurix')).json().data.keySet).toBe(false);
+    await prisma.platformSetting.deleteMany();
   });
 
   it('lista e detalhe com contagens e utilizadores', async () => {

@@ -73,6 +73,10 @@ pnpm dev:stop                           # termina TODOS os processos de desenvol
 - [ ] Reimportar o mesmo ficheiro → recusado; período sobreposto → "Falhou"; anular → stock reposto e permite reimportar.
 
 ## 7. Alertas e SMS
+- [ ] `/admin` → **Integrações** → Futurix SMS: colar a chave real, URL e remetente → "Guardar" → estado "Configurado"; a chave aparece só como ••••1234.
+- [ ] "Enviar teste" para o próprio telemóvel → "SMS enviado"; com chave errada → "Falhou: …".
+- [ ] Guardar sem preencher a chave mantém a anterior; "Remover chave" volta a "Não configurado".
+- [ ] Definições → Alertas e SMS do tenant deixa de mostrar o aviso "ainda não está activo" (até 30 s depois de guardar).
 - [ ] Consumo que deixa um produto abaixo do mínimo → alerta no sino em ~2 s; repor stock → alerta resolve sozinho.
 - [ ] Definições → Alertas e SMS: desligar um tipo, mudar limiar de validade, destinatários por perfil.
 - [ ] Horário de silêncio e resumo diário gravam.

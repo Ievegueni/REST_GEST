@@ -1,9 +1,17 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
+import { z } from 'zod';
 import type { AccessTokenPayload } from '../../core/auth';
 import { env } from '../../core/env';
 import { AppError } from '../../core/errors';
 import { prisma } from '../../core/prisma';
 import { audit } from '../../core/audit';
+import { setSettings } from '../../core/platform-settings';
+import {
+  FUTURIX_KEYS,
+  futurixConfig,
+  normalizePhone,
+  sendSms,
+} from '../../integrations/futurix-sms';
 import { taxTableSchema } from './schemas';
 import * as service from './service';
 import {
@@ -105,6 +113,64 @@ export async function adminRoutes(app: FastifyInstance) {
     });
 
     r.get('/dashboard', async () => ({ data: await service.dashboard() }));
+
+    // Integrações da plataforma: Futurix SMS (chave da COMUNICA, cifrada na BD)
+    const futurixView = async () => {
+      const c = await futurixConfig();
+      return {
+        url: c.url,
+        sender: c.sender ?? '',
+        keySet: Boolean(c.apiKey),
+        keyHint: c.apiKey ? `••••${c.apiKey.slice(-4)}` : null,
+        source: c.source,
+        configured: Boolean(c.apiKey && c.sender),
+      };
+    };
+    r.get('/integrations/futurix', async () => ({ data: await futurixView() }));
+    r.put('/integrations/futurix', async (req) => {
+      const b = z
+        .object({
+          url: z.string().trim().url('URL inválido').max(300),
+          sender: z.string().trim().min(1, 'Indique o remetente').max(20),
+          // string = nova chave; null = apagar; omisso = manter
+          apiKey: z.string().trim().min(8, 'Chave demasiado curta').max(500).nullable().optional(),
+        })
+        .parse(req.body);
+      await setSettings(
+        {
+          [FUTURIX_KEYS.url]: b.url,
+          [FUTURIX_KEYS.sender]: b.sender,
+          [FUTURIX_KEYS.apiKey]: b.apiKey,
+        },
+        { secret: [FUTURIX_KEYS.apiKey], by: req.admin.id },
+      );
+      await audit({
+        tenantId: null,
+        userId: req.admin.id,
+        action: 'admin.integrations.futurix',
+        entity: 'PlatformSetting',
+        entityId: 'futurix',
+        // nunca a chave: só se mudou
+        after: {
+          url: b.url,
+          sender: b.sender,
+          apiKey: b.apiKey === undefined ? 'mantida' : b.apiKey === null ? 'apagada' : 'alterada',
+        },
+        ip: req.ip,
+      });
+      return { data: await futurixView() };
+    });
+    r.post(
+      '/integrations/futurix/test',
+      { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } },
+      async (req) => {
+        const { to } = z.object({ to: z.string() }).parse(req.body);
+        const phone = normalizePhone(to);
+        if (!phone) throw new AppError('VALIDATION_ERROR', 'Número inválido (ex.: 923 456 789)');
+        const res = await sendSms(phone, 'RestoGest: SMS de teste da integração Futurix.');
+        return { data: { to: phone, ...res } };
+      },
+    );
 
     r.get('/tenants', async () => ({ data: await service.listTenants() }));
 

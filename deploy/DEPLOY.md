@@ -28,7 +28,7 @@ Criar o Super Admin com `pnpm --filter @restgest/api db:seed` **só** numa base 
 | `ENCRYPTION_KEY` | `openssl rand -base64 32` — **guardar fora da VPS**; sem ela os IBAN não se recuperam |
 | `APP_URL` | `https://<domínio>` (CORS) |
 | `CLOUDINARY_URL` | obrigatório em produção (sem ele os anexos ficam no disco da VPS) |
-| `FUTURIX_SMS_*` | quando houver chave |
+| `FUTURIX_SMS_*` | opcional: a chave pode ser configurada no `/admin` → Integrações (guardada cifrada; tem prioridade sobre o `.env`) |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Analisador IA (modelo por defeito `claude-opus-5`) |
 | `HOST`, `TRUST_PROXY`, `RUN_WORKERS` | definidos no ecosystem (`127.0.0.1`, `true`, `false`) |
 

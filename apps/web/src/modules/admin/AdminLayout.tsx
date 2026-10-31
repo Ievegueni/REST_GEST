@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Building2, Landmark, LayoutDashboard, Lock, Mail } from 'lucide-react';
+import { Building2, Landmark, LayoutDashboard, Lock, Mail, Plug } from 'lucide-react';
 import { Shell } from '../../components/Shell';
 import { buttonCls, Field } from '../../components/ui';
 import { t } from '../../i18n';
@@ -44,6 +44,12 @@ export function AdminLayout() {
           label: t('taxTables.title'),
           icon: Landmark,
           match: ['/admin/tabelas-fiscais'],
+        },
+        {
+          to: '/admin/integracoes',
+          label: t('integrations.title'),
+          icon: Plug,
+          match: ['/admin/integracoes'],
         },
       ]}
       user={{ name: admin.name, role: t('admin.title') }}

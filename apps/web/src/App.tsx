@@ -5,6 +5,7 @@ import { Layout } from './components/Layout';
 import { FeatureGate } from './features/session';
 import { AdminLayout } from './modules/admin/AdminLayout';
 import { AdminDashboardPage } from './modules/admin/AdminDashboardPage';
+import { IntegrationsPage } from './modules/admin/IntegrationsPage';
 import { NewTenantPage } from './modules/admin/NewTenantPage';
 import { TenantDetailPage } from './modules/admin/TenantDetailPage';
 import { TenantsPage } from './modules/admin/TenantsPage';
@@ -88,6 +89,7 @@ export function App() {
         <Route path="tenants/novo" element={<NewTenantPage />} />
         <Route path="tenants/:id" element={<TenantDetailPage />} />
         <Route path="tabelas-fiscais" element={<TaxTablesPage />} />
+        <Route path="integracoes" element={<IntegrationsPage />} />
       </Route>
 
       <Route element={<Layout />}>

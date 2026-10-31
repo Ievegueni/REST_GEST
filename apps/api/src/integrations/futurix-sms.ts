@@ -4,24 +4,50 @@
  * só este ficheiro muda quando chegarem.
  */
 import { env } from '../core/env';
+import { getSetting } from '../core/platform-settings';
 
 export type SmsResult =
   | { ok: true; providerId: string | null; cost: number | null }
   | { ok: false; error: string; retryable: boolean };
 
-export const smsConfigured = () => Boolean(env.FUTURIX_SMS_API_KEY && env.FUTURIX_SMS_SENDER);
+export const FUTURIX_KEYS = {
+  url: 'futurix.apiUrl',
+  apiKey: 'futurix.apiKey',
+  sender: 'futurix.sender',
+} as const;
+
+/** Configuração em uso: a do Super Admin (Integrações) tem prioridade sobre o .env. */
+export async function futurixConfig() {
+  const [url, apiKey, sender] = await Promise.all([
+    getSetting(FUTURIX_KEYS.url),
+    getSetting(FUTURIX_KEYS.apiKey),
+    getSetting(FUTURIX_KEYS.sender),
+  ]);
+  return {
+    url: url ?? env.FUTURIX_SMS_API_URL,
+    apiKey: apiKey ?? env.FUTURIX_SMS_API_KEY,
+    sender: sender ?? env.FUTURIX_SMS_SENDER,
+    source: apiKey ? ('platform' as const) : env.FUTURIX_SMS_API_KEY ? ('env' as const) : null,
+  };
+}
+
+export const smsConfigured = async () => {
+  const c = await futurixConfig();
+  return Boolean(c.apiKey && c.sender);
+};
 
 export async function sendSms(to: string, message: string): Promise<SmsResult> {
-  if (!smsConfigured())
+  const cfg = await futurixConfig();
+  if (!cfg.apiKey || !cfg.sender)
     return { ok: false, error: 'Futurix SMS não configurado', retryable: false };
   try {
-    const res = await fetch(`${env.FUTURIX_SMS_API_URL}/sms/send`, {
+    const res = await fetch(`${cfg.url.replace(/\/+$/, '')}/sms/send`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        authorization: `Bearer ${env.FUTURIX_SMS_API_KEY}`,
+        authorization: `Bearer ${cfg.apiKey}`,
       },
-      body: JSON.stringify({ to, message, sender: env.FUTURIX_SMS_SENDER }),
+      body: JSON.stringify({ to, message, sender: cfg.sender }),
       signal: AbortSignal.timeout(15_000),
     });
     const json = (await res.json().catch(() => ({}))) as {
