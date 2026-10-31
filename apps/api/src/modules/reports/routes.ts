@@ -1,13 +1,13 @@
-import { Prisma } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { canAccessUnit, protect } from '../../core/auth';
+import { protect } from '../../core/auth';
 import { AppError } from '../../core/errors';
 import { env } from '../../core/env';
 import { prisma } from '../../core/prisma';
-import { addDays, period, filtersSchema, todayLocal, zonedMidnight, type Filters } from './common';
+import { filtersSchema, period, scopeUnits, todayLocal, type Filters } from './common';
 import { REPORTS, type ReportName } from './definitions';
 import { logoDataUrl } from '../../core/logo';
+import { ownerDashboard } from './dashboard';
 import { toPdf, toXlsx } from './export';
 import { createOrders, suggest } from './replenishment';
 
@@ -88,127 +88,29 @@ export async function reportRoutes(app: FastifyInstance) {
   });
 
   // ---- Dashboard
+  /** Painel do dono: período (por defeito o mês corrente), por unidade e consolidado. */
   app.get('/dashboard', protect({ feature: 'stock', permission: 'stock.view' }), async (req) => {
-    const { unitId } = req.query as { unitId?: string };
-    const db = req.auth.db;
-    const units = unitId ? [unitId] : req.auth.unitIds === 'all' ? undefined : req.auth.unitIds;
-    if (unitId && !canAccessUnit(req.auth, unitId))
-      throw new AppError('FORBIDDEN', 'Sem acesso a esta unidade');
-    const inUnits = units ? { unitId: { in: units } } : {};
-    const monthStart = zonedMidnight(`${todayLocal().slice(0, 8)}01`);
-    const last30 = period({} as Filters);
-    const mv = (types: ('SALE_OUT' | 'CONSUMPTION' | 'WASTE')[], gte: Date) =>
-      db.stockMovement.aggregate({
-        where: { type: { in: types }, occurredAt: { gte }, location: inUnits },
-        _sum: { totalCost: true },
-      });
-
-    // série diária (últimos 30 dias, dia local): consumo e quebras ao custo
-    const daily = db.$queryRaw<{ day: string; consumption: number; waste: number }[]>`
-      SELECT to_char(m."occurredAt" AT TIME ZONE ${env.TZ_DISPLAY}, 'YYYY-MM-DD') AS day,
-        COALESCE(-SUM(m."totalCost") FILTER (WHERE m."type"::text IN ('SALE_OUT', 'CONSUMPTION')), 0)::float AS consumption,
-        COALESCE(-SUM(m."totalCost") FILTER (WHERE m."type"::text = 'WASTE'), 0)::float AS waste
-      FROM "StockMovement" m JOIN "StockLocation" l ON l."id" = m."locationId"
-      WHERE m."tenantId" = ${req.auth.tenantId} AND m."occurredAt" >= ${last30.gte}
-        ${units ? Prisma.sql`AND l."unitId" IN (${Prisma.join(units)})` : Prisma.empty}
-      GROUP BY 1`;
-
-    // vendas da semana (segunda até hoje, dia local) por unidade: importações do POS confirmadas
+    const q = z
+      .object({
+        from: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
+        to: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
+        unitId: z.string().optional(),
+      })
+      .parse(req.query);
     const today = todayLocal();
-    const weekStart = addDays(today, -((new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7));
-    const weekly = db.$queryRaw<{ unitId: string; amount: number }[]>`
-      SELECT i."unitId", COALESCE(SUM(l."amount"), 0)::int AS amount
-      FROM "SalesImportLine" l JOIN "SalesImport" i ON i."id" = l."importId"
-      WHERE i."tenantId" = ${req.auth.tenantId} AND i."status"::text = 'CONFIRMED'
-        AND l."saleDate" >= ${weekStart}::date AND l."saleDate" <= ${today}::date
-        ${units ? Prisma.sql`AND i."unitId" IN (${Prisma.join(units)})` : Prisma.empty}
-      GROUP BY 1`;
-
-    const [costs, alerts, openAlerts, consMonth, wasteMonth, purchMonth, top, weekRows, series] =
-      await Promise.all([
-        db.stockCost.findMany({ where: { ...inUnits, qty: { gt: 0 } } }),
-        db.alert.findMany({
-          where: {
-            status: 'OPEN',
-            ...(units && { OR: [{ unitId: null }, { unitId: { in: units } }] }),
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 5,
-        }),
-        db.alert.count({
-          where: {
-            status: 'OPEN',
-            ...(units && { OR: [{ unitId: null }, { unitId: { in: units } }] }),
-          },
-        }),
-        mv(['SALE_OUT', 'CONSUMPTION'], monthStart),
-        mv(['WASTE'], monthStart),
-        db.goodsReceipt.aggregate({
-          where: { status: 'POSTED', receivedAt: { gte: monthStart }, location: inUnits },
-          _sum: { totalAmount: true },
-        }),
-        db.stockMovement.groupBy({
-          by: ['productId'],
-          where: {
-            type: { in: ['SALE_OUT', 'CONSUMPTION'] },
-            occurredAt: { gte: last30.gte },
-            location: inUnits,
-          },
-          _sum: { totalCost: true },
-          orderBy: { _sum: { totalCost: 'asc' } },
-          take: 5,
-        }),
-        weekly,
-        daily,
-      ]);
-    const byDay = new Map(series.map((r) => [r.day, r]));
-    const names = new Map(
-      (
-        await db.product.findMany({
-          where: { id: { in: top.map((t) => t.productId) } },
-          select: { id: true, name: true },
-        })
-      ).map((p) => [p.id, p.name]),
-    );
-    return {
-      data: {
-        stockValue: Math.round(costs.reduce((s, c) => s + c.qty.mul(c.avgCost).toNumber(), 0)),
-        openAlerts,
-        alerts,
-        consumptionMonth: -(consMonth._sum.totalCost ?? 0),
-        wasteMonth: -(wasteMonth._sum.totalCost ?? 0),
-        purchasesMonth: purchMonth._sum.totalAmount ?? 0,
-        daily: Array.from({ length: last30.days }, (_, i) => {
-          const d = addDays(last30.from, i);
-          const r = byDay.get(d);
-          return {
-            date: d,
-            consumption: Math.round(r?.consumption ?? 0),
-            waste: Math.round(r?.waste ?? 0),
-          };
-        }),
-        topConsumption: top.map((t) => ({
-          productId: t.productId,
-          name: names.get(t.productId) ?? '',
-          value: -(t._sum.totalCost ?? 0),
-        })),
-        weekSales: {
-          from: weekStart,
-          to: today,
-          units: (
-            await db.unit.findMany({
-              where: { active: true, ...(units && { id: { in: units } }) },
-              select: { id: true, name: true },
-              orderBy: { name: 'asc' },
-            })
-          ).map((u) => ({
-            unitId: u.id,
-            name: u.name,
-            amount: weekRows.find((r) => r.unitId === u.id)?.amount ?? 0,
-          })),
-        },
-      },
-    };
+    const f = filtersSchema.parse({
+      from: q.from ?? `${today.slice(0, 8)}01`,
+      to: q.to ?? today,
+      unitId: q.unitId,
+    });
+    if (f.from! > f.to!) throw new AppError('VALIDATION_ERROR', 'Data inicial depois da final');
+    return { data: await ownerDashboard(req.auth, f, scopeUnits(req.auth, f)) };
   });
 }
 

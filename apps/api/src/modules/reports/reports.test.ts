@@ -260,18 +260,25 @@ describe('sugestão de reposição', () => {
     expect(again.find((x: { code: string }) => x.code === 'CERV')).toBeUndefined();
   });
 
-  it('dashboard', async () => {
+  it('painel do dono: período, por unidade, consolidado e série diária', async () => {
+    const today = todayLocal();
     const d = (await api('GET', '/api/dashboard')).json().data;
-    expect(d.stockValue).toBeGreaterThan(0);
+    // por defeito: mês corrente até hoje
+    expect(d.period).toEqual({ from: `${today.slice(0, 8)}01`, to: today });
+    expect(d.total.stockValue).toBeGreaterThan(0);
     expect(d.topConsumption[0].name).toBe('CERV');
-    // série de 30 dias com o consumo dos últimos 30 dias
-    expect(d.daily).toHaveLength(30);
-    const sum = d.daily.reduce((s: number, x: { consumption: number }) => s + x.consumption, 0);
-    expect(sum).toBeGreaterThan(0);
-    // vendas da semana: todas as unidades activas, com total em Kz (0 sem importações)
-    expect(d.weekSales.units.length).toBeGreaterThan(0);
+    // stock consolidado = soma das unidades
+    expect(d.units.reduce((a: number, u: { stockValue: number }) => a + u.stockValue, 0)).toBe(
+      d.total.stockValue,
+    );
+    expect(d.daily.days).toHaveLength(Number(today.slice(8, 10)));
+    expect(d.daily.units[0].revenue).toHaveLength(d.daily.days.length);
+    expect(d.previousTotal).toHaveProperty('revenue');
     expect(d.weekSales.units[0]).toHaveProperty('amount');
-    expect(d.weekSales.from <= d.weekSales.to).toBe(true);
-    expect(todayLocal()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    // período escolhido
+    const one = (await api('GET', `/api/dashboard?from=${today}&to=${today}`)).json().data;
+    expect(one.daily.days).toEqual([today]);
+    expect((await api('GET', '/api/dashboard?from=2026-02-10&to=2026-02-01')).statusCode).toBe(400);
   });
 });

@@ -89,7 +89,12 @@ pnpm dev:stop                           # termina TODOS os processos de desenvol
 - [ ] Ecónomo de outra unidade não recebe alertas da primeira.
 
 ## 8. Relatórios e dashboard
-- [ ] Painel mostra valor em stock, alertas, consumo/quebras/compras do mês, top consumos e vendas desta semana por unidade (segunda a hoje, total em Kz; com uma unidade escolhida no topo só mostra essa).
+- [ ] Painel: filtros Hoje / 7 dias / Esta semana / Este mês / Mês passado / Personalizado → todos os números mudam para o período; datas trocadas (início depois do fim) não são aceites.
+- [ ] Indicadores: Vendas, Margem bruta (e %), CMV %, Quebras, Compras, Valor em stock (actual), Alertas; com plano Completo e permissão de resultados também Resultado operacional. Variação ▲/▼ vs. período anterior com a mesma duração.
+- [ ] Gráfico "Vendas diárias por unidade": uma linha por unidade, tooltip com o valor de cada uma.
+- [ ] "Comparativo por unidade": vendas, margem, CMV %, quebras, compras, (resultado) e valor em stock de cada unidade + total; conferir as vendas com Importação de vendas.
+- [ ] "Vendas desta semana" (segunda a hoje) por unidade, independente do filtro; artigos mais vendidos, produtos com mais consumo e últimos alertas.
+- [ ] Escolher uma unidade no topo → todo o painel mostra só essa unidade.
 - [ ] Cada relatório abre com filtros; exportar Excel e PDF de pelo menos 3 relatórios e abrir os ficheiros (acentos correctos).
 - [ ] Rotação: "Só produtos parados".
 - [ ] Sugestão de reposição: calcular, ajustar quantidades/fornecedor, gerar encomendas (uma por fornecedor).
