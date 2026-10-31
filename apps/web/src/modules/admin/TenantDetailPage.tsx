@@ -7,11 +7,33 @@ import {
   type FeatureOverrides,
   type Plan,
 } from '@restgest/shared';
-import { buttonCls, ErrorBox, Field, secondaryCls } from '../../components/ui';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  CircleDollarSign,
+  FileSpreadsheet,
+  LogIn,
+  MessageSquareText,
+  MinusCircle,
+  PauseCircle,
+  PlayCircle,
+  Sparkles,
+} from 'lucide-react';
+import {
+  Badge,
+  buttonCls,
+  ErrorBox,
+  Field,
+  inputBase,
+  Panel,
+  secondaryCls,
+  StatCard,
+} from '../../components/ui';
+import { PlanBadge, StatusBadge } from './badges';
 import { useSession } from '../../features/session';
 import { t, type TKey } from '../../i18n';
 import { api } from '../../lib/api';
-import { formatMoney } from '../../lib/format';
+import { formatDate, formatMoney } from '../../lib/format';
 import {
   inputsToLimits,
   LimitsFields,
@@ -109,126 +131,214 @@ export function TenantDetailPage() {
   const effective = effectiveFeatures(form.plan, form.featureOverrides);
   const suspended = tenant.status === 'SUSPENDED';
 
+  const dirty = JSON.stringify(form) !== JSON.stringify(toForm(tenant));
+  const u = tenant.usage;
+  const usd = (v: number) =>
+    `${v.toLocaleString('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
+
   return (
-    <div className="space-y-6">
-      <Link to="/admin" className="text-sm text-slate-500 hover:underline">
-        {t('admin.back')}
+    <div className="space-y-6 pb-20">
+      <Link
+        to="/admin/tenants"
+        className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-brand-600"
+      >
+        <ArrowLeft className="size-4" />
+        {t('admin.tenants')}
       </Link>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {tenant.name}
-          {suspended && (
-            <span className="ml-2 text-sm text-red-700">({t('admin.status.SUSPENDED')})</span>
-          )}
-        </h1>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <span className="flex size-12 items-center justify-center rounded-xl bg-brand-600 text-lg font-semibold text-white">
+            {tenant.name.slice(0, 1).toUpperCase()}
+          </span>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">{tenant.name}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+              <PlanBadge plan={tenant.plan} />
+              <StatusBadge status={tenant.status} />
+              <span>{t('admin.since', { date: formatDate(tenant.createdAt) })}</span>
+              {tenant.nif && <span>· NIF {tenant.nif}</span>}
+            </div>
+          </div>
+        </div>
         <button
-          className={secondaryCls}
+          className={`${secondaryCls} ${suspended ? '' : 'text-red-600 hover:bg-red-50'}`}
           onClick={() => patch({ status: suspended ? 'ACTIVE' : 'SUSPENDED' })}
         >
+          {suspended ? <PlayCircle className="size-4" /> : <PauseCircle className="size-4" />}
           {suspended ? t('admin.reactivate') : t('admin.suspend')}
         </button>
       </div>
+
       <ErrorBox>{error}</ErrorBox>
-      {msg && <p className="rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{msg}</p>}
+      {msg && !dirty && (
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          {msg}
+        </p>
+      )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="space-y-3 rounded-xl border bg-white shadow-xs p-4">
-          <h2 className="font-medium">{t('admin.details')}</h2>
-          <Field
-            label={t('admin.name')}
-            value={form.name}
-            onChange={(name) => setForm({ ...form, name })}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-gray-500">{t('admin.usage')}</h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard
+            icon={MessageSquareText}
+            tone="amber"
+            label={t('admin.usage.sms')}
+            value={String(u.smsSent)}
+            hint={
+              <span className="text-gray-500">
+                {formatMoney(u.smsCost)}
+                {tenant.smsMonthlyLimit != null &&
+                  ` · ${t('admin.limitOf', { n: tenant.smsMonthlyLimit })}`}
+              </span>
+            }
           />
-          <Field
-            label={t('admin.nif')}
-            value={form.nif}
-            required={false}
-            onChange={(nif) => setForm({ ...form, nif })}
+          <StatCard
+            icon={Sparkles}
+            label={t('admin.usage.ai')}
+            value={String(u.aiRequests)}
+            hint={
+              <span className="text-gray-500">
+                {u.aiTokens.toLocaleString('pt-AO')} tokens
+                {tenant.aiMonthlyLimit != null &&
+                  ` · ${t('admin.limitOf', { n: tenant.aiMonthlyLimit })}`}
+              </span>
+            }
           />
-          <h2 className="pt-2 font-medium">{t('admin.limits')}</h2>
-          <LimitsFields value={form.limits} onChange={(limits) => setForm({ ...form, limits })} />
-        </section>
+          <StatCard
+            icon={CircleDollarSign}
+            label={t('admin.usage.aiCost')}
+            value={usd(u.aiCostUsd)}
+          />
+          <StatCard
+            icon={FileSpreadsheet}
+            tone="emerald"
+            label={t('admin.usage.imports')}
+            value={String(u.salesImports)}
+          />
+        </div>
+      </section>
 
-        <section className="space-y-3 rounded-xl border bg-white shadow-xs p-4">
-          <h2 className="font-medium">{t('admin.plan')}</h2>
-          <PlanSelector value={form.plan} onChange={(plan) => setForm({ ...form, plan })} />
-          <h2 className="pt-2 font-medium">{t('admin.features')}</h2>
-          <table className="w-full text-sm">
-            <tbody className="divide-y">
-              {FEATURES.map((f) => {
-                const o = form.featureOverrides[f];
-                return (
-                  <tr key={f}>
-                    <td className="py-1">{t(`feature.${f}` as TKey)}</td>
-                    <td className="py-1">
-                      <select
-                        aria-label={t(`feature.${f}` as TKey)}
-                        className="rounded border px-1 py-0.5"
-                        value={o === undefined ? '' : o ? 'on' : 'off'}
-                        onChange={(e) => setOverride(f, e.target.value)}
-                      >
-                        <option value="">{t('admin.override.plan')}</option>
-                        <option value="on">{t('admin.override.on')}</option>
-                        <option value="off">{t('admin.override.off')}</option>
-                      </select>
-                    </td>
-                    <td
-                      className={`py-1 text-right ${effective.has(f) ? 'text-emerald-700' : 'text-slate-400'}`}
+      <div className="grid gap-6 xl:grid-cols-5">
+        <div className="space-y-6 xl:col-span-3">
+          <Panel title={t('admin.plan')}>
+            <div className="space-y-5 p-5">
+              <PlanSelector value={form.plan} onChange={(plan) => setForm({ ...form, plan })} />
+              <div>
+                <h3 className="text-sm font-semibold">{t('admin.features')}</h3>
+                <p className="mb-2 text-xs text-gray-500">{t('admin.overridesHint')}</p>
+                <ul className="divide-y divide-gray-100 rounded-lg border">
+                  {FEATURES.map((f) => {
+                    const o = form.featureOverrides[f];
+                    const on = effective.has(f);
+                    return (
+                      <li key={f} className="flex items-center gap-3 px-3 py-2 text-sm">
+                        {on ? (
+                          <CheckCircle2 className="size-4.5 shrink-0 text-emerald-500" />
+                        ) : (
+                          <MinusCircle className="size-4.5 shrink-0 text-gray-300" />
+                        )}
+                        <span className={`flex-1 ${on ? '' : 'text-gray-400'}`}>
+                          {t(`feature.${f}` as TKey)}
+                        </span>
+                        {o !== undefined && (
+                          <Badge tone={o ? 'emerald' : 'red'}>
+                            {o ? t('admin.override.on') : t('admin.override.off')}
+                          </Badge>
+                        )}
+                        <select
+                          aria-label={t(`feature.${f}` as TKey)}
+                          className={`${inputBase} w-32 py-1`}
+                          value={o === undefined ? '' : o ? 'on' : 'off'}
+                          onChange={(e) => setOverride(f, e.target.value)}
+                        >
+                          <option value="">{t('admin.override.plan')}</option>
+                          <option value="on">{t('admin.override.on')}</option>
+                          <option value="off">{t('admin.override.off')}</option>
+                        </select>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          </Panel>
+        </div>
+
+        <div className="space-y-6 xl:col-span-2">
+          <Panel title={t('admin.details')}>
+            <div className="space-y-4 p-5">
+              <Field
+                label={t('admin.name')}
+                value={form.name}
+                onChange={(name) => setForm({ ...form, name })}
+              />
+              <Field
+                label={t('admin.nif')}
+                value={form.nif}
+                required={false}
+                onChange={(nif) => setForm({ ...form, nif })}
+              />
+            </div>
+          </Panel>
+          <Panel title={t('admin.limitsTitle')}>
+            <div className="p-5">
+              <p className="mb-3 text-xs text-gray-500">{t('admin.limitsHint')}</p>
+              <LimitsFields
+                value={form.limits}
+                onChange={(limits) => setForm({ ...form, limits })}
+              />
+            </div>
+          </Panel>
+          <Panel title={t('admin.users')}>
+            <ul className="divide-y divide-gray-100 text-sm">
+              {tenant.users.map((usr) => (
+                <li key={usr.id} className="flex items-center gap-3 px-5 py-3">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                    {usr.name
+                      .split(' ')
+                      .slice(0, 2)
+                      .map((w) => w[0])
+                      .join('')
+                      .toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className={`truncate font-medium ${usr.active ? '' : 'text-gray-400'}`}>
+                      {usr.name}
+                    </div>
+                    <div className="truncate text-xs text-gray-500">
+                      {usr.email} · {usr.role.name}
+                    </div>
+                  </div>
+                  {usr.active && !suspended && (
+                    <button
+                      className={`${secondaryCls} px-2.5 py-1.5 text-xs`}
+                      onClick={() => impersonate(usr.id)}
                     >
-                      {effective.has(f) ? '✔' : '—'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
+                      <LogIn className="size-3.5" />
+                      {t('admin.impersonate')}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
       </div>
 
-      <button className={buttonCls} onClick={save}>
-        {t('admin.save')}
-      </button>
-
-      <section className="rounded-xl border bg-white shadow-xs p-4">
-        <h2 className="mb-2 font-medium">{t('admin.usage')}</h2>
-        <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-5">
-          {(
-            [
-              ['admin.usage.sms', `${tenant.usage.smsSent} (${formatMoney(tenant.usage.smsCost)})`],
-              ['admin.usage.ai', String(tenant.usage.aiRequests)],
-              ['admin.usage.aiTokens', tenant.usage.aiTokens.toLocaleString('pt-AO')],
-              ['admin.usage.aiCost', `${tenant.usage.aiCostUsd.toFixed(2)} USD`],
-              ['admin.usage.imports', String(tenant.usage.salesImports)],
-            ] as const
-          ).map(([k, v]) => (
-            <div key={k}>
-              <dt className="text-slate-500">{t(k)}</dt>
-              <dd className="font-medium">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
-
-      <section className="rounded-xl border bg-white shadow-xs">
-        <h2 className="border-b px-4 py-2 font-medium">{t('admin.users')}</h2>
-        <ul className="divide-y text-sm">
-          {tenant.users.map((u) => (
-            <li key={u.id} className="flex items-center justify-between px-4 py-2">
-              <span>
-                {u.name}{' '}
-                <span className="text-slate-500">
-                  · {u.email} · {u.role.name}
-                </span>
-              </span>
-              {u.active && !suspended && (
-                <button className={secondaryCls} onClick={() => impersonate(u.id)}>
-                  {t('admin.impersonate')}
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {dirty && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 backdrop-blur lg:left-64">
+          <div className="mx-auto flex max-w-[1400px] items-center justify-end gap-3 px-4 py-3 sm:px-8">
+            <span className="mr-auto text-sm text-gray-600">{t('admin.unsaved')}</span>
+            <button className={secondaryCls} onClick={() => setForm(toForm(tenant))}>
+              {t('admin.discard')}
+            </button>
+            <button className={buttonCls} onClick={save}>
+              {t('admin.save')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

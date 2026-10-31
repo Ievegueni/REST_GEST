@@ -104,6 +104,8 @@ export async function adminRoutes(app: FastifyInstance) {
       return { data: t };
     });
 
+    r.get('/dashboard', async () => ({ data: await service.dashboard() }));
+
     r.get('/tenants', async () => ({ data: await service.listTenants() }));
 
     r.post('/tenants', async (req, reply) => {

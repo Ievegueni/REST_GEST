@@ -30,7 +30,9 @@ pnpm dev:stop                           # termina TODOS os processos de desenvol
 - [ ] Com plano STOCK, o menu não mostra Recursos humanos; abrir `/rh` directamente não mostra conteúdo.
 
 ## 2. Super Admin (`/admin`)
-- [ ] Login de Super Admin; lista de tenants com unidades/utilizadores.
+- [ ] Login de Super Admin → Painel: tenants activos, no plano Completo, unidades · utilizadores, SMS/IA/importações do mês, gráfico de actividade de 30 dias, maior uso de IA e tenants recentes.
+- [ ] Tenants: pesquisa por nome/NIF, filtros de plano e estado, etiquetas de plano/estado, barras de utilização quando há limite de unidades/utilizadores.
+- [ ] Detalhe do tenant: mudar o plano nos cartões ou um override → aparece a barra "Tem alterações por guardar"; "Descartar" repõe; "Guardar alterações" grava.
 - [ ] Criar tenant com primeiro administrador → o administrador entra na app.
 - [ ] Mudar plano STOCK ↔ COMPLETO e um override (ex.: desligar Analisador IA) → o menu do tenant muda logo.
 - [ ] Limites: máx. 1 unidade → criar segunda unidade no tenant dá "Limite do plano atingido".

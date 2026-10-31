@@ -1,10 +1,11 @@
 import argon2 from 'argon2';
-import type { Prisma } from '@prisma/client';
 import { audit } from '../../core/audit';
 import { AppError } from '../../core/errors';
 import { prisma } from '../../core/prisma';
 import { createTenant } from '../../core/tenants';
-import { todayLocal, zonedMidnight } from '../reports/common';
+import { Prisma } from '@prisma/client';
+import { env } from '../../core/env';
+import { addDays, todayLocal, zonedMidnight } from '../reports/common';
 import type { z } from 'zod';
 import type { createTenantSchema, updateTenantSchema } from './schemas';
 
@@ -151,4 +152,94 @@ export async function impersonationTarget(
     ip,
   });
   return user;
+}
+
+/** Painel do Super Admin: carteira de tenants, uso do mês e actividade dos últimos 30 dias. */
+export async function dashboard() {
+  const today = todayLocal();
+  const monthStart = zonedMidnight(`${today.slice(0, 8)}01`);
+  const from = addDays(today, -29);
+  const since = zonedMidnight(from);
+  const tz = env.TZ_DISPLAY;
+  const perDay = (table: string, extra = Prisma.empty) =>
+    prisma.$queryRaw<{ day: string; n: number }[]>`
+      SELECT to_char("createdAt" AT TIME ZONE ${tz}, 'YYYY-MM-DD') AS day, COUNT(*)::int AS n
+      FROM ${Prisma.raw(`"${table}"`)} WHERE "createdAt" >= ${since} ${extra} GROUP BY 1`;
+
+  const [tenants, units, users, sms, ai, imports, aiDays, smsDays, importDays, aiByTenant] =
+    await Promise.all([
+      prisma.tenant.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          plan: true,
+          status: true,
+          createdAt: true,
+          _count: { select: { units: true, users: true } },
+        },
+      }),
+      prisma.unit.count({ where: { active: true } }),
+      prisma.user.count({ where: { active: true } }),
+      prisma.smsLog.aggregate({
+        where: { status: 'SENT', createdAt: { gte: monthStart } },
+        _count: true,
+        _sum: { cost: true },
+      }),
+      prisma.aiRequest.aggregate({
+        where: { createdAt: { gte: monthStart } },
+        _count: true,
+        _sum: { costMicroUsd: true },
+      }),
+      prisma.salesImport.count({ where: { createdAt: { gte: monthStart } } }),
+      perDay('AiRequest'),
+      perDay('SmsLog', Prisma.sql`AND "status" = 'SENT'`),
+      perDay('SalesImport'),
+      prisma.aiRequest.groupBy({
+        by: ['tenantId'],
+        where: { createdAt: { gte: monthStart } },
+        _count: true,
+        _sum: { costMicroUsd: true },
+      }),
+    ]);
+
+  const series = (rows: { day: string; n: number }[]) => {
+    const m = new Map(rows.map((r) => [r.day, r.n]));
+    return Array.from({ length: 30 }, (_, i) => m.get(addDays(from, i)) ?? 0);
+  };
+  const name = new Map(tenants.map((t) => [t.id, t.name]));
+  return {
+    tenants: {
+      total: tenants.length,
+      active: tenants.filter((t) => t.status === 'ACTIVE').length,
+      suspended: tenants.filter((t) => t.status === 'SUSPENDED').length,
+      completo: tenants.filter((t) => t.plan === 'COMPLETO').length,
+      stock: tenants.filter((t) => t.plan === 'STOCK').length,
+    },
+    units,
+    users,
+    month: {
+      smsSent: sms._count,
+      smsCost: sms._sum.cost ?? 0,
+      aiRequests: ai._count,
+      aiCostUsd: (ai._sum.costMicroUsd ?? 0) / 1e6,
+      salesImports: imports,
+    },
+    daily: {
+      days: Array.from({ length: 30 }, (_, i) => addDays(from, i)),
+      ai: series(aiDays),
+      sms: series(smsDays),
+      imports: series(importDays),
+    },
+    recent: tenants.slice(0, 6),
+    topAi: aiByTenant
+      .map((r) => ({
+        tenantId: r.tenantId,
+        name: name.get(r.tenantId) ?? '—',
+        requests: r._count,
+        costUsd: (r._sum.costMicroUsd ?? 0) / 1e6,
+      }))
+      .sort((a, b) => b.requests - a.requests)
+      .slice(0, 5),
+  };
 }

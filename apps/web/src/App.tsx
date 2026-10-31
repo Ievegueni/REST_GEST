@@ -4,6 +4,7 @@ import type { Feature } from '@restgest/shared';
 import { Layout } from './components/Layout';
 import { FeatureGate } from './features/session';
 import { AdminLayout } from './modules/admin/AdminLayout';
+import { AdminDashboardPage } from './modules/admin/AdminDashboardPage';
 import { NewTenantPage } from './modules/admin/NewTenantPage';
 import { TenantDetailPage } from './modules/admin/TenantDetailPage';
 import { TenantsPage } from './modules/admin/TenantsPage';
@@ -82,7 +83,8 @@ export function App() {
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
 
       <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<TenantsPage />} />
+        <Route index element={<AdminDashboardPage />} />
+        <Route path="tenants" element={<TenantsPage />} />
         <Route path="tenants/novo" element={<NewTenantPage />} />
         <Route path="tenants/:id" element={<TenantDetailPage />} />
         <Route path="tabelas-fiscais" element={<TaxTablesPage />} />

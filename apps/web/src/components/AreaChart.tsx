@@ -41,6 +41,8 @@ export function AreaChart(props: {
   format?: (v: number) => string;
   /** mostra uma etiqueta do eixo X a cada N pontos */
   every?: number;
+  /** contagens: eixo Y só com inteiros */
+  integer?: boolean;
 }) {
   const id = useId();
   const [hover, setHover] = useState<number | null>(null);
@@ -56,7 +58,9 @@ export function AreaChart(props: {
   }, []);
   const n = props.labels.length;
   const all = props.series.flatMap((s) => s.values);
-  const max = niceMax(Math.max(0, ...all));
+  const max = props.integer
+    ? Math.max(4, Math.ceil(niceMax(Math.max(0, ...all)) / 4) * 4)
+    : niceMax(Math.max(0, ...all));
   const lo = Math.min(0, ...all) < 0 ? -niceMax(-Math.min(...all)) : 0;
   const x = (i: number) => PAD.left + (n <= 1 ? 0 : (i / (n - 1)) * (W - PAD.left - PAD.right));
   const y = (v: number) => PAD.top + ((max - v) / (max - lo)) * (H - PAD.top - PAD.bottom);

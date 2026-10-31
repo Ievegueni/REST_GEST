@@ -134,6 +134,17 @@ describe('gestão de tenants', () => {
     await as('PATCH', `/api/admin/tenants/${newTenantId}`, { status: 'ACTIVE' });
   });
 
+  it('painel: carteira, uso do mês e série de 30 dias', async () => {
+    const d = (await as('GET', '/api/admin/dashboard')).json().data;
+    expect(d.tenants.total).toBeGreaterThanOrEqual(1);
+    expect(d.tenants.completo + d.tenants.stock).toBe(d.tenants.total);
+    expect(d.daily.days).toHaveLength(30);
+    expect(d.daily.ai).toHaveLength(30);
+    expect(d.month).toHaveProperty('aiCostUsd');
+    // sem sessão de Super Admin → 401
+    expect((await app.inject({ url: '/api/admin/dashboard' })).statusCode).toBe(401);
+  });
+
   it('lista e detalhe com contagens e utilizadores', async () => {
     const list = (await as('GET', '/api/admin/tenants')).json().data;
     expect(list.some((t: { id: string }) => t.id === newTenantId)).toBe(true);

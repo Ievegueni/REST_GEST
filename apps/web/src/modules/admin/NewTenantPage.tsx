@@ -41,7 +41,7 @@ export function NewTenantPage() {
 
   return (
     <form onSubmit={submit} className="max-w-2xl space-y-6">
-      <Link to="/admin" className="text-sm text-slate-500 hover:underline">
+      <Link to="/admin/tenants" className="text-sm font-medium text-gray-500 hover:text-brand-600">
         {t('admin.back')}
       </Link>
       <h1 className="text-2xl font-semibold tracking-tight">{t('admin.newTenant')}</h1>

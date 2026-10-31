@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Building2, Landmark, Lock, Mail } from 'lucide-react';
+import { Building2, Landmark, LayoutDashboard, Lock, Mail } from 'lucide-react';
 import { Shell } from '../../components/Shell';
 import { buttonCls, Field } from '../../components/ui';
 import { t } from '../../i18n';
@@ -32,8 +32,19 @@ export function AdminLayout() {
       brandSubtitle={t('admin.title')}
       footer={t('admin.footer')}
       nav={[
-        { to: '/admin', label: t('admin.tenants'), icon: Building2, match: ['/admin/tenants'] },
-        { to: '/admin/tabelas-fiscais', label: t('taxTables.title'), icon: Landmark },
+        { to: '/admin', label: t('adminDash.title'), icon: LayoutDashboard, match: [] },
+        {
+          to: '/admin/tenants',
+          label: t('admin.tenants'),
+          icon: Building2,
+          match: ['/admin/tenants'],
+        },
+        {
+          to: '/admin/tabelas-fiscais',
+          label: t('taxTables.title'),
+          icon: Landmark,
+          match: ['/admin/tabelas-fiscais'],
+        },
       ]}
       user={{ name: admin.name, role: t('admin.title') }}
       onLogout={logout}

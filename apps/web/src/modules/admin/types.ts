@@ -14,6 +14,7 @@ export type TenantRow = Limits & {
   plan: Plan;
   status: 'ACTIVE' | 'SUSPENDED';
   featureOverrides: FeatureOverrides;
+  createdAt: string;
   _count: { units: number; users: number };
 };
 
