@@ -85,7 +85,7 @@ pnpm dev:stop                           # termina TODOS os processos de desenvol
 - [ ] Ecónomo de outra unidade não recebe alertas da primeira.
 
 ## 8. Relatórios e dashboard
-- [ ] Painel mostra valor em stock, alertas, consumo/quebras/compras do mês, top consumos, últimos inventários.
+- [ ] Painel mostra valor em stock, alertas, consumo/quebras/compras do mês, top consumos e vendas desta semana por unidade (segunda a hoje, total em Kz; com uma unidade escolhida no topo só mostra essa).
 - [ ] Cada relatório abre com filtros; exportar Excel e PDF de pelo menos 3 relatórios e abrir os ficheiros (acentos correctos).
 - [ ] Rotação: "Só produtos parados".
 - [ ] Sugestão de reposição: calcular, ajustar quantidades/fornecedor, gerar encomendas (uma por fornecedor).

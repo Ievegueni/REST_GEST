@@ -536,6 +536,7 @@ export const ptAO = {
   'dashboard.consumption': 'Consumo',
   'dashboard.waste': 'Quebras',
   'dashboard.inventory': 'Inventário',
+  'dashboard.weekSales': 'Vendas desta semana',
   'dashboard.variance': 'Desvio',
   'dashboard.stockValue': 'Valor em stock',
   'dashboard.openAlerts': 'Alertas activos',

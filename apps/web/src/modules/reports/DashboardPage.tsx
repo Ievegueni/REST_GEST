@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { BellRing, Boxes, CheckCircle2, Flame, ShoppingCart, Trash2 } from 'lucide-react';
+import { BellRing, Boxes, CheckCircle2, Flame, ShoppingCart, Store, Trash2 } from 'lucide-react';
 import { AreaChart } from '../../components/AreaChart';
 import { ErrorBox, PageHeader, Panel, StatCard } from '../../components/ui';
 import { useFeature, useSession } from '../../features/session';
 import { t } from '../../i18n';
-import { formatDate, formatDateTime, formatMoney } from '../../lib/format';
+import { formatDateTime, formatMoney } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
 
 type Dashboard = {
@@ -16,13 +16,11 @@ type Dashboard = {
   purchasesMonth: number;
   daily: { date: string; consumption: number; waste: number }[];
   topConsumption: { productId: string; name: string; value: number }[];
-  inventories: {
-    id: string;
-    number: number;
-    closedAt: string;
-    location: string;
-    variance: number;
-  }[];
+  weekSales: {
+    from: string;
+    to: string;
+    units: { unitId: string; name: string; amount: number }[];
+  };
 };
 
 export function DashboardPage() {
@@ -177,42 +175,33 @@ export function DashboardPage() {
           </ul>
         </Panel>
 
-        <Panel title={t('dashboard.inventories')}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr>
-                <th className="px-5 py-2.5 text-left">{t('dashboard.inventory')}</th>
-                <th className="px-5 py-2.5 text-right">{t('dashboard.variance')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {data.inventories.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50/60">
-                  <td className="px-5 py-3">
-                    <Link
-                      to={`/stock/inventarios/${c.id}`}
-                      className="font-medium text-gray-800 hover:text-brand-600"
-                    >
-                      nº {c.number} · {c.location}
-                    </Link>
-                    <div className="text-xs text-gray-400">{formatDate(c.closedAt)}</div>
-                  </td>
-                  <td
-                    className={`px-5 py-3 text-right font-medium tabular-nums ${c.variance < 0 ? 'text-red-600' : 'text-gray-700'}`}
-                  >
-                    {formatMoney(c.variance)}
-                  </td>
-                </tr>
-              ))}
-              {!data.inventories.length && (
-                <tr>
-                  <td colSpan={2} className="px-5 py-6 text-center text-gray-500">
-                    {t('common.empty')}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <Panel
+          title={t('dashboard.weekSales')}
+          action={
+            <span className="text-xs text-gray-500">
+              {day(data.weekSales.from)} – {day(data.weekSales.to)}
+            </span>
+          }
+        >
+          <ul className="divide-y divide-gray-100 text-sm">
+            {data.weekSales.units.map((u) => (
+              <li key={u.unitId} className="flex items-center gap-3 px-5 py-3.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                  <Store className="size-4.5" strokeWidth={1.75} />
+                </span>
+                <span className="flex-1 truncate font-medium text-gray-800">{u.name}</span>
+                <span className="font-semibold tabular-nums">{formatMoney(u.amount)}</span>
+              </li>
+            ))}
+          </ul>
+          {data.weekSales.units.length > 1 && (
+            <div className="flex items-center justify-between border-t bg-gray-50 px-5 py-3 text-sm">
+              <span className="font-medium text-gray-600">{t('common.total')}</span>
+              <span className="text-base font-semibold tabular-nums">
+                {formatMoney(data.weekSales.units.reduce((a, u) => a + u.amount, 0))}
+              </span>
+            </div>
+          )}
         </Panel>
       </div>
     </div>

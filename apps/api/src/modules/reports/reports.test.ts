@@ -268,6 +268,10 @@ describe('sugestão de reposição', () => {
     expect(d.daily).toHaveLength(30);
     const sum = d.daily.reduce((s: number, x: { consumption: number }) => s + x.consumption, 0);
     expect(sum).toBeGreaterThan(0);
+    // vendas da semana: todas as unidades activas, com total em Kz (0 sem importações)
+    expect(d.weekSales.units.length).toBeGreaterThan(0);
+    expect(d.weekSales.units[0]).toHaveProperty('amount');
+    expect(d.weekSales.from <= d.weekSales.to).toBe(true);
     expect(todayLocal()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

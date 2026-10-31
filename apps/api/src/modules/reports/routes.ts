@@ -112,7 +112,18 @@ export async function reportRoutes(app: FastifyInstance) {
         ${units ? Prisma.sql`AND l."unitId" IN (${Prisma.join(units)})` : Prisma.empty}
       GROUP BY 1`;
 
-    const [costs, alerts, openAlerts, consMonth, wasteMonth, purchMonth, top, inventories, series] =
+    // vendas da semana (segunda até hoje, dia local) por unidade: importações do POS confirmadas
+    const today = todayLocal();
+    const weekStart = addDays(today, -((new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7));
+    const weekly = db.$queryRaw<{ unitId: string; amount: number }[]>`
+      SELECT i."unitId", COALESCE(SUM(l."amount"), 0)::int AS amount
+      FROM "SalesImportLine" l JOIN "SalesImport" i ON i."id" = l."importId"
+      WHERE i."tenantId" = ${req.auth.tenantId} AND i."status"::text = 'CONFIRMED'
+        AND l."saleDate" >= ${weekStart}::date AND l."saleDate" <= ${today}::date
+        ${units ? Prisma.sql`AND i."unitId" IN (${Prisma.join(units)})` : Prisma.empty}
+      GROUP BY 1`;
+
+    const [costs, alerts, openAlerts, consMonth, wasteMonth, purchMonth, top, weekRows, series] =
       await Promise.all([
         db.stockCost.findMany({ where: { ...inUnits, qty: { gt: 0 } } }),
         db.alert.findMany({
@@ -146,15 +157,7 @@ export async function reportRoutes(app: FastifyInstance) {
           orderBy: { _sum: { totalCost: 'asc' } },
           take: 5,
         }),
-        db.inventoryCount.findMany({
-          where: { status: 'CLOSED', location: inUnits },
-          orderBy: { closedAt: 'desc' },
-          take: 3,
-          include: {
-            location: { select: { name: true, unit: { select: { name: true } } } },
-            lines: { where: { countedQty: { not: null } } },
-          },
-        }),
+        weekly,
         daily,
       ]);
     const byDay = new Map(series.map((r) => [r.day, r]));
@@ -188,23 +191,21 @@ export async function reportRoutes(app: FastifyInstance) {
           name: names.get(t.productId) ?? '',
           value: -(t._sum.totalCost ?? 0),
         })),
-        inventories: inventories.map((c) => ({
-          id: c.id,
-          number: c.number,
-          closedAt: c.closedAt,
-          location: `${c.location.unit.name} · ${c.location.name}`,
-          variance: Math.round(
-            c.lines.reduce(
-              (s, l) =>
-                s +
-                l
-                  .countedQty!.sub(l.expectedQty ?? 0)
-                  .mul(l.unitCost ?? 0)
-                  .toNumber(),
-              0,
-            ),
-          ),
-        })),
+        weekSales: {
+          from: weekStart,
+          to: today,
+          units: (
+            await db.unit.findMany({
+              where: { active: true, ...(units && { id: { in: units } }) },
+              select: { id: true, name: true },
+              orderBy: { name: 'asc' },
+            })
+          ).map((u) => ({
+            unitId: u.id,
+            name: u.name,
+            amount: weekRows.find((r) => r.unitId === u.id)?.amount ?? 0,
+          })),
+        },
       },
     };
   });
