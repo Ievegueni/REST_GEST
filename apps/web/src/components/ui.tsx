@@ -106,9 +106,11 @@ export function StatCard(props: {
   };
   const Icon = props.icon;
   return (
-    <div className={`${cardCls} flex h-full items-center gap-4 p-5`}>
+    <div
+      className={`${cardCls} flex h-full flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5`}
+    >
       <span
-        className={`flex size-11 shrink-0 items-center justify-center rounded-lg ${tones[props.tone ?? 'brand']}`}
+        className={`flex size-9 shrink-0 items-center justify-center rounded-lg sm:size-11 ${tones[props.tone ?? 'brand']}`}
       >
         <Icon className="size-5" strokeWidth={1.75} />
       </span>
@@ -116,7 +118,7 @@ export function StatCard(props: {
         <div className="truncate text-sm text-gray-500" title={props.label}>
           {props.label}
         </div>
-        <div className="truncate text-2xl font-semibold tracking-tight tabular-nums">
+        <div className="truncate text-xl font-semibold tracking-tight tabular-nums sm:text-2xl">
           {props.value}
         </div>
         {props.hint && <div className="mt-0.5 text-xs">{props.hint}</div>}

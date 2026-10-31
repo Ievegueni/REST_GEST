@@ -44,7 +44,7 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       {header}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
         <Link to="/stock" className="rounded-xl transition hover:-translate-y-0.5">
           <StatCard
             icon={Boxes}

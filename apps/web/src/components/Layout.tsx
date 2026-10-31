@@ -86,12 +86,12 @@ export function Layout() {
             <span className="sr-only">{t('units.label')}</span>
             <Building2
               aria-hidden
-              className="pointer-events-none absolute left-2.5 size-4 text-gray-400"
+              className="pointer-events-none absolute left-2.5 hidden size-4 text-gray-400 sm:block"
             />
             <select
               id="unit"
               aria-label={t('units.label')}
-              className="max-w-56 min-w-44 rounded-lg border border-gray-200 bg-gray-50 py-1.5 pr-8 pl-8 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:border-brand-500 focus:ring-3 focus:ring-brand-100 focus:outline-none"
+              className="w-48 rounded-lg border border-gray-200 bg-gray-50 py-1.5 pr-7 pl-2.5 sm:w-auto sm:max-w-56 sm:min-w-44 sm:pr-8 sm:pl-8 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:border-brand-500 focus:ring-3 focus:ring-brand-100 focus:outline-none"
               value={unitId}
               onChange={(e) => setUnitId(e.target.value)}
             >

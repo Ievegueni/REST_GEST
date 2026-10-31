@@ -107,7 +107,7 @@ export function Shell(props: {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {props.banner}
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-white/90 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-white/90 px-3 backdrop-blur sm:gap-3 sm:px-6">
           <button
             className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 lg:hidden"
             aria-label={t('shell.openMenu')}
@@ -115,10 +115,10 @@ export function Shell(props: {
           >
             <Menu className="size-5" />
           </button>
-          <div className="ml-auto flex items-center gap-3 sm:gap-4">
+          <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-4">
             {props.header}
-            <div className="flex items-center gap-3 border-l pl-3 sm:pl-4">
-              <span className="flex size-9 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+            <div className="flex shrink-0 items-center gap-2 border-l pl-2 sm:gap-3 sm:pl-4">
+              <span className="hidden size-9 items-center justify-center rounded-full bg-brand-50 text-brand-600 sm:flex">
                 <User className="size-4.5" strokeWidth={1.75} />
               </span>
               <div className="hidden text-right leading-tight sm:block">
@@ -136,8 +136,8 @@ export function Shell(props: {
             </div>
           </div>
         </header>
-        <main className="w-full flex-1 px-4 py-6 sm:px-8 sm:py-8">
-          <div className="mx-auto max-w-[1400px]">{props.children}</div>
+        <main className="w-full min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
+          <div className="mx-auto max-w-[1400px] min-w-0">{props.children}</div>
         </main>
       </div>
     </div>
