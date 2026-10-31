@@ -78,7 +78,7 @@ export function AiReportsPage() {
       {msg && <p className="rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{msg}</p>}
 
       <div className="grid gap-4 md:grid-cols-[18rem_1fr]">
-        <ul className="divide-y rounded border bg-white text-sm">
+        <ul className="divide-y rounded-xl border bg-white shadow-xs text-sm">
           {rows?.length === 0 && <li className="p-3 text-slate-500">{t('ai.reports.empty')}</li>}
           {rows?.map((r) => (
             <li key={r.id}>
@@ -95,7 +95,7 @@ export function AiReportsPage() {
           ))}
         </ul>
         {open && (
-          <article className="rounded border bg-white p-4 text-sm">
+          <article className="rounded-xl border bg-white shadow-xs p-4 text-sm">
             <div className="mb-3 flex items-start justify-between gap-2">
               <div>
                 <h2 className="font-semibold">{t(`ai.reports.${open.kind}`)}</h2>

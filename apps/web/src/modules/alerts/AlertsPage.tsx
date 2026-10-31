@@ -62,7 +62,7 @@ export function AlertsPage() {
         {(['OPEN', 'RESOLVED'] as const).map((s) => (
           <button
             key={s}
-            className={`${secondaryCls} ${status === s ? 'bg-slate-900 text-white hover:bg-slate-700' : ''}`}
+            className={`${secondaryCls} ${status === s ? 'border-brand-600 bg-brand-50 text-brand-700 hover:bg-brand-50' : ''}`}
             onClick={() => setStatus(s)}
           >
             {t(s === 'OPEN' ? 'alerts.open' : 'alerts.resolved')}

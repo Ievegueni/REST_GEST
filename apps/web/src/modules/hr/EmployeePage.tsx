@@ -138,7 +138,7 @@ function EmployeeForm({ employee: e, reload }: { employee: Employee | null; relo
       <form onSubmit={submit} className="space-y-4">
         <fieldset
           disabled={!manage}
-          className="grid gap-3 rounded border bg-white p-4 md:grid-cols-4"
+          className="grid gap-3 rounded-xl border bg-white shadow-xs p-4 md:grid-cols-4"
         >
           <F label={`${t('hr.number')} *`}>
             <input
@@ -459,7 +459,7 @@ function Documents({ employee, reload }: { employee: Employee; reload: () => voi
   };
 
   return (
-    <section className="space-y-2 rounded border bg-white p-4">
+    <section className="space-y-2 rounded-xl border bg-white shadow-xs p-4">
       <h3 className="font-medium">{t('hr.documents')}</h3>
       <ul className="divide-y text-sm">
         {employee.documents!.map((d) => (

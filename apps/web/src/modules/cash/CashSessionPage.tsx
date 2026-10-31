@@ -128,7 +128,7 @@ function SessionView({ s, reload }: { s: Session; reload: () => void }) {
       <Link to="/caixa" className="text-sm text-slate-500 hover:underline">
         {t('common.back')}
       </Link>
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-2xl font-semibold tracking-tight">
         {t('cash.session', { date })} {s.shift && `· ${s.shift}`} · {s.unit.name}
         <span className="ml-2 text-sm text-slate-500">({t(`cashStatus.${s.status}`)})</span>
       </h1>
@@ -196,7 +196,7 @@ function SessionView({ s, reload }: { s: Session; reload: () => void }) {
           </tbody>
         </table>
         {editable && (
-          <details className="rounded border bg-white p-3 text-sm">
+          <details className="rounded-xl border bg-white shadow-xs p-3 text-sm">
             <summary className="cursor-pointer">{t('cash.denominations')}</summary>
             <div className="mt-2 space-y-1">
               {notes.map((n, i) => (
@@ -271,7 +271,7 @@ function SessionView({ s, reload }: { s: Session; reload: () => void }) {
 
       <section className="space-y-2">
         <h2 className="font-medium">{t('cash.movements')}</h2>
-        <ul className="divide-y rounded border bg-white text-sm">
+        <ul className="divide-y rounded-xl border bg-white shadow-xs text-sm">
           {s.movements.map((m) => (
             <li key={m.id} className="flex items-center justify-between px-3 py-2">
               <span>
@@ -353,7 +353,7 @@ function SessionView({ s, reload }: { s: Session; reload: () => void }) {
         )}
       </section>
 
-      <section className="grid gap-2 rounded border bg-white p-4 text-sm sm:grid-cols-2">
+      <section className="grid gap-2 rounded-xl border bg-white shadow-xs p-4 text-sm sm:grid-cols-2">
         <div>
           {t('cash.expectedCash')}: <strong>{formatMoney(s.summary.expectedCash)}</strong>
         </div>

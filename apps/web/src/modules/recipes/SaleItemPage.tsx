@@ -132,7 +132,7 @@ function SaleItemForm({ item, reload }: { item: SaleItem | null; reload: () => v
         {item ? `${item.code} · ${item.name}` : t('recipes.new')}
       </h2>
       <fieldset disabled={!manage} className="space-y-4">
-        <div className="grid gap-3 rounded border bg-white p-4 md:grid-cols-3">
+        <div className="grid gap-3 rounded-xl border bg-white shadow-xs p-4 md:grid-cols-3">
           <label className="space-y-1 text-sm">
             <span>{t('recipes.code')} *</span>
             <input
@@ -205,7 +205,7 @@ function SaleItemForm({ item, reload }: { item: SaleItem | null; reload: () => v
           </label>
         </div>
 
-        <div className="space-y-2 rounded border bg-white p-4">
+        <div className="space-y-2 rounded-xl border bg-white shadow-xs p-4">
           <h3 className="font-medium">{t('recipes.ingredients')}</h3>
           <p className="text-xs text-slate-500">{t('recipes.lossHint')}</p>
           <datalist id="ingredients">

@@ -115,7 +115,7 @@ export function TenantDetailPage() {
         {t('admin.back')}
       </Link>
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">
+        <h1 className="text-2xl font-semibold tracking-tight">
           {tenant.name}
           {suspended && (
             <span className="ml-2 text-sm text-red-700">({t('admin.status.SUSPENDED')})</span>
@@ -132,7 +132,7 @@ export function TenantDetailPage() {
       {msg && <p className="rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{msg}</p>}
 
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="space-y-3 rounded border bg-white p-4">
+        <section className="space-y-3 rounded-xl border bg-white shadow-xs p-4">
           <h2 className="font-medium">{t('admin.details')}</h2>
           <Field
             label={t('admin.name')}
@@ -149,7 +149,7 @@ export function TenantDetailPage() {
           <LimitsFields value={form.limits} onChange={(limits) => setForm({ ...form, limits })} />
         </section>
 
-        <section className="space-y-3 rounded border bg-white p-4">
+        <section className="space-y-3 rounded-xl border bg-white shadow-xs p-4">
           <h2 className="font-medium">{t('admin.plan')}</h2>
           <PlanSelector value={form.plan} onChange={(plan) => setForm({ ...form, plan })} />
           <h2 className="pt-2 font-medium">{t('admin.features')}</h2>
@@ -189,7 +189,7 @@ export function TenantDetailPage() {
         {t('admin.save')}
       </button>
 
-      <section className="rounded border bg-white p-4">
+      <section className="rounded-xl border bg-white shadow-xs p-4">
         <h2 className="mb-2 font-medium">{t('admin.usage')}</h2>
         <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-5">
           {(
@@ -209,7 +209,7 @@ export function TenantDetailPage() {
         </dl>
       </section>
 
-      <section className="rounded border bg-white">
+      <section className="rounded-xl border bg-white shadow-xs">
         <h2 className="border-b px-4 py-2 font-medium">{t('admin.users')}</h2>
         <ul className="divide-y text-sm">
           {tenant.users.map((u) => (

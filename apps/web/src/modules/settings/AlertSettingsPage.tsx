@@ -217,7 +217,7 @@ function SmsForm({ initial }: { initial: Settings }) {
     }
   };
   return (
-    <section className="max-w-xl space-y-3 rounded border bg-white p-4">
+    <section className="max-w-xl space-y-3 rounded-xl border bg-white shadow-xs p-4">
       <h2 className="font-medium">{t('sms.settings')}</h2>
       <div className="grid grid-cols-2 gap-3">
         <label className="space-y-1 text-sm">

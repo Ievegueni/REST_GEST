@@ -15,8 +15,8 @@ export type Chart = {
 type Turn = { role: 'user' | 'assistant'; content: string; charts?: Chart[] };
 type Status = { configured: boolean; used: number; limit: number | null };
 
-const COLORS = ['bg-sky-600', 'bg-amber-500', 'bg-emerald-600'];
-const STROKES = ['#0284c7', '#f59e0b', '#059669'];
+const COLORS = ['bg-brand-600', 'bg-amber-500', 'bg-emerald-600'];
+const STROKES = ['#4f46e5', '#f59e0b', '#059669'];
 
 /** Markdown mínimo e seguro: **negrito** e linhas "- item". */
 function inline(s: string) {
@@ -64,7 +64,7 @@ export function ChartView({ chart }: { chart: Chart }) {
   const max = Math.max(1, ...all.map(Math.abs));
   const fmt = (v: number) => v.toLocaleString('pt-AO');
   return (
-    <figure className="mt-3 rounded border bg-white p-3">
+    <figure className="mt-3 rounded-xl border bg-white shadow-xs p-3">
       <figcaption className="mb-2 text-sm font-medium">{chart.title}</figcaption>
       {chart.kind === 'bar' ? (
         <div className="flex h-44 items-end gap-2 overflow-x-auto">
@@ -160,7 +160,7 @@ export function AiPage() {
     <div className="mx-auto max-w-3xl space-y-4">
       <AiTabs />
       <div className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold">{t('ai.title')}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('ai.title')}</h1>
         {status && (
           <span className="text-xs text-slate-500">
             {t('ai.usage', {
@@ -177,13 +177,13 @@ export function AiPage() {
       )}
 
       {turns.length === 0 && (
-        <div className="rounded border bg-white p-4 text-sm text-slate-600">
+        <div className="rounded-xl border bg-white shadow-xs p-4 text-sm text-slate-600">
           <p className="mb-2">{t('ai.intro')}</p>
           <ul className="space-y-1">
             {(['ai.example1', 'ai.example2', 'ai.example3'] as const).map((k) => (
               <li key={k}>
                 <button
-                  className="text-left text-sky-700 hover:underline"
+                  className="text-left text-brand-600 hover:underline"
                   onClick={() => setQ(t(k))}
                 >
                   {t(k)}
@@ -200,8 +200,8 @@ export function AiPage() {
             key={i}
             className={
               m.role === 'user'
-                ? 'ml-auto w-fit max-w-[80%] rounded bg-sky-600 px-3 py-2 text-white'
-                : 'rounded border bg-white p-3 text-sm'
+                ? 'ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-brand-600 px-4 py-2.5 text-white shadow-sm'
+                : 'rounded-xl border bg-white shadow-xs p-3 text-sm'
             }
           >
             {m.role === 'user' ? m.content : <Markdown text={m.content} />}

@@ -73,7 +73,7 @@ export function RunPage() {
       <Link to="/salarios" className="text-sm text-slate-500 hover:underline">
         {t('common.back')}
       </Link>
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-2xl font-semibold tracking-tight">
         {t('nav.payroll')} {String(r.month).padStart(2, '0')}/{r.year} · {r.unit.name}
         <span className="ml-2 text-sm text-slate-500">({t(`payrollStatus.${r.status}`)})</span>
       </h1>

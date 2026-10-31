@@ -51,7 +51,7 @@ export function InventoriesPage() {
       {canOpen && (
         <form
           onSubmit={open}
-          className="flex flex-wrap items-end gap-3 rounded border bg-white p-4 text-sm"
+          className="flex flex-wrap items-end gap-3 rounded-xl border bg-white shadow-xs p-4 text-sm"
         >
           <label className="space-y-1">
             <span>{t('inventory.location')}</span>

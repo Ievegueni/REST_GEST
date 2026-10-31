@@ -38,7 +38,7 @@ export function ReceiptPage() {
           ({t(`docStatus.${r.status}` as TKey)})
         </span>
       </h2>
-      <dl className="grid gap-1 rounded border bg-white p-4 text-sm md:grid-cols-2">
+      <dl className="grid gap-1 rounded-xl border bg-white shadow-xs p-4 text-sm md:grid-cols-2">
         <div>
           <dt className="inline text-slate-500">{t('purchases.supplier')}: </dt>
           <dd className="inline">{r.supplier.name}</dd>

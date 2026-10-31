@@ -30,7 +30,7 @@ export function TaxTablesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">{t('taxTables.title')}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('taxTables.title')}</h1>
         <button className={buttonCls} onClick={() => setEditing('new')}>
           {t('taxTables.new')}
         </button>
@@ -126,7 +126,7 @@ function TableForm({ table, onDone }: { table: Table | null; onDone: () => void 
   );
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded border bg-white p-4">
+    <form onSubmit={submit} className="space-y-3 rounded-xl border bg-white shadow-xs p-4">
       <div className="flex flex-wrap gap-3">
         <label className="space-y-1 text-sm">
           <span>{t('taxTables.validFrom')}</span>

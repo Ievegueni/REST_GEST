@@ -1,10 +1,11 @@
+import { Prisma } from '@prisma/client';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { canAccessUnit, protect } from '../../core/auth';
 import { AppError } from '../../core/errors';
 import { env } from '../../core/env';
 import { prisma } from '../../core/prisma';
-import { period, filtersSchema, todayLocal, zonedMidnight, type Filters } from './common';
+import { addDays, period, filtersSchema, todayLocal, zonedMidnight, type Filters } from './common';
 import { REPORTS, type ReportName } from './definitions';
 import { toPdf, toXlsx } from './export';
 import { createOrders, suggest } from './replenishment';
@@ -101,7 +102,17 @@ export async function reportRoutes(app: FastifyInstance) {
         _sum: { totalCost: true },
       });
 
-    const [costs, alerts, openAlerts, consMonth, wasteMonth, purchMonth, top, inventories] =
+    // série diária (últimos 30 dias, dia local): consumo e quebras ao custo
+    const daily = db.$queryRaw<{ day: string; consumption: number; waste: number }[]>`
+      SELECT to_char(m."occurredAt" AT TIME ZONE ${env.TZ_DISPLAY}, 'YYYY-MM-DD') AS day,
+        COALESCE(-SUM(m."totalCost") FILTER (WHERE m."type"::text IN ('SALE_OUT', 'CONSUMPTION')), 0)::float AS consumption,
+        COALESCE(-SUM(m."totalCost") FILTER (WHERE m."type"::text = 'WASTE'), 0)::float AS waste
+      FROM "StockMovement" m JOIN "StockLocation" l ON l."id" = m."locationId"
+      WHERE m."tenantId" = ${req.auth.tenantId} AND m."occurredAt" >= ${last30.gte}
+        ${units ? Prisma.sql`AND l."unitId" IN (${Prisma.join(units)})` : Prisma.empty}
+      GROUP BY 1`;
+
+    const [costs, alerts, openAlerts, consMonth, wasteMonth, purchMonth, top, inventories, series] =
       await Promise.all([
         db.stockCost.findMany({ where: { ...inUnits, qty: { gt: 0 } } }),
         db.alert.findMany({
@@ -144,7 +155,9 @@ export async function reportRoutes(app: FastifyInstance) {
             lines: { where: { countedQty: { not: null } } },
           },
         }),
+        daily,
       ]);
+    const byDay = new Map(series.map((r) => [r.day, r]));
     const names = new Map(
       (
         await db.product.findMany({
@@ -161,6 +174,15 @@ export async function reportRoutes(app: FastifyInstance) {
         consumptionMonth: -(consMonth._sum.totalCost ?? 0),
         wasteMonth: -(wasteMonth._sum.totalCost ?? 0),
         purchasesMonth: purchMonth._sum.totalAmount ?? 0,
+        daily: Array.from({ length: last30.days }, (_, i) => {
+          const d = addDays(last30.from, i);
+          const r = byDay.get(d);
+          return {
+            date: d,
+            consumption: Math.round(r?.consumption ?? 0),
+            waste: Math.round(r?.waste ?? 0),
+          };
+        }),
         topConsumption: top.map((t) => ({
           productId: t.productId,
           name: names.get(t.productId) ?? '',

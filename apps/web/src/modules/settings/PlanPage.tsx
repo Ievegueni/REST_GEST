@@ -24,7 +24,7 @@ export function PlanPage() {
       <p className="mb-6 text-sm">
         {t('settings.planCurrent')}: <strong>{t(`plan.${session.tenant.plan}` as TKey)}</strong>
       </p>
-      <ul className="divide-y rounded border bg-white">
+      <ul className="divide-y rounded-xl border bg-white shadow-xs">
         {FEATURES.map((f) => {
           const s = status(f);
           return (

@@ -41,7 +41,7 @@ export function SaleItemsPage() {
               <td className={tdCls}>
                 {i.name}
                 {i.isSubRecipe && (
-                  <span className="ml-2 rounded bg-sky-100 px-1.5 py-0.5 text-xs text-sky-800">
+                  <span className="ml-2 rounded-md bg-brand-50 px-1.5 py-0.5 text-xs font-medium text-brand-700">
                     {t('recipes.subRecipe')}
                   </span>
                 )}

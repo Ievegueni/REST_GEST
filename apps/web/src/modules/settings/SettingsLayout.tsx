@@ -14,7 +14,7 @@ export function SettingsLayout() {
   const cash = useFeature('cash_closing');
   return (
     <>
-      <h1 className="mb-4 text-xl font-semibold">{t('nav.settings')}</h1>
+      <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t('nav.settings')}</h1>
       <Tabs
         items={[
           { to: '/definicoes/plano', label: t('settings.plan') },

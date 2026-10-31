@@ -46,7 +46,7 @@ export function ProductLines(props: {
     props.onChange(props.lines.map((l, j) => (j === i ? { ...l, ...patch } : l)));
 
   return (
-    <div className="space-y-2 rounded border bg-white p-4">
+    <div className="space-y-2 rounded-xl border bg-white shadow-xs p-4">
       <datalist id="product-options">
         {props.products?.map((p) => (
           <option key={p.id} value={productLabel(p)} />

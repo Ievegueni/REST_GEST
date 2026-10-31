@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { useSession } from '../../features/session';
 import { t } from '../../i18n';
 import { ApiError } from '../../lib/api';
+import { Lock, Mail } from 'lucide-react';
 import { buttonCls, Field } from '../../components/ui';
 import { AuthCard } from './AuthCard';
 
@@ -29,13 +30,15 @@ export function LoginPage() {
   };
 
   return (
-    <AuthCard title={t('auth.login')} onSubmit={submit} error={error}>
+    <AuthCard title={t('auth.welcome')} onSubmit={submit} error={error}>
       <Field
         label={t('auth.email')}
         type="email"
         value={email}
         onChange={setEmail}
         autoComplete="email"
+        icon={Mail}
+        placeholder={t('auth.emailPlaceholder')}
       />
       <Field
         label={t('auth.password')}
@@ -43,13 +46,15 @@ export function LoginPage() {
         value={password}
         onChange={setPassword}
         autoComplete="current-password"
+        icon={Lock}
+        placeholder="••••••••"
       />
-      <button className={`${buttonCls} w-full`} disabled={busy}>
+      <button className={`${buttonCls} w-full py-2.5 text-base`} disabled={busy}>
         {t('auth.login')}
       </button>
       <Link
         to="/recuperar-senha"
-        className="block text-center text-sm text-slate-500 hover:underline"
+        className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700"
       >
         {t('auth.forgot')}
       </Link>

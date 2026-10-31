@@ -69,7 +69,7 @@ export function MovementPage() {
 
   return (
     <form onSubmit={submit} className="max-w-5xl space-y-4">
-      <div className="grid gap-3 rounded border bg-white p-4 md:grid-cols-4">
+      <div className="grid gap-3 rounded-xl border bg-white shadow-xs p-4 md:grid-cols-4">
         <label className="space-y-1 text-sm">
           <span>{t('stock.location')}</span>
           <select

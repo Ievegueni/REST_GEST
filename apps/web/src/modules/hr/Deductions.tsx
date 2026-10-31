@@ -51,7 +51,7 @@ export function Deductions({ employeeId }: { employeeId: string }) {
   };
 
   return (
-    <section className="space-y-2 rounded border bg-white p-4">
+    <section className="space-y-2 rounded-xl border bg-white shadow-xs p-4">
       <h3 className="font-medium">{t('deductions.title')}</h3>
       <table className={tableCls}>
         <thead className="bg-slate-50">

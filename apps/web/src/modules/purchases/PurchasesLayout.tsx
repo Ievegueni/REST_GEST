@@ -5,7 +5,7 @@ import { t } from '../../i18n';
 export function PurchasesLayout() {
   return (
     <>
-      <h1 className="mb-4 text-xl font-semibold">{t('nav.purchases')}</h1>
+      <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t('nav.purchases')}</h1>
       <Tabs
         items={[
           { to: '/compras', label: t('purchases.orders') },

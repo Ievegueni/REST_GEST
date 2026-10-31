@@ -9,7 +9,7 @@ export function StockLayout() {
   const inventory = useCan('inventory.count');
   return (
     <>
-      <h1 className="mb-4 text-xl font-semibold">{t('nav.stock')}</h1>
+      <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t('nav.stock')}</h1>
       <Tabs
         items={[
           { to: '/stock', label: t('stock.current') },

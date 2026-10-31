@@ -40,7 +40,7 @@ export function CategoriesPage() {
           {t('category.new')}
         </button>
       )}
-      <ul className="divide-y rounded border bg-white text-sm">
+      <ul className="divide-y rounded-xl border bg-white shadow-xs text-sm">
         {tree.map((c) => (
           <li
             key={c.id}

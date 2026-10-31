@@ -104,7 +104,7 @@ function OrderForm({ order, reload }: { order: Order | null; reload: () => void 
         {order ? t('purchases.order', { n: order.number }) : t('purchases.newOrder')}
         {order && <span className="ml-2 text-sm text-slate-500">({t('orderStatus.DRAFT')})</span>}
       </h2>
-      <div className="grid gap-3 rounded border bg-white p-4 md:grid-cols-4">
+      <div className="grid gap-3 rounded-xl border bg-white shadow-xs p-4 md:grid-cols-4">
         <label className="space-y-1 text-sm">
           <span>{t('purchases.supplier')} *</span>
           <select
@@ -239,7 +239,7 @@ function OrderView({ order, reload }: { order: Order; reload: () => void }) {
         </tbody>
       </table>
       {order.receipts.length > 0 && (
-        <ul className="divide-y rounded border bg-white text-sm">
+        <ul className="divide-y rounded-xl border bg-white shadow-xs text-sm">
           {order.receipts.map((r) => (
             <li key={r.id} className="flex justify-between px-4 py-2">
               <Link to={`/compras/recepcoes/${r.id}`} className="hover:underline">

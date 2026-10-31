@@ -54,7 +54,7 @@ export function UnitsPage() {
         {t('units.new')}
       </button>
       {units?.map((u) => (
-        <section key={u.id} className="rounded border bg-white">
+        <section key={u.id} className="rounded-xl border bg-white shadow-xs">
           <header className="flex items-center justify-between border-b px-4 py-2">
             <div>
               <span className="font-medium">{u.name}</span>

@@ -44,10 +44,10 @@ export function NewTenantPage() {
       <Link to="/admin" className="text-sm text-slate-500 hover:underline">
         {t('admin.back')}
       </Link>
-      <h1 className="text-xl font-semibold">{t('admin.newTenant')}</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{t('admin.newTenant')}</h1>
       <ErrorBox>{error}</ErrorBox>
 
-      <section className="space-y-3 rounded border bg-white p-4">
+      <section className="space-y-3 rounded-xl border bg-white shadow-xs p-4">
         <Field label={t('admin.name')} value={name} onChange={setName} />
         <Field label={t('admin.nif')} value={nif} onChange={setNif} required={false} />
         <div className="space-y-1 text-sm">
@@ -56,7 +56,7 @@ export function NewTenantPage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded border bg-white p-4">
+      <section className="space-y-3 rounded-xl border bg-white shadow-xs p-4">
         <h2 className="font-medium">{t('admin.firstAdmin')}</h2>
         <Field label={t('admin.name')} value={admin.name} onChange={setA('name')} />
         <Field label={t('auth.email')} type="email" value={admin.email} onChange={setA('email')} />
@@ -75,7 +75,7 @@ export function NewTenantPage() {
         />
       </section>
 
-      <section className="space-y-3 rounded border bg-white p-4">
+      <section className="space-y-3 rounded-xl border bg-white shadow-xs p-4">
         <h2 className="font-medium">{t('admin.limits')}</h2>
         <LimitsFields value={limits} onChange={setLimits} />
       </section>

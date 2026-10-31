@@ -65,11 +65,11 @@ export function ReportsPage() {
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
       <nav className="w-full shrink-0 space-y-1 lg:w-56">
-        <h1 className="mb-2 text-xl font-semibold">{t('nav.reports')}</h1>
+        <h1 className="mb-2 text-2xl font-semibold tracking-tight">{t('nav.reports')}</h1>
         {list?.map((r) => (
           <button
             key={r.name}
-            className={`block w-full rounded px-3 py-2 text-left text-sm ${r.name === name ? 'bg-slate-900 text-white' : 'hover:bg-slate-100'}`}
+            className={`block w-full rounded px-3 py-2 text-left text-sm ${r.name === name ? 'bg-brand-50 font-medium text-brand-700' : 'text-gray-700 hover:bg-gray-100'}`}
             onClick={() => {
               setName(r.name);
               setGroup('');
@@ -82,7 +82,7 @@ export function ReportsPage() {
       <div className="min-w-0 flex-1 space-y-4">
         {!name && <p className="text-slate-500">{t('reports.choose')}</p>}
         {name && (
-          <div className="flex flex-wrap items-end gap-2 rounded border bg-white p-3 text-sm">
+          <div className="flex flex-wrap items-end gap-2 rounded-xl border bg-white shadow-xs p-3 text-sm">
             {meta?.period && (
               <>
                 <label className="space-y-1">

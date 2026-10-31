@@ -48,7 +48,7 @@ export function ReplenishmentPage() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-600">{t('replenishment.hint')}</p>
-      <div className="flex flex-wrap items-end gap-2 rounded border bg-white p-3 text-sm">
+      <div className="flex flex-wrap items-end gap-2 rounded-xl border bg-white shadow-xs p-3 text-sm">
         <label className="space-y-1">
           <span>{t('sales.unit')}</span>
           <select className={inputCls} value={unit} onChange={(e) => setUnitId(e.target.value)}>

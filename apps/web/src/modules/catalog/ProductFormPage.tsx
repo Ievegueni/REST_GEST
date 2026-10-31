@@ -155,7 +155,7 @@ function ProductForm({ product }: { product: Product | null }) {
       {msg && <p className="rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{msg}</p>}
 
       <fieldset disabled={!manage} className="space-y-6">
-        <section className="grid gap-3 rounded border bg-white p-4 md:grid-cols-2">
+        <section className="grid gap-3 rounded-xl border bg-white shadow-xs p-4 md:grid-cols-2">
           <Labeled label={`${t('product.code')} *`}>
             <input
               className={inputCls}
@@ -260,7 +260,7 @@ function ProductForm({ product }: { product: Product | null }) {
           </label>
         </section>
 
-        <section className="space-y-2 rounded border bg-white p-4">
+        <section className="space-y-2 rounded-xl border bg-white shadow-xs p-4">
           <h3 className="font-medium">{t('product.conversions')}</h3>
           <p className="text-xs text-slate-500">{t('product.conversionHint')}</p>
           {form.conversions.map((c, i) => (
@@ -324,7 +324,7 @@ function ProductForm({ product }: { product: Product | null }) {
           </button>
         </section>
 
-        <section className="rounded border bg-white">
+        <section className="rounded-xl border bg-white shadow-xs">
           <h3 className="border-b px-4 py-2 font-medium">
             {t('product.limits')} ({stockSymbol})
           </h3>

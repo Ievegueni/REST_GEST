@@ -91,7 +91,7 @@ function SupplierView({ s, reload }: { s: SupplierDetail; reload: () => void }) 
         )}
       </PageHeader>
       <Inactive active={s.active} />
-      <dl className="grid gap-x-6 gap-y-1 rounded border bg-white p-4 text-sm md:grid-cols-2">
+      <dl className="grid gap-x-6 gap-y-1 rounded-xl border bg-white shadow-xs p-4 text-sm md:grid-cols-2">
         {(
           ['nif', 'contactName', 'phone', 'email', 'address', 'paymentTermDays', 'notes'] as const
         ).map((k) => (

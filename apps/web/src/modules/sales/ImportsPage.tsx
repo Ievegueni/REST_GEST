@@ -48,7 +48,7 @@ export function ImportsPage() {
     <div className="space-y-4">
       <form
         onSubmit={submit}
-        className="flex flex-wrap items-end gap-3 rounded border bg-white p-4 text-sm"
+        className="flex flex-wrap items-end gap-3 rounded-xl border bg-white shadow-xs p-4 text-sm"
       >
         <label className="space-y-1">
           <span>{t('sales.unit')}</span>

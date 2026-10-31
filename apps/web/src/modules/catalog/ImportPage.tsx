@@ -66,7 +66,7 @@ export function ImportPage() {
       </div>
       <ErrorBox>{error}</ErrorBox>
       {result && (
-        <div className="space-y-3 rounded border bg-white p-4 text-sm">
+        <div className="space-y-3 rounded-xl border bg-white shadow-xs p-4 text-sm">
           {result.applied ? (
             <p className="text-emerald-700">
               {t('import.done', { create: result.create, update: result.update })}

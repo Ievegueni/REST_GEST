@@ -1,5 +1,28 @@
 import { useState } from 'react';
-import { ErrorBox, inputCls, secondaryCls, tableCls, tdCls, thCls } from '../../components/ui';
+import {
+  Banknote,
+  FileSpreadsheet,
+  FileText,
+  Percent,
+  ReceiptText,
+  Scale,
+  Trash2,
+  TrendingUp,
+  Users,
+  UtensilsCrossed,
+  type LucideIcon,
+} from 'lucide-react';
+import { AreaChart } from '../../components/AreaChart';
+import {
+  ErrorBox,
+  inputCls,
+  Panel,
+  secondaryCls,
+  StatCard,
+  tableCls,
+  tdCls,
+  thCls,
+} from '../../components/ui';
 import { useSession } from '../../features/session';
 import { t, type TKey } from '../../i18n';
 import { apiDownload } from '../../lib/api';
@@ -36,25 +59,33 @@ function Kpi({
   value,
   change,
   good,
+  icon,
+  tone,
 }: {
   label: string;
   value: string;
   change?: number | null;
   good?: boolean;
+  icon: LucideIcon;
+  tone?: 'brand' | 'red' | 'amber' | 'emerald';
 }) {
   return (
-    <div className="rounded border bg-white p-4">
-      <div className="text-sm text-slate-500">{label}</div>
-      <div className="mt-1 text-xl font-semibold">{value}</div>
-      {change != null && (
-        <div
-          className={`text-xs ${change >= 0 === (good ?? true) ? 'text-emerald-700' : 'text-red-700'}`}
-        >
-          {change >= 0 ? '▲' : '▼'} {Math.abs(change).toLocaleString('pt-AO')}%{' '}
-          {t('results.vsPrevious')}
-        </div>
-      )}
-    </div>
+    <StatCard
+      icon={icon}
+      tone={tone}
+      label={label}
+      value={value}
+      hint={
+        change != null && (
+          <span
+            className={`font-medium ${change >= 0 === (good ?? true) ? 'text-emerald-600' : 'text-red-600'}`}
+          >
+            {change >= 0 ? '▲' : '▼'} {Math.abs(change).toLocaleString('pt-AO')}%{' '}
+            <span className="font-normal text-gray-500">{t('results.vsPrevious')}</span>
+          </span>
+        )
+      }
+    />
   );
 }
 
@@ -72,17 +103,26 @@ export function ResultsPage() {
       `resultados-${group}.${format}`,
     ).catch((e: Error) => setErr(e.message));
 
-  const max = Math.max(
-    1,
-    ...(data?.daily ?? []).map((d) => Math.max(d.revenue, Math.abs(d.result))),
-  );
+  // todos os dias do período (dias sem movimento = 0)
+  const byDay = new Map((data?.daily ?? []).map((d) => [d.date, d]));
+  const days: string[] = [];
+  if (data)
+    for (let d = data.from; d <= data.to && days.length < 400;) {
+      days.push(d);
+      const x = new Date(`${d}T00:00:00Z`);
+      x.setUTCDate(x.getUTCDate() + 1);
+      d = x.toISOString().slice(0, 10);
+    }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-3">
-        <h1 className="mr-auto text-xl font-semibold">{t('nav.results')}</h1>
+        <div className="mr-auto">
+          <h1 className="text-2xl font-semibold tracking-tight">{t('nav.results')}</h1>
+          <p className="mt-0.5 text-sm text-gray-500">{t('results.subtitle')}</p>
+        </div>
         <label className="space-y-1 text-sm">
-          <span>{t('reports.from')}</span>
+          <span className="font-medium text-gray-700">{t('reports.from')}</span>
           <input
             className={inputCls}
             type="date"
@@ -91,7 +131,7 @@ export function ResultsPage() {
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span>{t('reports.to')}</span>
+          <span className="font-medium text-gray-700">{t('reports.to')}</span>
           <input
             className={inputCls}
             type="date"
@@ -99,14 +139,22 @@ export function ResultsPage() {
             onChange={(e) => setTo(e.target.value)}
           />
         </label>
-        {(['day', 'month', 'unit'] as const).map((g) => (
-          <span key={g} className="flex gap-1">
-            <button className={secondaryCls} onClick={() => download(g, 'xlsx')}>
-              Excel {t(`results.group.${g}`)}
-            </button>
+        <div className="flex">
+          <span className="inline-flex items-center gap-1.5 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600">
+            <FileSpreadsheet className="size-4 text-emerald-600" /> Excel
           </span>
-        ))}
+          {(['day', 'month', 'unit'] as const).map((g, i) => (
+            <button
+              key={g}
+              className={`border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 ${i ? 'border-l-0' : ''} ${g === 'unit' ? 'rounded-r-lg' : ''}`}
+              onClick={() => download(g, 'xlsx')}
+            >
+              {t(`results.group.${g}`)}
+            </button>
+          ))}
+        </div>
         <button className={secondaryCls} onClick={() => download('month', 'pdf')}>
+          <FileText className="size-4 text-red-500" />
           PDF
         </button>
       </div>
@@ -115,43 +163,59 @@ export function ResultsPage() {
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Kpi
+              icon={Banknote}
               label={t('results.revenue')}
               value={formatMoney(data.total.revenue)}
               change={delta(data.total.revenue, data.previous.revenue)}
             />
             <Kpi
+              icon={TrendingUp}
+              tone={data.total.result < 0 ? 'red' : 'emerald'}
               label={t('results.result')}
               value={formatMoney(data.total.result)}
               change={delta(data.total.result, data.previous.result)}
             />
-            <Kpi label={t('results.cmvPct')} value={pct(data.total.cmvPct)} />
-            <Kpi label={t('results.personnelPct')} value={pct(data.total.personnelPct)} />
+            <Kpi icon={Percent} label={t('results.cmvPct')} value={pct(data.total.cmvPct)} />
             <Kpi
+              icon={Users}
+              label={t('results.personnelPct')}
+              value={pct(data.total.personnelPct)}
+            />
+            <Kpi
+              icon={UtensilsCrossed}
               label={t('results.cogs')}
               value={formatMoney(data.total.cogs)}
               change={delta(data.total.cogs, data.previous.cogs)}
               good={false}
             />
             <Kpi
+              icon={Trash2}
+              tone="red"
               label={t('results.waste')}
               value={formatMoney(data.total.waste)}
               change={delta(data.total.waste, data.previous.waste)}
               good={false}
             />
             <Kpi
+              icon={ReceiptText}
+              tone="amber"
               label={t('results.opex')}
               value={formatMoney(data.total.opex)}
               change={delta(data.total.opex, data.previous.opex)}
               good={false}
             />
-            <Kpi label={t('results.breakEven')} value={formatMoney(data.total.breakEven)} />
+            <Kpi
+              icon={Scale}
+              label={t('results.breakEven')}
+              value={formatMoney(data.total.breakEven)}
+            />
           </div>
 
-          <section className="space-y-2">
-            <h2 className="font-medium">{t('results.byUnit')}</h2>
+          <section className="space-y-3">
+            <h2 className="font-semibold">{t('results.byUnit')}</h2>
             <div className="overflow-x-auto">
               <table className={tableCls}>
-                <thead className="bg-slate-100">
+                <thead>
                   <tr>
                     <th className={thCls}>{t('hr.unit')}</th>
                     {(
@@ -177,7 +241,7 @@ export function ResultsPage() {
                     (u) => (
                       <tr
                         key={u.unitId}
-                        className={u.unitId === 'total' ? 'bg-slate-50 font-medium' : ''}
+                        className={u.unitId === 'total' ? 'bg-gray-50 font-semibold' : ''}
                       >
                         <td className={tdCls}>{u.name}</td>
                         {(['revenue', 'cogs', 'waste', 'opex', 'personnel'] as const).map((k) => (
@@ -186,7 +250,7 @@ export function ResultsPage() {
                           </td>
                         ))}
                         <td
-                          className={`${tdCls} whitespace-nowrap text-right ${u.result < 0 ? 'text-red-700' : 'text-emerald-700'}`}
+                          className={`${tdCls} whitespace-nowrap text-right ${u.result < 0 ? 'text-red-600' : 'text-emerald-600'}`}
                         >
                           {formatMoney(u.result)}
                         </td>
@@ -200,38 +264,42 @@ export function ResultsPage() {
             </div>
           </section>
 
-          <section className="space-y-2">
-            <h2 className="font-medium">{t('results.daily')}</h2>
-            <div
-              className="flex h-48 items-end gap-1 overflow-x-auto rounded border bg-white p-3"
-              role="img"
-              aria-label={t('results.daily')}
-            >
-              {data.daily.map((d) => (
-                <div
-                  key={d.date}
-                  className="flex min-w-6 flex-1 flex-col items-center justify-end gap-0.5"
-                  title={`${d.date.split('-').reverse().join('/')}: ${t('results.revenue')} ${formatMoney(d.revenue)} · ${t('results.result')} ${formatMoney(d.result)}`}
-                >
-                  <div className="flex w-full items-end gap-0.5">
-                    <div
-                      className="flex-1 bg-slate-300"
-                      style={{ height: `${(d.revenue / max) * 140}px` }}
-                    />
-                    <div
-                      className={`flex-1 ${d.result < 0 ? 'bg-red-500' : 'bg-emerald-500'}`}
-                      style={{ height: `${(Math.abs(d.result) / max) * 140}px` }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-slate-400">{d.date.slice(8)}</span>
-                </div>
-              ))}
+          <Panel
+            title={t('results.daily')}
+            action={
+              <div className="flex gap-4 text-xs text-gray-500">
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-brand-600" />
+                  {t('results.revenue')}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-emerald-500" />
+                  {t('results.result')}
+                </span>
+              </div>
+            }
+          >
+            <div className="px-3 pt-4 pb-2">
+              <AreaChart
+                labels={days.map((d) => `${d.slice(8, 10)}/${d.slice(5, 7)}`)}
+                format={formatMoney}
+                series={[
+                  {
+                    name: t('results.revenue'),
+                    color: '#4f46e5',
+                    values: days.map((d) => byDay.get(d)?.revenue ?? 0),
+                  },
+                  {
+                    name: t('results.result'),
+                    color: '#10b981',
+                    values: days.map((d) => byDay.get(d)?.result ?? 0),
+                  },
+                ]}
+              />
             </div>
-            <p className="text-xs text-slate-500">
-              <span className="mr-1 inline-block h-2 w-3 bg-slate-300" /> {t('results.revenue')} ·{' '}
-              <span className="mx-1 inline-block h-2 w-3 bg-emerald-500" /> {t('results.result')}
-            </p>
-            <p className="text-xs text-slate-500">{t('results.note')}</p>
+          </Panel>
+          <section>
+            <p className="text-xs text-gray-500">{t('results.note')}</p>
           </section>
         </>
       )}

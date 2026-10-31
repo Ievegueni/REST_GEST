@@ -7,7 +7,7 @@ export function CatalogLayout() {
   const manage = useCan('catalog.manage');
   return (
     <>
-      <h1 className="mb-4 text-xl font-semibold">{t('nav.catalog')}</h1>
+      <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t('nav.catalog')}</h1>
       <Tabs
         items={[
           { to: '/catalogo/produtos', label: t('catalog.products') },

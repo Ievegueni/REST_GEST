@@ -264,6 +264,10 @@ describe('sugestão de reposição', () => {
     const d = (await api('GET', '/api/dashboard')).json().data;
     expect(d.stockValue).toBeGreaterThan(0);
     expect(d.topConsumption[0].name).toBe('CERV');
+    // série de 30 dias com o consumo dos últimos 30 dias
+    expect(d.daily).toHaveLength(30);
+    const sum = d.daily.reduce((s: number, x: { consumption: number }) => s + x.consumption, 0);
+    expect(sum).toBeGreaterThan(0);
     expect(todayLocal()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

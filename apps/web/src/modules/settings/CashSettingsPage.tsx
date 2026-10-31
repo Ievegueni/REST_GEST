@@ -17,7 +17,7 @@ export function CashSettingsPage() {
     <div className="max-w-xl space-y-6">
       <section className="space-y-2">
         <h2 className="font-medium">{t('cash.methods')}</h2>
-        <ul className="divide-y rounded border bg-white text-sm">
+        <ul className="divide-y rounded-xl border bg-white shadow-xs text-sm">
           {methods?.map((m) => (
             <li key={m.id} className="flex justify-between px-4 py-2">
               <span>
@@ -75,7 +75,7 @@ function LimitForm({ initial, manage }: { initial: number | null; manage: boolea
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   return (
-    <section className="space-y-2 rounded border bg-white p-4">
+    <section className="space-y-2 rounded-xl border bg-white shadow-xs p-4">
       <label className="block space-y-1 text-sm">
         <span>{t('cash.diffLimit')}</span>
         <input

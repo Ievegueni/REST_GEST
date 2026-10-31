@@ -115,7 +115,7 @@ function NewTransfer() {
         {t('common.back')}
       </Link>
       <h2 className="text-lg font-semibold">{t('transfers.new')}</h2>
-      <div className="grid gap-3 rounded border bg-white p-4 md:grid-cols-3">
+      <div className="grid gap-3 rounded-xl border bg-white shadow-xs p-4 md:grid-cols-3">
         {select(from, setFrom, t('transfers.from'))}
         {select(to, setTo, t('transfers.to'))}
         <label className="space-y-1 text-sm">

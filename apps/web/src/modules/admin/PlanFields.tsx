@@ -19,7 +19,7 @@ export function PlanSelector({ value, onChange }: { value: Plan; onChange: (p: P
         <label
           key={p}
           className={`cursor-pointer rounded border px-4 py-2 text-sm ${
-            value === p ? 'border-slate-900 bg-slate-900 text-white' : 'bg-white hover:bg-slate-50'
+            value === p ? 'border-brand-600 bg-brand-600 text-white' : 'bg-white hover:bg-slate-50'
           }`}
         >
           <input

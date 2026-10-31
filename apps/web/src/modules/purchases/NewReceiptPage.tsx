@@ -127,7 +127,7 @@ function ReceiptForm({ order }: { order: Order | null }) {
           </span>
         )}
       </h2>
-      <div className="grid gap-3 rounded border bg-white p-4 md:grid-cols-3">
+      <div className="grid gap-3 rounded-xl border bg-white shadow-xs p-4 md:grid-cols-3">
         <label className="space-y-1 text-sm">
           <span>{t('purchases.supplier')} *</span>
           <select

@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
+import { Building2, Landmark, Lock, Mail } from 'lucide-react';
+import { Shell } from '../../components/Shell';
 import { buttonCls, Field } from '../../components/ui';
 import { t } from '../../i18n';
 import { api, ApiError } from '../../lib/api';
@@ -26,28 +28,18 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen">
-      <header className="flex h-14 items-center justify-between bg-slate-900 px-6 text-slate-100">
-        <Link to="/admin" className="font-semibold">
-          {t('app.name')} · {t('admin.title')}
-        </Link>
-        <div className="flex items-center gap-3 text-sm">
-          <Link to="/admin" className="hover:underline">
-            {t('admin.tenants')}
-          </Link>
-          <Link to="/admin/tabelas-fiscais" className="hover:underline">
-            {t('taxTables.title')}
-          </Link>
-          <span>{admin.name}</span>
-          <button onClick={logout} className="text-slate-400 hover:underline">
-            {t('auth.logout')}
-          </button>
-        </div>
-      </header>
-      <main className="mx-auto max-w-5xl p-6">
-        <Outlet />
-      </main>
-    </div>
+    <Shell
+      brandSubtitle={t('admin.title')}
+      footer={t('admin.footer')}
+      nav={[
+        { to: '/admin', label: t('admin.tenants'), icon: Building2, match: ['/admin/tenants'] },
+        { to: '/admin/tabelas-fiscais', label: t('taxTables.title'), icon: Landmark },
+      ]}
+      user={{ name: admin.name, role: t('admin.title') }}
+      onLogout={logout}
+    >
+      <Outlet />
+    </Shell>
   );
 }
 
@@ -67,13 +59,20 @@ function AdminLogin({ onLogin }: { onLogin: (a: Admin) => void }) {
   };
 
   return (
-    <AuthCard title={t('admin.login')} onSubmit={submit} error={error}>
+    <AuthCard
+      title={t('admin.title')}
+      subtitle={t('admin.loginSubtitle')}
+      onSubmit={submit}
+      error={error}
+    >
       <Field
         label={t('auth.email')}
         type="email"
         value={email}
         onChange={setEmail}
         autoComplete="email"
+        icon={Mail}
+        placeholder={t('auth.emailPlaceholder')}
       />
       <Field
         label={t('auth.password')}
@@ -81,8 +80,10 @@ function AdminLogin({ onLogin }: { onLogin: (a: Admin) => void }) {
         value={password}
         onChange={setPassword}
         autoComplete="current-password"
+        icon={Lock}
+        placeholder="••••••••"
       />
-      <button className={`${buttonCls} w-full`}>{t('auth.login')}</button>
+      <button className={`${buttonCls} w-full py-2.5 text-base`}>{t('auth.login')}</button>
     </AuthCard>
   );
 }

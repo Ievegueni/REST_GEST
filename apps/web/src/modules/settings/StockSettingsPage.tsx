@@ -34,7 +34,7 @@ function WasteReasons() {
     }
   };
   return (
-    <section className="max-w-md space-y-3 rounded border bg-white p-4">
+    <section className="max-w-md space-y-3 rounded-xl border bg-white shadow-xs p-4">
       <h2 className="font-medium">{t('wasteReasons.title')}</h2>
       <p className="text-xs text-slate-500">{t('wasteReasons.hint')}</p>
       <ul className="divide-y text-sm">
@@ -102,7 +102,7 @@ function Form({ initial }: { initial: Settings }) {
   };
 
   return (
-    <div className="max-w-md space-y-3 rounded border bg-white p-4">
+    <div className="max-w-md space-y-3 rounded-xl border bg-white shadow-xs p-4">
       <label className="block space-y-1 text-sm">
         <span>{t('settings.negativeStock')}</span>
         <select

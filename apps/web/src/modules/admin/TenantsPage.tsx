@@ -18,7 +18,7 @@ export function TenantsPage() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">{t('admin.tenants')}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('admin.tenants')}</h1>
         <Link to="/admin/tenants/novo" className={buttonCls}>
           {t('admin.newTenant')}
         </Link>
@@ -27,7 +27,7 @@ export function TenantsPage() {
       {!tenants ? (
         <p className="text-slate-500">{t('common.loading')}</p>
       ) : (
-        <table className="w-full rounded border bg-white text-sm">
+        <table className="w-full rounded-xl border bg-white shadow-xs text-sm">
           <thead className="bg-slate-100 text-left">
             <tr>
               <th className="px-3 py-2">{t('admin.name')}</th>

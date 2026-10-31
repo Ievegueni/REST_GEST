@@ -135,7 +135,7 @@ export function SalesImportPage() {
       )}
 
       {parseErrors.length > 0 && (
-        <details className="rounded border bg-white p-3 text-sm">
+        <details className="rounded-xl border bg-white shadow-xs p-3 text-sm">
           <summary className="cursor-pointer text-red-700">
             {t('sales.parseErrors')} ({parseErrors.length})
           </summary>

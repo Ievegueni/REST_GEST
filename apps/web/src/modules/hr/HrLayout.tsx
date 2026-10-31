@@ -5,7 +5,7 @@ import { t } from '../../i18n';
 export function HrLayout() {
   return (
     <>
-      <h1 className="mb-4 text-xl font-semibold">{t('nav.hr')}</h1>
+      <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t('nav.hr')}</h1>
       <Tabs
         items={[
           { to: '/rh', label: t('hr.employees') },

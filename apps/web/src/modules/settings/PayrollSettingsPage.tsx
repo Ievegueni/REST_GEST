@@ -45,7 +45,7 @@ function Form({ initial }: { initial: S }) {
     }
   };
   return (
-    <div className="max-w-md space-y-3 rounded border bg-white p-4">
+    <div className="max-w-md space-y-3 rounded-xl border bg-white shadow-xs p-4">
       <p className="text-xs text-slate-500">{t('payroll.settingsHint')}</p>
       {(
         [

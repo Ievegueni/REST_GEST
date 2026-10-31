@@ -57,7 +57,7 @@ export function PayrollPage() {
       <PageHeader title={t('nav.payroll')} />
       <form
         onSubmit={process}
-        className="mb-4 flex flex-wrap items-end gap-3 rounded border bg-white p-4"
+        className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border bg-white shadow-xs p-4"
       >
         <UnitSelect value={unit} units={units} onChange={setUnitId} />
         <label className="space-y-1 text-sm">

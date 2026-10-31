@@ -121,7 +121,7 @@ export function DailyCostsPage() {
       </div>
       <form
         onSubmit={add}
-        className="flex flex-wrap items-end gap-2 rounded border bg-white p-3 text-sm"
+        className="flex flex-wrap items-end gap-2 rounded-xl border bg-white shadow-xs p-3 text-sm"
       >
         <input
           aria-label={t('costs.date')}
@@ -357,7 +357,7 @@ export function CostCategoriesPage() {
       <button className={buttonCls} onClick={() => setEditing('new')}>
         {t('costs.newCategory')}
       </button>
-      <ul className="max-w-md divide-y rounded border bg-white text-sm">
+      <ul className="max-w-md divide-y rounded-xl border bg-white shadow-xs text-sm">
         {data?.map((c) => (
           <li key={c.id} className="flex justify-between px-4 py-2">
             <span>

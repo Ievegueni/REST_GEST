@@ -84,13 +84,13 @@ export function PayablePage() {
       <Link to="/contas-a-pagar" className="text-sm text-slate-500 hover:underline">
         {t('common.back')}
       </Link>
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-2xl font-semibold tracking-tight">
         {p.supplier.name} · {p.documentNumber ?? p.description ?? ''}
         <span className="ml-2 text-sm text-slate-500">
           ({t(`payableStatus.${p.status}` as TKey)})
         </span>
       </h1>
-      <dl className="grid gap-1 rounded border bg-white p-4 text-sm sm:grid-cols-3">
+      <dl className="grid gap-1 rounded-xl border bg-white shadow-xs p-4 text-sm sm:grid-cols-3">
         <div>
           {t('payables.issueDate')}: {formatDate(p.issueDate)}
         </div>

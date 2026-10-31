@@ -21,7 +21,7 @@ export function PositionsPage() {
     kind: 'department' | 'position',
     extra?: (i: T) => string | null,
   ) => (
-    <ul className="divide-y rounded border bg-white text-sm">
+    <ul className="divide-y rounded-xl border bg-white shadow-xs text-sm">
       {items?.map((i) => (
         <li key={i.id} className="flex justify-between px-4 py-2">
           <span>
