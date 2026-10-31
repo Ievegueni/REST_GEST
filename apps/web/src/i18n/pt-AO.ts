@@ -33,6 +33,8 @@ export const ptAO = {
   'auth.emailPlaceholder': 'nome@restaurante.ao',
   'shell.footer': 'COMUNICA, LDA',
   'shell.openMenu': 'Abrir menu',
+  'shell.collapse': 'Esconder menu',
+  'shell.expand': 'Mostrar menu',
   'shell.closeMenu': 'Fechar menu',
   'auth.logout': 'Sair',
   'auth.forgot': 'Esqueci-me da senha',

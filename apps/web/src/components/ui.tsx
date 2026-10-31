@@ -115,10 +115,10 @@ export function StatCard(props: {
         <Icon className="size-5" strokeWidth={1.75} />
       </span>
       <div className="min-w-0">
-        <div className="truncate text-sm text-gray-500" title={props.label}>
+        <div className="text-sm leading-snug text-gray-500" title={props.label}>
           {props.label}
         </div>
-        <div className="truncate text-xl font-semibold tracking-tight tabular-nums sm:text-2xl">
+        <div className="truncate text-xl font-semibold tracking-tight tabular-nums 2xl:text-2xl">
           {props.value}
         </div>
         {props.hint && <div className="mt-0.5 text-xs">{props.hint}</div>}

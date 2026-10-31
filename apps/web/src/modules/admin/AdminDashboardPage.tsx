@@ -55,7 +55,7 @@ export function AdminDashboardPage() {
         </Link>
       </PageHeader>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] sm:gap-4">
         <StatCard
           icon={Building2}
           label={t('adminDash.activeTenants')}

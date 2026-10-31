@@ -327,7 +327,7 @@ export function TenantDetailPage() {
       </div>
 
       {dirty && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 backdrop-blur lg:left-64">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-white/95 backdrop-blur lg:left-[var(--sidebar-w)]">
           <div className="mx-auto flex max-w-[1400px] items-center justify-end gap-3 px-4 py-3 sm:px-8">
             <span className="mr-auto text-sm text-gray-600">{t('admin.unsaved')}</span>
             <button className={secondaryCls} onClick={() => setForm(toForm(tenant))}>

@@ -1,13 +1,30 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { ChefHat, LogOut, Menu, User, X, type LucideIcon } from 'lucide-react';
+import {
+  ChefHat,
+  LogOut,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  User,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { t } from '../i18n';
 
 /** match: prefixos extra que também activam o item (além do próprio `to`, exacto) */
 export type ShellNavItem = { to: string; label: string; icon: LucideIcon; match?: string[] };
 
 /** Marca da plataforma: ícone num quadrado branco + nome. */
-export function BrandMark({ subtitle, size = 'sm' }: { subtitle?: string; size?: 'sm' | 'lg' }) {
+export function BrandMark({
+  subtitle,
+  size = 'sm',
+  compact = false,
+}: {
+  subtitle?: string;
+  size?: 'sm' | 'lg';
+  compact?: boolean;
+}) {
   const lg = size === 'lg';
   return (
     <div className="flex items-center gap-3">
@@ -16,7 +33,7 @@ export function BrandMark({ subtitle, size = 'sm' }: { subtitle?: string; size?:
       >
         <ChefHat className={lg ? 'size-8' : 'size-6'} strokeWidth={1.75} />
       </span>
-      <div className="min-w-0 leading-tight">
+      <div className={`min-w-0 leading-tight ${compact ? 'sr-only' : ''}`}>
         <div className={`font-semibold tracking-tight text-white ${lg ? 'text-2xl' : 'text-base'}`}>
           {t('app.name')}
         </div>
@@ -28,6 +45,8 @@ export function BrandMark({ subtitle, size = 'sm' }: { subtitle?: string; size?:
 
 /** Primeiro segmento do caminho (ex.: /catalogo/produtos → catalogo). */
 const section = (path: string) => path.split('/')[1] ?? '';
+
+const COLLAPSE_KEY = 'restgest.sidebarCollapsed';
 
 export function Shell(props: {
   brandSubtitle: string;
@@ -43,6 +62,22 @@ export function Shell(props: {
 }) {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
+  // sidebar recolhida (só ícones) no computador; lembrada neste browser
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggleCollapsed = () => {
+    setCollapsed(!collapsed);
+    try {
+      localStorage.setItem(COLLAPSE_KEY, collapsed ? '0' : '1');
+    } catch {
+      /* armazenamento indisponível: fica só nesta sessão */
+    }
+  };
   const active = (n: ShellNavItem) =>
     n.match
       ? pathname === n.to || n.match.some((m) => pathname.startsWith(m))
@@ -50,13 +85,15 @@ export function Shell(props: {
         ? pathname === '/'
         : section(pathname) === section(n.to);
 
-  const sidebar = (
-    <aside className="flex h-full w-64 flex-col bg-night-900 text-slate-300">
-      <div className="flex h-16 items-center px-4">
-        <BrandMark subtitle={props.brandSubtitle} />
+  const sidebar = (mini: boolean) => (
+    <aside
+      className={`flex h-full flex-col bg-night-900 text-slate-300 transition-[width] duration-200 ${mini ? 'w-[72px]' : 'w-64'}`}
+    >
+      <div className={`flex h-16 items-center ${mini ? 'justify-center' : 'px-4'}`}>
+        <BrandMark subtitle={props.brandSubtitle} compact={mini} />
       </div>
       <nav
-        className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3 [scrollbar-color:rgb(255_255_255_/0.12)_transparent] [scrollbar-width:thin]"
+        className={`sidebar-scroll flex-1 space-y-0.5 overflow-y-auto py-3 px-3`}
         aria-label="Menu principal"
       >
         {props.nav.map((n) => {
@@ -69,32 +106,40 @@ export function Shell(props: {
               end
               onClick={() => setOpen(false)}
               aria-current={on ? 'page' : undefined}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+              title={mini ? n.label : undefined}
+              className={`flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition ${
+                mini ? 'justify-center px-0' : 'px-3'
+              } ${
                 on
                   ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30'
                   : 'text-slate-300 hover:bg-white/5 hover:text-white'
               }`}
             >
               <Icon className="size-[18px] shrink-0" strokeWidth={1.75} />
-              <span className="truncate">{n.label}</span>
+              <span className={mini ? 'sr-only' : 'truncate'}>{n.label}</span>
             </NavLink>
           );
         })}
       </nav>
-      <div className="border-t border-white/10 px-5 py-4 text-xs text-slate-500">
-        {props.footer ?? t('shell.footer')}
-      </div>
+      {!mini && (
+        <div className="border-t border-white/10 px-5 py-4 text-xs text-slate-500">
+          {props.footer ?? t('shell.footer')}
+        </div>
+      )}
     </aside>
   );
 
   return (
-    <div className="flex min-h-screen">
+    <div
+      className="flex min-h-screen"
+      style={{ '--sidebar-w': collapsed ? '72px' : '16rem' } as CSSProperties}
+    >
       {/* desktop */}
-      <div className="sticky top-0 hidden h-screen shrink-0 lg:block">{sidebar}</div>
+      <div className="sticky top-0 hidden h-screen shrink-0 lg:block">{sidebar(collapsed)}</div>
       {/* móvel */}
       {open && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
-          <div className="h-full">{sidebar}</div>
+          <div className="h-full">{sidebar(false)}</div>
           <button
             aria-label={t('shell.closeMenu')}
             className="flex-1 bg-night-950/50"
@@ -114,6 +159,19 @@ export function Shell(props: {
             onClick={() => setOpen(true)}
           >
             <Menu className="size-5" />
+          </button>
+          <button
+            className="hidden rounded-md p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 lg:block"
+            aria-label={collapsed ? t('shell.expand') : t('shell.collapse')}
+            title={collapsed ? t('shell.expand') : t('shell.collapse')}
+            aria-expanded={!collapsed}
+            onClick={toggleCollapsed}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-5" />
+            ) : (
+              <PanelLeftClose className="size-5" />
+            )}
           </button>
           <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-4">
             {props.header}
