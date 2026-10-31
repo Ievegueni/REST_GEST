@@ -537,6 +537,18 @@ export const ptAO = {
   'dashboard.waste': 'Quebras',
   'dashboard.inventory': 'Inventário',
   'dashboard.weekSales': 'Vendas desta semana',
+  'settings.company': 'Empresa',
+  'company.logo': 'Logotipo',
+  'company.logoHelp':
+    'Aparece no menu lateral e no cabeçalho dos PDF (relatórios, recibos de vencimento e relatórios da IA).',
+  'logo.alt': 'Logotipo da empresa',
+  'logo.none': 'Sem logotipo',
+  'logo.upload': 'Carregar logotipo',
+  'logo.replace': 'Substituir',
+  'logo.remove': 'Remover',
+  'logo.hint':
+    'PNG ou JPG até 512 KB. Use fundo transparente ou branco; formato horizontal fica melhor.',
+  'logo.tooBig': 'O ficheiro tem mais de 512 KB.',
   'dashboard.variance': 'Desvio',
   'dashboard.stockValue': 'Valor em stock',
   'dashboard.openAlerts': 'Alertas activos',

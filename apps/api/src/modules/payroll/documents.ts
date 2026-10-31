@@ -62,15 +62,22 @@ export function payrollMap(r: Run): Report {
 export const payrollMapXlsx = (r: Run) => toXlsx(payrollMap(r), `Estado: ${r.status}`);
 
 /** Um recibo por página. */
-export function payslipsPdf(r: Run, tenant: { name: string; nif: string | null }) {
+export function payslipsPdf(
+  r: Run,
+  tenant: { name: string; nif: string | null; logo?: string | null },
+) {
   const content = r.lines.flatMap((l, i) => {
     const d = l.details as unknown as Details;
     const row = (label: string, value: number | null, bold = false) => [
       { text: label, bold },
       { text: value == null ? '' : kz(value), alignment: 'right', bold },
     ];
+    const brk = i > 0 ? { pageBreak: 'before' } : {};
     return [
-      { text: tenant.name, bold: true, fontSize: 12, ...(i > 0 && { pageBreak: 'before' }) },
+      tenant.logo
+        ? { image: tenant.logo, fit: [120, 36], margin: [0, 0, 0, 6], ...brk }
+        : { text: '', ...brk },
+      { text: tenant.name, bold: true, fontSize: 12 },
       { text: [tenant.nif ? `NIF ${tenant.nif} · ` : '', r.unit.name].join(''), color: '#555555' },
       {
         text: `Recibo de vencimento — ${periodLabel(r)}`,

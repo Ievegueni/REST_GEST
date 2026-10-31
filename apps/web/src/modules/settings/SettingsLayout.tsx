@@ -18,6 +18,7 @@ export function SettingsLayout() {
       <Tabs
         items={[
           { to: '/definicoes/plano', label: t('settings.plan') },
+          { to: '/definicoes/empresa', label: t('settings.company') },
           ...(units ? [{ to: '/definicoes/unidades', label: t('settings.units') }] : []),
           ...(users ? [{ to: '/definicoes/utilizadores', label: t('settings.users') }] : []),
           ...(stock ? [{ to: '/definicoes/stock', label: t('settings.stock') }] : []),

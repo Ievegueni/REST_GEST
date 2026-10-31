@@ -10,7 +10,7 @@ function renderAt(path: string, plan: Plan | null) {
     user: { id: 'u', name: 'Ana', email: 'ana@x' },
     role: 'Administrador',
     permissions: [],
-    tenant: { id: 't', name: 'Demo', plan },
+    tenant: { id: 't', name: 'Demo', plan, logoUrl: null },
     features: [...effectiveFeatures(plan)],
     units: [{ id: 'u1', name: 'Centro' }],
     impersonated: false,
@@ -24,6 +24,7 @@ function renderAt(path: string, plan: Plan | null) {
     logout: async () => {},
     startImpersonation: async () => {},
     endImpersonation: () => {},
+    reload: async () => {},
   };
   return render(
     <SessionContext.Provider value={value}>

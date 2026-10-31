@@ -1,6 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { protect } from '../core/auth';
+import { AppError } from '../core/errors';
+import { setTenantLogo } from '../core/logo';
 import { getSettings, updateSettings } from '../core/settings';
 
 const time = z
@@ -26,5 +28,20 @@ export async function settingsRoutes(app: FastifyInstance) {
   app.get('/settings', protect(), async (req) => ({ data: await getSettings(req.auth.tenantId) }));
   app.patch('/settings', protect({ permission: 'settings.manage' }), async (req) => ({
     data: await updateSettings(req.auth.tenantId, req.auth.userId, schema.parse(req.body), req.ip),
+  }));
+
+  // Logotipo da empresa (multipart, campo "file"); DELETE remove
+  app.put('/settings/logo', protect({ permission: 'settings.manage' }), async (req) => {
+    const file = await req.file();
+    if (!file) throw new AppError('VALIDATION_ERROR', 'Ficheiro em falta');
+    return {
+      data: await setTenantLogo(req.auth.tenantId, await file.toBuffer(), {
+        userId: req.auth.userId,
+        ip: req.ip,
+      }),
+    };
+  });
+  app.delete('/settings/logo', protect({ permission: 'settings.manage' }), async (req) => ({
+    data: await setTenantLogo(req.auth.tenantId, null, { userId: req.auth.userId, ip: req.ip }),
   }));
 }

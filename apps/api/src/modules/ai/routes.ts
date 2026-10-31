@@ -4,7 +4,8 @@ import { canAccessUnit, protect } from '../../core/auth';
 import { AppError } from '../../core/errors';
 import { prisma } from '../../core/prisma';
 import { aiConfigured } from '../../integrations/anthropic';
-import { renderPdf } from '../reports/export';
+import { logoDataUrl } from '../../core/logo';
+import { pdfHeader, renderPdf } from '../reports/export';
 import { runAnomalies, runWeekly } from './reports';
 import { aiUsage, chat } from './service';
 
@@ -93,7 +94,7 @@ export async function aiRoutes(app: FastifyInstance) {
           pageSize: 'A4',
           pageMargins: [40, 50, 40, 50],
           defaultStyle: { font: 'Helvetica', fontSize: 10 },
-          header: { text: tenant.name, margin: [40, 20, 40, 0], fontSize: 8, color: '#666666' },
+          header: pdfHeader(tenant.name, await logoDataUrl(req.auth.tenantId), 40, 16),
           content: [
             { text: title, fontSize: 16, bold: true },
             {

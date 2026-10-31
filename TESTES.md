@@ -41,6 +41,10 @@ pnpm dev:stop                           # termina TODOS os processos de desenvol
 - [ ] "Entrar como" → faixa amarela "Sessão de suporte"; "Terminar" volta ao /admin.
 
 ## 3. Estrutura e catálogo
+- [ ] Definições → Empresa: carregar logotipo (PNG/JPG) → aparece no menu lateral; recarregar a página mantém-no; "Remover" volta ao ícone.
+- [ ] Ficheiro .svg, .webp ou acima de 512 KB → mensagem de erro; utilizador sem permissão de definições vê o logotipo mas não os botões.
+- [ ] PDF de um relatório, recibos de vencimento e relatório da IA trazem o logotipo no cabeçalho.
+- [ ] `/admin` → tenant → Dados: carregar/remover o logotipo do cliente; aparece na lista de tenants e no painel.
 - [ ] Definições → Unidades e locais: criar unidade, locais (Armazém, Bar, Cozinha), desactivar um local.
 - [ ] Definições → Utilizadores: criar Ecónomo só com uma unidade → ao entrar como ele só vê essa unidade.
 - [ ] Catálogo → Categorias: Bebidas > Cervejas; tentar pôr "Bebidas" dentro de "Cervejas" → recusado.

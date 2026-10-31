@@ -20,12 +20,29 @@ export function BrandMark({
   subtitle,
   size = 'sm',
   compact = false,
+  logoUrl,
 }: {
   subtitle?: string;
   size?: 'sm' | 'lg';
   compact?: boolean;
+  /** logotipo da empresa: substitui o ícone; o nome da empresa passa a título */
+  logoUrl?: string | null;
 }) {
   const lg = size === 'lg';
+  if (logoUrl)
+    return (
+      <div className="flex min-w-0 items-center gap-3">
+        <span
+          className={`flex h-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ${compact ? 'w-10 p-1' : 'max-w-28 min-w-10 px-2 py-1'}`}
+        >
+          <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" />
+        </span>
+        <div className={`min-w-0 leading-tight ${compact ? 'sr-only' : ''}`}>
+          <div className="truncate text-sm font-semibold text-white">{subtitle}</div>
+          <div className="truncate text-xs text-slate-400">{t('app.name')}</div>
+        </div>
+      </div>
+    );
   return (
     <div className="flex items-center gap-3">
       <span
@@ -50,6 +67,7 @@ const COLLAPSE_KEY = 'restgest.sidebarCollapsed';
 
 export function Shell(props: {
   brandSubtitle: string;
+  logoUrl?: string | null;
   nav: ShellNavItem[];
   user: { name: string; role: string };
   onLogout: () => void;
@@ -90,7 +108,7 @@ export function Shell(props: {
       className={`flex h-full flex-col bg-night-900 text-slate-300 transition-[width] duration-200 ${mini ? 'w-[72px]' : 'w-64'}`}
     >
       <div className={`flex h-16 items-center ${mini ? 'justify-center' : 'px-4'}`}>
-        <BrandMark subtitle={props.brandSubtitle} compact={mini} />
+        <BrandMark subtitle={props.brandSubtitle} compact={mini} logoUrl={props.logoUrl} />
       </div>
       <nav
         className={`sidebar-scroll flex-1 space-y-0.5 overflow-y-auto py-3 px-3`}

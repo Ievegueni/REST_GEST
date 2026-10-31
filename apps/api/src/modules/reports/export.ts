@@ -70,7 +70,21 @@ export function formatCell(c: Column, v: Row[string] | undefined): string {
   }
 }
 
-export async function toPdf(r: Report, subtitle: string, tenantName: string) {
+/** Cabeçalho de página dos PDF: logotipo do tenant (se houver) à esquerda, nome à direita. */
+export const pdfHeader = (name: string, logo: string | null, x: number, top = 12) => ({
+  margin: [x, top, x, 0],
+  columns: [
+    logo ? { image: logo, fit: [90, 24] } : { text: '' },
+    { text: name, alignment: 'right', fontSize: 8, color: '#666666', margin: [0, 6, 0, 0] },
+  ],
+});
+
+export async function toPdf(
+  r: Report,
+  subtitle: string,
+  tenantName: string,
+  logo: string | null = null,
+) {
   const numeric = (c: Column) => c.type !== 'text' && c.type !== 'date';
   const cell = (c: Column, v: Row[string] | undefined, bold = false) => ({
     text: formatCell(c, v),
@@ -92,7 +106,7 @@ export async function toPdf(r: Report, subtitle: string, tenantName: string) {
     pageOrientation: r.columns.length > 6 ? 'landscape' : 'portrait',
     pageMargins: [30, 40, 30, 40],
     defaultStyle: { font: 'Helvetica', fontSize: 8 },
-    header: { text: tenantName, margin: [30, 15, 30, 0], fontSize: 8, color: '#666666' },
+    header: pdfHeader(tenantName, logo, 30),
     footer: (page: number, pages: number) => ({
       text: `${page} / ${pages}`,
       alignment: 'right',

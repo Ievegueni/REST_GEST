@@ -1,3 +1,4 @@
+import { logoUrl } from '../../core/logo';
 import { createHash, randomBytes } from 'node:crypto';
 import argon2 from 'argon2';
 import { AppError } from '../../core/errors';
@@ -131,7 +132,7 @@ export async function getSession(userId: string) {
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     include: {
-      tenant: true,
+      tenant: { omit: { logoData: true } },
       role: { include: { permissions: true } },
       userUnits: { include: { unit: true } },
     },
@@ -146,7 +147,12 @@ export async function getSession(userId: string) {
     user: { id: user.id, name: user.name, email: user.email },
     role: user.role.name,
     permissions: user.role.permissions.map((p) => p.code),
-    tenant: { id: user.tenantId, name: user.tenant.name, plan: user.tenant.plan },
+    tenant: {
+      id: user.tenantId,
+      name: user.tenant.name,
+      plan: user.tenant.plan,
+      logoUrl: logoUrl(user.tenant),
+    },
     units: units.map((u) => ({ id: u.id, name: u.name })),
   };
 }

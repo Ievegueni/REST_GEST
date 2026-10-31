@@ -55,6 +55,10 @@ model Tenant {
   payrollMonthDays    Int?
   /// diferença de caixa (AOA) acima da qual a justificação é obrigatória e há alerta
   cashDifferenceLimit Int?
+  /// logotipo (PNG/JPEG, ≤ 512 KB) guardado na BD: servido sem sessão em <img> e usado nos PDF
+  logoData            Bytes?
+  logoMime            String?
+  logoUpdatedAt       DateTime?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 

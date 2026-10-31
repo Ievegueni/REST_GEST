@@ -5,6 +5,7 @@ import { env } from '../../core/env';
 import { AppError } from '../../core/errors';
 import { prisma } from '../../core/prisma';
 import { audit } from '../../core/audit';
+import { setTenantLogo } from '../../core/logo';
 import { setSettings } from '../../core/platform-settings';
 import {
   FUTURIX_KEYS,
@@ -190,6 +191,21 @@ export async function adminRoutes(app: FastifyInstance) {
         req.admin.id,
         req.ip,
       ),
+    }));
+
+    r.put<{ Params: { id: string } }>('/tenants/:id/logo', async (req) => {
+      const file = await req.file();
+      if (!file) throw new AppError('VALIDATION_ERROR', 'Ficheiro em falta');
+      await service.getTenant(req.params.id); // 404 se não existir
+      return {
+        data: await setTenantLogo(req.params.id, await file.toBuffer(), {
+          adminId: req.admin.id,
+          ip: req.ip,
+        }),
+      };
+    });
+    r.delete<{ Params: { id: string } }>('/tenants/:id/logo', async (req) => ({
+      data: await setTenantLogo(req.params.id, null, { adminId: req.admin.id, ip: req.ip }),
     }));
 
     // Impersonation: token de tenant curto (30 min, sem refresh) marcado com o id do Super Admin.

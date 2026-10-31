@@ -13,3 +13,15 @@ export const StatusBadge = ({ status }: { status: string }) => (
     {t(`admin.status.${status}` as TKey)}
   </Badge>
 );
+
+/** Logotipo do tenant (ou a inicial) em quadrado pequeno, para listas. */
+export const TenantMark = ({ name, logoUrl }: { name: string; logoUrl: string | null }) =>
+  logoUrl ? (
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-white p-1">
+      <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" />
+    </span>
+  ) : (
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-sm font-semibold text-brand-700">
+      {name.slice(0, 1).toUpperCase()}
+    </span>
+  );

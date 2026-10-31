@@ -61,6 +61,7 @@ export function Layout() {
   return (
     <Shell
       brandSubtitle={session.tenant.name}
+      logoUrl={session.tenant.logoUrl}
       nav={nav}
       user={{ name: session.user.name, role: session.role }}
       onLogout={logout}

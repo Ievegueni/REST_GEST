@@ -20,6 +20,7 @@ import { ProductFormPage } from './modules/catalog/ProductFormPage';
 import { ProductsPage } from './modules/catalog/ProductsPage';
 import { PlanPage } from './modules/settings/PlanPage';
 import { SettingsLayout } from './modules/settings/SettingsLayout';
+import { CompanyPage } from './modules/settings/CompanyPage';
 import { UnitsPage } from './modules/settings/UnitsPage';
 import { UsersPage } from './modules/settings/UsersPage';
 import { StockSettingsPage } from './modules/settings/StockSettingsPage';
@@ -158,6 +159,7 @@ export function App() {
         <Route path="/definicoes" element={<SettingsLayout />}>
           <Route index element={<Navigate to="plano" replace />} />
           <Route path="plano" element={<PlanPage />} />
+          <Route path="empresa" element={<CompanyPage />} />
           <Route path="unidades" element={<UnitsPage />} />
           <Route path="utilizadores" element={<UsersPage />} />
           <Route path="stock" element={<StockSettingsPage />} />

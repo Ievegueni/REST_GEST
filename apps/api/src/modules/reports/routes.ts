@@ -7,6 +7,7 @@ import { env } from '../../core/env';
 import { prisma } from '../../core/prisma';
 import { addDays, period, filtersSchema, todayLocal, zonedMidnight, type Filters } from './common';
 import { REPORTS, type ReportName } from './definitions';
+import { logoDataUrl } from '../../core/logo';
 import { toPdf, toXlsx } from './export';
 import { createOrders, suggest } from './replenishment';
 
@@ -49,7 +50,7 @@ export async function reportRoutes(app: FastifyInstance) {
       return reply
         .header('content-type', 'application/pdf')
         .header('content-disposition', `attachment; filename="${file}.pdf"`)
-        .send(await toPdf(report, subtitle, tenant.name));
+        .send(await toPdf(report, subtitle, tenant.name, await logoDataUrl(req.auth.tenantId)));
     }
     throw new AppError('VALIDATION_ERROR', 'Formato inválido (json, xlsx, pdf)');
   });

@@ -6,7 +6,7 @@ export type Session = {
   user: { id: string; name: string; email: string };
   role: string;
   permissions: string[];
-  tenant: { id: string; name: string; plan: Plan };
+  tenant: { id: string; name: string; plan: Plan; logoUrl: string | null };
   features: Feature[];
   units: { id: string; name: string }[];
   /** sessão aberta por um Super Admin */
@@ -23,6 +23,8 @@ type SessionState = {
   logout: () => Promise<void>;
   startImpersonation: (accessToken: string) => Promise<void>;
   endImpersonation: () => void;
+  /** volta a ler a sessão (ex.: depois de mudar o logotipo) */
+  reload: () => Promise<void>;
 };
 
 export const SessionContext = createContext<SessionState | null>(null);
@@ -71,6 +73,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setAccessToken(null);
       setSession(null);
     },
+    reload: load,
   };
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

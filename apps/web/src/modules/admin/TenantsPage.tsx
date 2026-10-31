@@ -5,7 +5,7 @@ import { buttonCls, ErrorBox, inputBase, PageHeader } from '../../components/ui'
 import { t } from '../../i18n';
 import { formatDate } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
-import { PlanBadge, StatusBadge } from './badges';
+import { PlanBadge, StatusBadge, TenantMark } from './badges';
 import type { TenantRow } from './types';
 
 /** "3 / 5" com barra de utilização quando há limite. */
@@ -106,13 +106,18 @@ export function TenantsPage() {
                 {rows.map((tn) => (
                   <tr key={tn.id} className="group hover:bg-gray-50/60">
                     <td className="px-5 py-3">
-                      <Link
-                        to={`/admin/tenants/${tn.id}`}
-                        className="font-medium text-gray-900 group-hover:text-brand-600"
-                      >
-                        {tn.name}
-                      </Link>
-                      {tn.nif && <div className="text-xs text-gray-500">NIF {tn.nif}</div>}
+                      <div className="flex items-center gap-3">
+                        <TenantMark name={tn.name} logoUrl={tn.logoUrl} />
+                        <div>
+                          <Link
+                            to={`/admin/tenants/${tn.id}`}
+                            className="font-medium text-gray-900 group-hover:text-brand-600"
+                          >
+                            {tn.name}
+                          </Link>
+                          {tn.nif && <div className="text-xs text-gray-500">NIF {tn.nif}</div>}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-5 py-3">
                       <PlanBadge plan={tn.plan} />

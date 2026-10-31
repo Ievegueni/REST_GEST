@@ -15,6 +15,7 @@ export type TenantRow = Limits & {
   status: 'ACTIVE' | 'SUSPENDED';
   featureOverrides: FeatureOverrides;
   createdAt: string;
+  logoUrl: string | null;
   _count: { units: number; users: number };
 };
 

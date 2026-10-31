@@ -1,3 +1,4 @@
+import { logoDataUrl } from '../../core/logo';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { canAccessUnit, protect } from '../../core/auth';
@@ -112,7 +113,7 @@ export async function payrollRoutes(app: FastifyInstance) {
         'content-disposition',
         `attachment; filename="recibos-${run.year}-${String(run.month).padStart(2, '0')}.pdf"`,
       )
-      .send(await payslipsPdf(run, tenant));
+      .send(await payslipsPdf(run, { ...tenant, logo: await logoDataUrl(req.auth.tenantId) }));
   });
   app.get('/payroll-runs/:id/map.xlsx', view, async (req, reply) => {
     const run = await service.getRun(req.auth, idParam.parse(req.params).id);

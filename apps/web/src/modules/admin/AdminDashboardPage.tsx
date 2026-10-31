@@ -12,7 +12,7 @@ import { buttonCls, ErrorBox, PageHeader, Panel, StatCard } from '../../componen
 import { t } from '../../i18n';
 import { formatDate, formatMoney } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
-import { PlanBadge, StatusBadge } from './badges';
+import { PlanBadge, StatusBadge, TenantMark } from './badges';
 
 type Dashboard = {
   tenants: { total: number; active: number; suspended: number; completo: number; stock: number };
@@ -32,6 +32,7 @@ type Dashboard = {
     plan: string;
     status: string;
     createdAt: string;
+    logoUrl: string | null;
     _count: { units: number; users: number };
   }[];
   topAi: { tenantId: string; name: string; requests: number; costUsd: number }[];
@@ -185,12 +186,15 @@ export function AdminDashboardPage() {
               {data.recent.map((tn) => (
                 <tr key={tn.id} className="hover:bg-gray-50/60">
                   <td className="px-5 py-3">
-                    <Link
-                      to={`/admin/tenants/${tn.id}`}
-                      className="font-medium hover:text-brand-600"
-                    >
-                      {tn.name}
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <TenantMark name={tn.name} logoUrl={tn.logoUrl} />
+                      <Link
+                        to={`/admin/tenants/${tn.id}`}
+                        className="font-medium hover:text-brand-600"
+                      >
+                        {tn.name}
+                      </Link>
+                    </div>
                   </td>
                   <td className="px-5 py-3">
                     <PlanBadge plan={tn.plan} />

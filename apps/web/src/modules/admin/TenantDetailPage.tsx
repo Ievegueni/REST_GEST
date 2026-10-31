@@ -29,6 +29,7 @@ import {
   secondaryCls,
   StatCard,
 } from '../../components/ui';
+import { LogoUploader } from '../../components/LogoUploader';
 import { PlanBadge, StatusBadge } from './badges';
 import { useSession } from '../../features/session';
 import { t, type TKey } from '../../i18n';
@@ -148,9 +149,15 @@ export function TenantDetailPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
-          <span className="flex size-12 items-center justify-center rounded-xl bg-brand-600 text-lg font-semibold text-white">
-            {tenant.name.slice(0, 1).toUpperCase()}
-          </span>
+          {tenant.logoUrl ? (
+            <span className="flex h-12 max-w-32 min-w-12 items-center justify-center rounded-xl border bg-white px-2 py-1">
+              <img src={tenant.logoUrl} alt="" className="max-h-full max-w-full object-contain" />
+            </span>
+          ) : (
+            <span className="flex size-12 items-center justify-center rounded-xl bg-brand-600 text-lg font-semibold text-white">
+              {tenant.name.slice(0, 1).toUpperCase()}
+            </span>
+          )}
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">{tenant.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
@@ -279,6 +286,15 @@ export function TenantDetailPage() {
                 required={false}
                 onChange={(nif) => setForm({ ...form, nif })}
               />
+              <div className="space-y-1.5 text-sm">
+                <span className="font-medium text-gray-700">{t('company.logo')}</span>
+                <LogoUploader
+                  logoUrl={tenant.logoUrl}
+                  path={`/admin/tenants/${tenant.id}/logo`}
+                  canEdit
+                  onChange={(logoUrl) => setTenant({ ...tenant, logoUrl })}
+                />
+              </div>
             </div>
           </Panel>
           <Panel title={t('admin.limitsTitle')}>

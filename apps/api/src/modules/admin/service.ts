@@ -2,6 +2,7 @@ import argon2 from 'argon2';
 import { audit } from '../../core/audit';
 import { AppError } from '../../core/errors';
 import { prisma } from '../../core/prisma';
+import { logoUrl } from '../../core/logo';
 import { createTenant } from '../../core/tenants';
 import { Prisma } from '@prisma/client';
 import { env } from '../../core/env';
@@ -22,15 +23,19 @@ export async function login(email: string, password: string) {
   return admin;
 }
 
-export const listTenants = () =>
-  prisma.tenant.findMany({
-    orderBy: { name: 'asc' },
-    include: { _count: { select: { units: true, users: true } } },
-  });
+export const listTenants = async () =>
+  (
+    await prisma.tenant.findMany({
+      orderBy: { name: 'asc' },
+      omit: { logoData: true },
+      include: { _count: { select: { units: true, users: true } } },
+    })
+  ).map((t) => ({ ...t, logoUrl: logoUrl(t) }));
 
 export async function getTenant(id: string) {
   const tenant = await prisma.tenant.findUnique({
     where: { id },
+    omit: { logoData: true },
     include: {
       _count: { select: { units: true, users: true } },
       users: {
@@ -46,7 +51,7 @@ export async function getTenant(id: string) {
     },
   });
   if (!tenant) throw new AppError('NOT_FOUND', 'Tenant não encontrado');
-  return { ...tenant, usage: await monthUsage(id) };
+  return { ...tenant, logoUrl: logoUrl(tenant), usage: await monthUsage(id) };
 }
 
 /** Uso do mês corrente para facturação: SMS enviados, pedidos IA, importações. */
@@ -105,9 +110,13 @@ export async function update(
   adminId: string,
   ip?: string,
 ) {
-  const before = await prisma.tenant.findUnique({ where: { id } });
+  const before = await prisma.tenant.findUnique({ where: { id }, omit: { logoData: true } });
   if (!before) throw new AppError('NOT_FOUND', 'Tenant não encontrado');
-  const after = await prisma.tenant.update({ where: { id }, data: patch });
+  const after = await prisma.tenant.update({
+    where: { id },
+    data: patch,
+    omit: { logoData: true },
+  });
 
   const changed = (Object.keys(patch) as (keyof typeof patch)[]).filter(
     (k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]),
@@ -126,7 +135,7 @@ export async function update(
       ip,
     });
   }
-  return after;
+  return { ...after, logoUrl: logoUrl(after) };
 }
 
 /** Escolhe o utilizador a impersonar (por defeito o primeiro Administrador activo) e regista na auditoria. */
@@ -176,6 +185,7 @@ export async function dashboard() {
           plan: true,
           status: true,
           createdAt: true,
+          logoUpdatedAt: true,
           _count: { select: { units: true, users: true } },
         },
       }),
@@ -231,7 +241,7 @@ export async function dashboard() {
       sms: series(smsDays),
       imports: series(importDays),
     },
-    recent: tenants.slice(0, 6),
+    recent: tenants.slice(0, 6).map((t) => ({ ...t, logoUrl: logoUrl(t) })),
     topAi: aiByTenant
       .map((r) => ({
         tenantId: r.tenantId,
