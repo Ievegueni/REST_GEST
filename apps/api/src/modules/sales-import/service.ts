@@ -11,6 +11,7 @@ import { explode, loadRecipeBook, outputLocationResolver } from '../recipes/book
 import { postMovements, reverseMovements, type MovementInput } from '../stock/engine';
 import { parseSalesFile, type ProfileConfig } from './parse';
 import { evaluatePosUnmapped } from '../alerts/engine';
+import { syncDailyCashFromSales } from '../cash/from-sales';
 
 const D = Prisma.Decimal;
 const REF = 'SalesImport';
@@ -311,6 +312,16 @@ async function postLines(auth: AuthContext, id: string) {
   );
 }
 
+/** Dias com vendas numa importação (para a caixa do dia). */
+async function importDays(auth: AuthContext, id: string) {
+  const rows = await auth.db.salesImportLine.findMany({
+    where: { importId: id },
+    distinct: ['saleDate'],
+    select: { saleDate: true },
+  });
+  return rows.map((r) => r.saleDate);
+}
+
 export async function confirmImport(auth: AuthContext, id: string, ip?: string) {
   const imp = await auth.db.salesImport.findUniqueOrThrow({ where: { id } });
   if (imp.status !== 'READY')
@@ -320,6 +331,7 @@ export async function confirmImport(auth: AuthContext, id: string, ip?: string) 
     where: { id },
     data: { status: 'CONFIRMED', confirmedAt: new Date(), confirmedById: auth.userId },
   });
+  await syncDailyCashFromSales(auth, imp.unitId, await importDays(auth, id));
   await audit({
     tenantId: auth.tenantId,
     userId: auth.userId,
@@ -367,6 +379,8 @@ export async function cancelImport(auth: AuthContext, id: string, ip?: string) {
     },
     { timeout: 120_000 },
   );
+  if (imp.status === 'CONFIRMED')
+    await syncDailyCashFromSales(auth, imp.unitId, await importDays(auth, id));
   await audit({
     tenantId: auth.tenantId,
     userId: auth.userId,
