@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   emptyLine,
@@ -7,9 +7,9 @@ import {
   resolveLines,
   type Line,
 } from '../../components/ProductLines';
-import { buttonCls, ErrorBox, inputCls } from '../../components/ui';
+import { buttonCls, ErrorBox, inputCls, secondaryCls } from '../../components/ui';
 import { t } from '../../i18n';
-import { api, apiUpload } from '../../lib/api';
+import { api, apiDownload, apiUpload } from '../../lib/api';
 import { formatMoney, nowLocal } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
 import type { ProductRow, Supplier, Unit } from '../types';
@@ -23,6 +23,16 @@ export function NewReceiptPage() {
   if (orderId && !order) return <p className="text-slate-500">{t('common.loading')}</p>;
   return <ReceiptForm order={order} />;
 }
+
+type ImportedLine = {
+  code: string;
+  name: string;
+  qty: number;
+  unitId: string;
+  unitPrice: number;
+  lotCode: string;
+  expiryDate: string;
+};
 
 function ReceiptForm({ order }: { order: Order | null }) {
   const navigate = useNavigate();
@@ -53,6 +63,46 @@ function ReceiptForm({ order }: { order: Order | null }) {
   );
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const excelRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  const [importErrors, setImportErrors] = useState<{ row: number; message: string }[]>([]);
+  const [importedCount, setImportedCount] = useState<number | null>(null);
+
+  const importExcel = async (file: File | undefined) => {
+    if (excelRef.current) excelRef.current.value = '';
+    if (!file) return;
+    setImporting(true);
+    setError('');
+    setImportErrors([]);
+    setImportedCount(null);
+    try {
+      const res = await apiUpload<{
+        lines: ImportedLine[];
+        errors: { row: number; message: string }[];
+      }>('/goods-receipts/import', file);
+      const added = res.lines.map((l) =>
+        emptyLine({
+          text: productLabel(l),
+          qty: String(l.qty),
+          unitId: l.unitId,
+          unitPrice: String(l.unitPrice),
+          lotCode: l.lotCode,
+          expiryDate: l.expiryDate,
+        }),
+      );
+      setLines((cur) => {
+        const kept = cur.filter((l) => l.text.trim());
+        const next = [...kept, ...added];
+        return next.length ? next : [emptyLine()];
+      });
+      setImportErrors(res.errors);
+      setImportedCount(added.length);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const locations =
     units
@@ -200,6 +250,56 @@ function ReceiptForm({ order }: { order: Order | null }) {
           {attachment && <span className="text-emerald-700">✔ {attachment.name}</span>}
         </label>
       </div>
+      {!order && (
+        <div className="space-y-2 rounded-xl border bg-white shadow-xs p-4 text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className={buttonCls}
+              disabled={importing || !products}
+              onClick={() => excelRef.current?.click()}
+            >
+              {importing ? t('purchases.uploading') : t('purchases.importLines')}
+            </button>
+            <button
+              type="button"
+              className={secondaryCls}
+              onClick={() =>
+                apiDownload('/goods-receipts/import/template', 'modelo-recepcao.xlsx').catch(
+                  (e: Error) => setError(e.message),
+                )
+              }
+            >
+              {t('import.template')}
+            </button>
+            <input
+              ref={excelRef}
+              type="file"
+              accept=".xlsx"
+              className="hidden"
+              onChange={(e) => importExcel(e.target.files?.[0])}
+            />
+            <span className="text-slate-500">{t('purchases.importLinesHint')}</span>
+          </div>
+          {importedCount !== null && (
+            <p className="text-emerald-700">
+              {t('purchases.importLinesDone', { n: importedCount })}
+            </p>
+          )}
+          {importErrors.length > 0 && (
+            <div className="text-red-700">
+              <p className="font-medium">{t('purchases.importLinesErrors')}</p>
+              <ul className="list-disc pl-5">
+                {importErrors.map((e) => (
+                  <li key={e.row}>
+                    {t('import.row')} {e.row}: {e.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
       <ProductLines
         products={products}
         lines={lines}

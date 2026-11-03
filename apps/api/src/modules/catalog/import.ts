@@ -17,9 +17,9 @@ const COLUMNS = {
 type Col = keyof typeof COLUMNS;
 const REQUIRED: Col[] = ['code', 'name', 'category', 'unit'];
 
-const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+export const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
 
-function cellText(v: ExcelJS.CellValue): string {
+export function cellText(v: ExcelJS.CellValue): string {
   if (v == null) return '';
   if (v instanceof Date) return v.toISOString();
   if (typeof v === 'object') {

@@ -1,6 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { canAccessUnit, protect } from '../../core/auth';
+import { AppError } from '../../core/errors';
 import { idParam } from '../../core/schemas';
+import { buildReceiptTemplate, parseReceiptLines } from './receipt-import';
 import { listQuery, orderSchema, orderStatusSchema, receiptSchema } from './schemas';
 import * as service from './service';
 
@@ -64,6 +66,20 @@ export async function purchaseRoutes(app: FastifyInstance) {
       },
     });
     return { data: rows.filter((r) => canAccessUnit(req.auth, r.location.unitId)) };
+  });
+
+  app.get('/goods-receipts/import/template', manage, async (_req, reply) =>
+    reply
+      .header('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      .header('content-disposition', 'attachment; filename="modelo-recepcao.xlsx"')
+      .send(await buildReceiptTemplate()),
+  );
+
+  /** Lê um Excel e devolve as linhas para o formulário (não grava). */
+  app.post('/goods-receipts/import', manage, async (req) => {
+    const file = await req.file();
+    if (!file) throw new AppError('VALIDATION_ERROR', 'Ficheiro em falta');
+    return { data: await parseReceiptLines(req.auth, await file.toBuffer()) };
   });
 
   app.post('/goods-receipts', manage, async (req, reply) =>
