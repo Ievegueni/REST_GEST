@@ -795,22 +795,28 @@ enum ImportKind {
 }
 
 model ImportProfile {
-  id               String     @id @default(cuid())
-  tenantId         String     @default(dbgenerated("current_setting('app.tenant_id')"))
-  name             String
+  id                     String     @id @default(cuid())
+  tenantId               String     @default(dbgenerated("current_setting('app.tenant_id')"))
+  name                   String
   /// sistema de origem (ex.: Winrest); os mapeamentos de artigos são por sistema
-  posName          String
-  kind             ImportKind @default(SALES_BY_ITEM)
-  sheetName        String?
-  headerRow        Int        @default(1)
+  posName                String
+  kind                   ImportKind @default(SALES_BY_ITEM)
+  sheetName              String?
+  headerRow              Int        @default(1)
   /// { itemCode, itemName, qty, amount, date } → texto do cabeçalho no ficheiro
-  columns          Json
+  columns                Json
   /// DD/MM/YYYY, YYYY-MM-DD, MM/DD/YYYY (células de data Excel são lidas directamente)
-  dateFormat       String     @default("DD/MM/YYYY")
-  decimalSeparator String     @default(",")
-  active           Boolean    @default(true)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  dateFormat             String     @default("DD/MM/YYYY")
+  decimalSeparator       String     @default(",")
+  /// separador decimal da coluna de valor, quando difere da quantidade (null = o mesmo)
+  amountDecimalSeparator String?
+  /// relatórios com várias secções: título da secção a ler (lê até à linha "Total")
+  section                String?
+  /// título da secção que lista as famílias/grupos; essas linhas são subtotais e são ignoradas
+  groupSection           String?
+  active                 Boolean    @default(true)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
 
   tenant  Tenant        @relation(fields: [tenantId], references: [id])
   imports SalesImport[]

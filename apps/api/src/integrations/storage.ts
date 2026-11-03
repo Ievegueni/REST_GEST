@@ -12,6 +12,7 @@ import { AppError } from '../core/errors';
 
 export const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 export const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+export const CSV_MIME = 'text/csv';
 const LOCAL_DIR = path.resolve(process.cwd(), '.uploads');
 
 export type StoredFile = { url: string; name: string };

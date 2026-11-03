@@ -5,7 +5,7 @@ import { assertUnitAccess, tenantFeatures, type AuthContext } from '../../core/a
 import { AppError } from '../../core/errors';
 import { tenantDb } from '../../core/prisma';
 import { nextNumber } from '../../core/sequence';
-import { storeFile, XLSX_MIME } from '../../integrations/storage';
+import { CSV_MIME, storeFile, XLSX_MIME } from '../../integrations/storage';
 import { defineJob } from '../../jobs/queue';
 import { explode, loadRecipeBook, outputLocationResolver } from '../recipes/book';
 import { postMovements, reverseMovements, type MovementInput } from '../stock/engine';
@@ -43,6 +43,7 @@ export const parseJob = defineJob<ParseJob>(
         Buffer.from(file, 'base64'),
         imp.profile as unknown as ProfileConfig,
         fallbackDate,
+        /\.csv$/i.test(imp.fileName),
       );
     } catch (e) {
       return void (await fail((e as Error).message));
@@ -100,8 +101,9 @@ export async function createImport(
   file: { buffer: Buffer; filename: string },
 ) {
   assertUnitAccess(auth, input.unitId);
-  if (!/\.xlsx$/i.test(file.filename))
-    throw new AppError('VALIDATION_ERROR', 'Envie um ficheiro .xlsx');
+  const csv = /\.csv$/i.test(file.filename);
+  if (!csv && !/\.xlsx$/i.test(file.filename))
+    throw new AppError('VALIDATION_ERROR', 'Envie um ficheiro .xlsx ou .csv');
   const db = auth.db;
   const profile = await db.importProfile.findUniqueOrThrow({ where: { id: input.profileId } });
   if (!profile.active) throw new AppError('VALIDATION_ERROR', 'Perfil inactivo');
@@ -113,7 +115,8 @@ export async function createImport(
   if (dup)
     throw new AppError('CONFLICT', `Este ficheiro já foi importado (importação nº ${dup.number})`);
 
-  const stored = await storeFile(auth.tenantId, { ...file, mimetype: XLSX_MIME }, [XLSX_MIME]);
+  const mimetype = csv ? CSV_MIME : XLSX_MIME;
+  const stored = await storeFile(auth.tenantId, { ...file, mimetype }, [mimetype]);
   const imp = await db.$transaction(async (tx) =>
     tx.salesImport.create({
       data: {

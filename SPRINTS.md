@@ -74,6 +74,7 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Upload → parse em worker → pré-visualização → confirmação
 - [x] Mapeamento artigo POS ↔ ficha técnica; pendentes com alerta
 - [x] Anti-duplicação (hash + período) e anulação de importação
+- [x] Importação de relatórios CSV do POS com secções (lê "Vendas por Artigo", ignora subtotais de família, data do cabeçalho, valor sem IVA) — validado com ficheiro real de 2026-11-03
 - [ ] **Quando houver ficheiro Winrest:** criar perfis pré-definidos `winrest_vendas_artigo` e `winrest_pagamentos`
 
 ### Sprint 7 — Alertas e SMS
@@ -174,6 +175,6 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 ## Pendências
 - [x] Configuração da chave Futurix no Super Admin → Integrações (cifrada, com SMS de teste)
 - [ ] Confirmar com a Futurix o formato real da API (endpoint, autenticação, resposta) — `integrations/futurix-sms.ts`
-- [ ] Obter ficheiro de exportação Winrest (vendas por artigo + por método de pagamento)
+- [x] Ficheiro de vendas por artigo recebido (CSV); falta o de métodos de pagamento
 - [ ] Validar IRT/INSS em vigor
 - [ ] Definir nome comercial da plataforma

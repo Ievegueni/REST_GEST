@@ -8,6 +8,9 @@ export type Profile = {
   columns: { itemCode: string; itemName?: string; qty: string; amount?: string; date?: string };
   dateFormat: string;
   decimalSeparator: string;
+  amountDecimalSeparator: string | null;
+  section: string | null;
+  groupSection: string | null;
   active: boolean;
 };
 export type ImportRow = {

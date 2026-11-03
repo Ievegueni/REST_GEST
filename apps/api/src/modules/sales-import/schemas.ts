@@ -22,6 +22,9 @@ export const profileSchema = z.object({
   }),
   dateFormat: z.enum(['DD/MM/YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY']).default('DD/MM/YYYY'),
   decimalSeparator: z.enum([',', '.']).default(','),
+  amountDecimalSeparator: z.enum([',', '.']).nullish(),
+  section: optText(100),
+  groupSection: optText(100),
   active: z.boolean().default(true),
 });
 

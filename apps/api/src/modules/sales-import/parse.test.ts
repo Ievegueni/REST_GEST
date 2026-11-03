@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import ExcelJS from 'exceljs';
-import { parseDate, parseNumber, parseSalesFile } from './parse';
+import { parseCsv, parseDate, parseNumber, parseSalesFile } from './parse';
 
 describe('parseNumber', () => {
   it('respeita o separador decimal', () => {
@@ -74,5 +74,66 @@ describe('parseSalesFile', () => {
     await expect(
       parseSalesFile(file, { ...cfg, columns: { itemCode: 'X', qty: 'Q' } }, '2026-10-30'),
     ).rejects.toThrow('Colunas não encontradas: X');
+  });
+});
+
+describe('relatório CSV com secções', () => {
+  const q = (...c: string[]) => c.map((v) => `"${v}"`).join(',');
+  const head = q('', '', 'Descrição', 'Quantidade', 'Total', 'Total c/IVA');
+  const csv = [
+    '"Vendas artigos"',
+    '"Empresa X, Lda 1\r\nNº  de contribuinte: 500000000"',
+    '"[ 2026-11-03 ]"',
+    q('', '', 'Vendas por Artigo', '', '', ''),
+    head,
+    q('', '', 'Aguas', '3.00', '5.514Kz', '5.900Kz'),
+    q('', '', 'Agua 1l', '1.00', '2.757Kz', '2.950Kz'),
+    q('', '', 'Agua 1l', '2.00', '5.514Kz', '5.900Kz'),
+    q('', '', 'Acompanhamentos', '1.00', '0Kz', '0Kz'),
+    q('', '', 'Couve ', '1.00', '0Kz', '0Kz'),
+    q('', '', 'Total', '4.00', '5.514Kz', '5.900Kz'),
+    q('', '', 'Vendas por local', '', '', ''),
+    head,
+    q('', '', 'Agua 1l', '3.00', '8.271Kz', '8.850Kz'),
+    q('', '', 'Total', '3.00', '8.271Kz', '8.850Kz'),
+    q('', '', 'Resumo por família\n', '', '', ''),
+    head,
+    q('', '', 'Aguas', '3.00', '5.514Kz', '5.900Kz'),
+    q('', '', 'Acompanhamentos', '1.00', '0Kz', '0Kz'),
+    q('', '', 'Total', '4.00', '5.514Kz', '5.900Kz'),
+    '"Apuramento impresso em 2026-11-04 às 14:38:43"',
+  ].join('\r\n');
+  const cfg = {
+    sheetName: null,
+    headerRow: 1,
+    columns: { itemCode: 'Descrição', qty: 'Quantidade', amount: 'Total' },
+    dateFormat: 'YYYY-MM-DD',
+    decimalSeparator: '.',
+    amountDecimalSeparator: ',',
+    section: 'Vendas por Artigo',
+    groupSection: 'Resumo por família',
+  };
+
+  it('parseCsv trata aspas, campos multilinha e ;', () => {
+    expect(parseCsv('a;"b;""c"""\r\n"x\ny";2')).toEqual([
+      ['a', 'b;"c"'],
+      ['x\ny', '2'],
+    ]);
+  });
+
+  it('lê só a secção de artigos, ignora famílias e usa a data do cabeçalho', async () => {
+    const r = await parseSalesFile(Buffer.from('\uFEFF' + csv), cfg, null, true);
+    expect(r.errors).toEqual([]);
+    expect(r.rows.map((x) => [x.posCode, x.qty, x.amount, x.saleDate])).toEqual([
+      ['Agua 1l', 1, 2757, '2026-11-03'],
+      ['Agua 1l', 2, 5514, '2026-11-03'],
+      ['Couve', 1, 0, '2026-11-03'],
+    ]);
+    // a data indicada no upload prevalece sobre a do ficheiro
+    const r2 = await parseSalesFile(Buffer.from(csv), cfg, '2026-11-02', true);
+    expect(r2.rows[0]!.saleDate).toBe('2026-11-02');
+    await expect(
+      parseSalesFile(Buffer.from(csv), { ...cfg, section: 'Vendas por mesa' }, null, true),
+    ).rejects.toThrow('Secção "Vendas por mesa" não encontrada');
   });
 });

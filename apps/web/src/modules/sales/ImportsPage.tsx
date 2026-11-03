@@ -35,7 +35,7 @@ export function ImportsPage() {
       const imp = await apiUpload<Import>('/sales-imports', file, {
         unitId: unit,
         profileId: profile.id,
-        ...(needsDate && { saleDate }),
+        ...(needsDate && saleDate && { saleDate }),
       });
       navigate(`/vendas/${imp.id}`);
     } catch (err) {
@@ -80,7 +80,7 @@ export function ImportsPage() {
             <input
               className={inputCls}
               type="date"
-              required
+              required={!profile.section}
               value={saleDate}
               onChange={(e) => setSaleDate(e.target.value)}
             />
@@ -90,7 +90,7 @@ export function ImportsPage() {
           <span>{t('sales.file')}</span>
           <input
             type="file"
-            accept=".xlsx"
+            accept=".xlsx,.csv"
             required
             className="block"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}

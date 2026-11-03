@@ -8,11 +8,18 @@ import type { Profile } from './types';
 
 const COLS = ['itemCode', 'itemName', 'qty', 'amount', 'date'] as const;
 
+const separators = [
+  { value: ',', label: '1.234,56' },
+  { value: '.', label: '1,234.56' },
+];
+
 const fields: FieldDef[] = [
   { key: 'name', label: t('admin.name'), required: true },
   { key: 'posName', label: t('sales.posName'), required: true },
   { key: 'sheetName', label: t('sales.sheetName') },
   { key: 'headerRow', label: t('sales.headerRow'), type: 'number', required: true },
+  { key: 'section', label: t('sales.section') },
+  { key: 'groupSection', label: t('sales.groupSection') },
   ...COLS.map((c) => ({
     key: `col_${c}`,
     label: t(`sales.col.${c}` as TKey),
@@ -30,16 +37,20 @@ const fields: FieldDef[] = [
     label: t('sales.decimalSeparator'),
     type: 'select',
     required: true,
-    options: [
-      { value: ',', label: '1.234,56' },
-      { value: '.', label: '1,234.56' },
-    ],
+    options: separators,
+  },
+  {
+    key: 'amountDecimalSeparator',
+    label: t('sales.amountDecimalSeparator'),
+    type: 'select',
+    options: [{ value: '', label: t('sales.sameAsQty') }, ...separators],
   },
   { key: 'active', label: t('common.active'), type: 'checkbox' },
 ];
 
 const toValues = (p: Profile): Values => ({
   ...p,
+  amountDecimalSeparator: p.amountDecimalSeparator ?? '',
   ...Object.fromEntries(COLS.map((c) => [`col_${c}`, p.columns[c] ?? ''])),
 });
 const toBody = (v: Values) => ({
@@ -49,6 +60,9 @@ const toBody = (v: Values) => ({
   headerRow: v.headerRow,
   dateFormat: v.dateFormat,
   decimalSeparator: v.decimalSeparator,
+  amountDecimalSeparator: v.amountDecimalSeparator || null,
+  section: v.section,
+  groupSection: v.groupSection,
   active: v.active,
   columns: Object.fromEntries(COLS.map((c) => [c, v[`col_${c}`] || null])),
 });
