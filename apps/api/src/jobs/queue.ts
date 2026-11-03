@@ -11,7 +11,9 @@ const redis = new URL(env.REDIS_URL);
 const connection = {
   host: redis.hostname,
   port: Number(redis.port || 6379),
-  password: redis.password || undefined,
+  username: redis.username ? decodeURIComponent(redis.username) : undefined,
+  password: redis.password ? decodeURIComponent(redis.password) : undefined,
+  db: Number(redis.pathname.slice(1)) || 0,
   maxRetriesPerRequest: null,
 };
 
