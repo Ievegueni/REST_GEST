@@ -1,6 +1,6 @@
 /**
  * Armazenamento de ficheiros (facturas, comprovativos, documentos RH).
- * Cloudinary via REST assinado; sem CLOUDINARY_URL em dev, grava em disco (.uploads/).
+ * Cloudinary via REST assinado; sem CLOUDINARY_URL grava em disco (.uploads/), também em produção.
  * ponytail: ficheiros Cloudinary ficam em URL pública não adivinhável; mudar para
  * type=authenticated + URLs assinadas se os documentos RH o exigirem.
  */
@@ -32,8 +32,6 @@ export async function storeFile(
     throw new AppError('VALIDATION_ERROR', 'Tipo de ficheiro não permitido');
   }
   if (env.CLOUDINARY_URL) return uploadCloudinary(tenantId, file);
-  if (env.NODE_ENV === 'production')
-    throw new AppError('INTERNAL_ERROR', 'Armazenamento não configurado');
 
   const name = `${randomBytes(8).toString('hex')}-${safeName(file.filename)}`;
   await mkdir(path.join(LOCAL_DIR, tenantId), { recursive: true });
@@ -41,7 +39,7 @@ export async function storeFile(
   return { url: `/api/files/${tenantId}/${name}`, name: file.filename };
 }
 
-/** Lê um ficheiro local (só dev). O nome é validado contra path traversal. */
+/** Lê um ficheiro local. O nome é validado contra path traversal. */
 export async function readLocalFile(tenantId: string, name: string) {
   if (!/^[\w.-]+$/.test(name) || !/^[\w]+$/.test(tenantId))
     throw new AppError('NOT_FOUND', 'Ficheiro não encontrado');

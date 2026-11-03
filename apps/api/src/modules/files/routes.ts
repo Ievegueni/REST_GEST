@@ -16,7 +16,7 @@ export async function fileRoutes(app: FastifyInstance) {
     return reply.status(201).send({ data: stored });
   });
 
-  /** Ficheiros locais (dev). Só o próprio tenant. */
+  /** Ficheiros guardados em disco. Só o próprio tenant. */
   app.get<{ Params: { tenantId: string; name: string } }>(
     '/files/:tenantId/:name',
     protect(),
@@ -25,14 +25,14 @@ export async function fileRoutes(app: FastifyInstance) {
         throw new AppError('NOT_FOUND', 'Ficheiro não encontrado');
       const buf = await readLocalFile(req.params.tenantId, req.params.name);
       const ext = req.params.name.split('.').pop()?.toLowerCase();
-      const type =
-        ext === 'pdf'
-          ? 'application/pdf'
-          : ext === 'png'
-            ? 'image/png'
-            : ext === 'webp'
-              ? 'image/webp'
-              : 'image/jpeg';
+      const types: Record<string, string> = {
+        pdf: 'application/pdf',
+        png: 'image/png',
+        webp: 'image/webp',
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        csv: 'text/csv',
+      };
+      const type = types[ext ?? ''] ?? 'image/jpeg';
       return reply.header('content-type', type).send(buf);
     },
   );
