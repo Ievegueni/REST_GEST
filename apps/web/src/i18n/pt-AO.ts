@@ -455,6 +455,7 @@ export const ptAO = {
   'sales.profile': 'Perfil',
   'sales.file': 'Ficheiro (.xlsx ou .csv)',
   'sales.saleDate': 'Data das vendas',
+  'sales.saleDateMissing': 'Indique a data das vendas antes de escolher o ficheiro.',
   'sales.import': 'Importação nº {n}',
   'sales.period': 'Período',
   'sales.rows': 'Linhas',

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buttonCls, ErrorBox, inputCls, tableCls, tdCls, thCls } from '../../components/ui';
 import { t, type TKey } from '../../i18n';
@@ -16,7 +16,7 @@ export function ImportsPage() {
   const [unitId, setUnitId] = useState('');
   const [profileId, setProfileId] = useState('');
   const [saleDate, setSaleDate] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [upError, setUpError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -26,8 +26,17 @@ export function ImportsPage() {
   const profile = activeProfiles.find((p) => p.id === profileId) ?? activeProfiles[0];
   const needsDate = profile && !profile.columns.date;
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const pick = () => {
+    setUpError('');
+    if (needsDate && !profile.section && !saleDate) {
+      setUpError(t('sales.saleDateMissing'));
+      return;
+    }
+    fileRef.current?.click();
+  };
+
+  const upload = async (file: File | undefined) => {
+    if (fileRef.current) fileRef.current.value = '';
     if (!file || !profile) return;
     setBusy(true);
     setUpError('');
@@ -46,8 +55,7 @@ export function ImportsPage() {
 
   return (
     <div className="space-y-4">
-      <form
-        onSubmit={submit}
+      <div
         className="flex flex-wrap items-end gap-3 rounded-xl border bg-white shadow-xs p-4 text-sm"
       >
         <label className="space-y-1">
@@ -80,27 +88,28 @@ export function ImportsPage() {
             <input
               className={inputCls}
               type="date"
-              required={!profile.section}
               value={saleDate}
               onChange={(e) => setSaleDate(e.target.value)}
             />
           </label>
         )}
-        <label className="space-y-1">
-          <span>{t('sales.file')}</span>
-          <input
-            type="file"
-            accept=".xlsx,.csv"
-            required
-            className="block"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-        </label>
-        <button className={buttonCls} disabled={busy || !file || !profile || !unit}>
-          {t('sales.upload')}
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".xlsx,.csv"
+          className="hidden"
+          onChange={(e) => upload(e.target.files?.[0])}
+        />
+        <button
+          type="button"
+          className={buttonCls}
+          onClick={pick}
+          disabled={busy || !profile || !unit}
+        >
+          {busy ? t('common.loading') : t('sales.upload')}
         </button>
         <ErrorBox>{upError}</ErrorBox>
-      </form>
+      </div>
       <ErrorBox>{error}</ErrorBox>
       <table className={tableCls}>
         <thead className="bg-slate-100">
