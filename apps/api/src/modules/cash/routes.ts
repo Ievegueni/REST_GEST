@@ -52,6 +52,9 @@ export async function cashRoutes(app: FastifyInstance) {
       amountsSchema.parse(req.body),
     ),
   }));
+  app.post('/cash-sessions/:id/pos-amounts', close, async (req) => ({
+    data: await service.fillFromPos(req.auth, idParam.parse(req.params).id),
+  }));
   app.post('/cash-sessions/:id/movements', close, async (req, reply) =>
     reply.status(201).send({
       data: await service.addMovement(

@@ -92,6 +92,14 @@ export function assertUnitAccess(auth: AuthContext, unitId: string) {
   if (!canAccessUnit(auth, unitId)) throw new AppError('FORBIDDEN', 'Sem acesso a esta unidade');
 }
 
+/** Unidade do agente POS autenticado. */
+export const agentUnitId = (auth: AuthContext) => (auth.unitIds as string[])[0]!;
+
+/** Rota do agente POS local que exige uma feature do plano. */
+export const agentRoute = (feature: Feature) => ({
+  preHandler: [authenticateAgent, requireFeature(feature)],
+});
+
 /** Opções de rota: autenticação + feature do plano + permissão. */
 export function protect(opts: { feature?: Feature; permission?: Permission } = {}) {
   return {
@@ -130,7 +138,7 @@ export async function systemAuth(
 
 /**
  * preHandler do agente POS local: chave da unidade no header `x-agent-key`.
- * Contexto de sistema limitado a essa unidade; exige a feature de reservas.
+ * Contexto de sistema limitado a essa unidade; cada rota exige a sua feature.
  */
 export async function authenticateAgent(req: FastifyRequest) {
   const key = req.headers['x-agent-key'];
@@ -138,7 +146,10 @@ export async function authenticateAgent(req: FastifyRequest) {
     typeof key === 'string' && key
       ? await prisma.unit.findUnique({ where: { posAgentKeyHash: sha256(key) } })
       : null;
-  if (!unit?.active) throw new AppError('UNAUTHORIZED', 'Chave do agente inválida');
-  req.auth = await systemAuth(unit.tenantId, [unit.id]);
-  await requireFeature('reservations')(req);
+  if (!unit?.active || !unit.posAgentUserId)
+    throw new AppError(
+      'UNAUTHORIZED',
+      'Chave do agente inválida: gere uma nova em Definições → Mesas',
+    );
+  req.auth = { ...(await systemAuth(unit.tenantId, [unit.id])), userId: unit.posAgentUserId };
 }

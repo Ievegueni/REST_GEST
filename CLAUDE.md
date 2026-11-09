@@ -277,6 +277,7 @@ Implementado com a **Anthropic API** (tool use). O modelo **nunca acede à BD di
 - **Ecrã da recepção** (`/recepcao`, pensado para tablet): grelha de mesas (livre / reservada / ocupada com minutos), lista das reservas do dia, chegou → escolher mesa, libertar mesa. Actualiza por polling (15 s).
 - Perfil **Recepção** (`reservations.manage`): ao entrar vai directo para o ecrã das mesas.
 - **Ligação ao POS (Winrest)** via agente local (`apps/pos-agent`): lê as mesas abertas na BD SQLite do POS (só leitura, consulta configurável; ver `apps/pos-agent/README.md`) e envia a lista completa a `POST /pos-agent/tables` com a chave da unidade (`x-agent-key`; só o hash fica em `Unit.posAgentKeyHash`). O servidor ocupa as mesas abertas no POS e liberta as que o POS fechou (`Reservation.posSeen`). As mesas ligam-se pelo nome.
+- **Vendas em tempo real** (mesmo agente, `POST /pos-agent/sales`): cada factura fechada no POS entra numa `SalesImport` do dia (confirmada) com `posDocId` nas linhas — receita sem IVA, `SALE_OUT` pelas fichas técnicas, consumo interno sem receita, anulações estornadas; `PosDocument`/`PosPayment` evitam duplicados e alimentam o fecho de caixa (`PaymentMethod.posCode`). Dias já importados por ficheiro são ignorados.
 
 ## 8. Modelo de dados (resumo)
 
@@ -303,7 +304,7 @@ Entidades principais (todas com `id`, `tenantId`, `createdAt`, `updatedAt`, salv
 - `CashSession`, `CashCount`, `CashMovement`
 - `Payable`, `PayablePayment`
 - `AiRequest`, `AiReport`
-- `DiningTable`, `Reservation`
+- `DiningTable`, `Reservation`, `PosDocument`, `PosPayment`
 - `AuditLog`
 
 Índices obrigatórios: `(tenantId, ...)` em todas as consultas frequentes; `StockMovement (tenantId, productId, locationId, occurredAt)`.

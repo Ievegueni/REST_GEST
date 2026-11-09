@@ -127,18 +127,24 @@ model Tenant {
   payablePayments        PayablePayment[]
   diningTables           DiningTable[]
   reservations           Reservation[]
+  posDocuments           PosDocument[]
+  posPayments            PosPayment[]
 }
 
 model Unit {
-  id        String   @id @default(cuid())
-  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
-  name      String
-  address   String?
-  active    Boolean  @default(true)
+  id              String   @id @default(cuid())
+  tenantId        String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  name            String
+  address         String?
+  active          Boolean  @default(true)
   /// SHA-256 da chave do agente POS local (sincroniza mesas abertas); a chave só é mostrada ao gerar
-  posAgentKeyHash String? @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  posAgentKeyHash String?  @unique
+  /// quem gerou a chave: as operações do agente (movimentos de stock) ficam em seu nome
+  posAgentUserId  String?
+  /// última venda do POS recebida pelo agente (marca do POS, opaca)
+  posSalesCursor  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   tenant          Tenant                   @relation(fields: [tenantId], references: [id])
   locations       StockLocation[]
@@ -155,6 +161,7 @@ model Unit {
   payables        Payable[]
   diningTables    DiningTable[]
   reservations    Reservation[]
+  posDocuments    PosDocument[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -891,24 +898,29 @@ model SalesImport {
 }
 
 model SalesImportLine {
-  id         String    @id @default(cuid())
-  tenantId   String    @default(dbgenerated("current_setting('app.tenant_id')"))
-  importId   String
-  rowNumber  Int
-  posCode    String
-  posLabel   String?
-  qty        Decimal   @db.Decimal(14, 3)
-  amount     Int
-  saleDate   DateTime  @db.Date
+  id          String    @id @default(cuid())
+  tenantId    String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  importId    String
+  rowNumber   Int
+  posCode     String
+  posLabel    String?
+  qty         Decimal   @db.Decimal(14, 3)
+  amount      Int
+  /// valor com impostos (vendas do agente POS; `amount` é sem impostos)
+  grossAmount Int?
+  saleDate    DateTime  @db.Date
+  /// factura do POS de origem (vendas em tempo real)
+  posDocId    String?
   /// preenchidos quando a linha é lançada em stock (ou ignorada)
-  saleItemId String?
-  postedAt   DateTime?
+  saleItemId  String?
+  postedAt    DateTime?
 
   tenant   Tenant      @relation(fields: [tenantId], references: [id])
   import   SalesImport @relation(fields: [tenantId, importId], references: [tenantId, id], onDelete: Cascade)
   saleItem SaleItem?   @relation(fields: [tenantId, saleItemId], references: [tenantId, id], onDelete: Restrict)
 
   @@index([tenantId, importId, posCode])
+  @@index([tenantId, posDocId])
 }
 
 // ---------- Alertas e notificações ----------
@@ -1361,6 +1373,8 @@ model PaymentMethod {
   name     String
   /// numerário: contado fisicamente, entra no saldo de caixa (sangrias, pagamentos)
   isCash   Boolean @default(false)
+  /// código do meio de pagamento no POS (ex.: NU, MC): preenche o fecho de caixa com as vendas do agente
+  posCode  String?
   active   Boolean @default(true)
 
   tenant          Tenant              @relation(fields: [tenantId], references: [id])
@@ -1809,4 +1823,50 @@ model Reservation {
   @@unique([tenantId, id])
   @@index([tenantId, unitId, startsAt])
   @@index([tenantId, unitId, status])
+}
+
+// ---------------------------------------------------------------- Vendas em tempo real (agente POS)
+
+/// Factura fechada no POS recebida pelo agente. Evita duplicados e permite estornar se for anulada.
+model PosDocument {
+  id           String    @id @default(cuid())
+  tenantId     String    @default(dbgenerated("current_setting('app.tenant_id')"))
+  unitId       String
+  /// id do documento na BD do POS
+  posDocId     String
+  number       String?
+  /// mesa (acumulador) no POS
+  table        String?
+  businessDate DateTime  @db.Date
+  closedAt     DateTime
+  /// total com impostos
+  total        Int
+  /// consumo interno: baixa stock, sem receita
+  internal     Boolean   @default(false)
+  importId     String?
+  cancelledAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  tenant   Tenant       @relation(fields: [tenantId], references: [id])
+  unit     Unit         @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  payments PosPayment[]
+
+  @@unique([tenantId, unitId, posDocId])
+  @@unique([tenantId, id])
+  @@index([tenantId, unitId, businessDate])
+}
+
+model PosPayment {
+  id         String  @id @default(cuid())
+  tenantId   String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  documentId String
+  /// código e nome do meio de pagamento no POS
+  methodCode String
+  methodName String?
+  amount     Int
+
+  tenant   Tenant      @relation(fields: [tenantId], references: [id])
+  document PosDocument @relation(fields: [tenantId, documentId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, documentId])
 }

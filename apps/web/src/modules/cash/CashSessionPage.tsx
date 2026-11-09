@@ -54,12 +54,32 @@ type Session = {
 export function CashSessionPage() {
   const { id } = useParams<{ id: string }>();
   const { data, error, reload } = useApi<Session>(`/cash-sessions/${id}`);
+  // mensagem do "Valores do POS" (sobrevive ao recarregar a sessão)
+  const [posNotice, setPosNotice] = useState('');
   if (error) return <ErrorBox>{error}</ErrorBox>;
   if (!data) return <p className="text-slate-500">{t('common.loading')}</p>;
-  return <SessionView key={JSON.stringify(data)} s={data} reload={reload} />;
+  return (
+    <SessionView
+      key={JSON.stringify(data)}
+      s={data}
+      reload={reload}
+      posNotice={posNotice}
+      setPosNotice={setPosNotice}
+    />
+  );
 }
 
-function SessionView({ s, reload }: { s: Session; reload: () => void }) {
+function SessionView({
+  s,
+  reload,
+  posNotice,
+  setPosNotice,
+}: {
+  s: Session;
+  reload: () => void;
+  posNotice: string;
+  setPosNotice: (v: string) => void;
+}) {
   const canClose = useCan('cash.close');
   const canValidate = useCan('cash.validate');
   const editable = s.status === 'OPEN' && canClose;
@@ -263,10 +283,32 @@ function SessionView({ s, reload }: { s: Session; reload: () => void }) {
           </details>
         )}
         {editable && (
-          <button className={buttonCls} onClick={saveAmounts}>
-            {t('cash.saveAmounts')}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button className={buttonCls} onClick={saveAmounts}>
+              {t('cash.saveAmounts')}
+            </button>
+            <button
+              className={secondaryCls}
+              title={t('cash.fromPosHint')}
+              onClick={() =>
+                call(async () => {
+                  const r = await api<{ posUnmapped: string[] }>(
+                    `/cash-sessions/${s.id}/pos-amounts`,
+                    { method: 'POST' },
+                  );
+                  setPosNotice(
+                    r.posUnmapped.length
+                      ? t('cash.posUnmapped', { codes: r.posUnmapped.join(', ') })
+                      : t('cash.fromPosDone'),
+                  );
+                })
+              }
+            >
+              {t('cash.fromPos')}
+            </button>
+          </div>
         )}
+        {posNotice && <p className="text-sm text-slate-600">{posNotice}</p>}
       </section>
 
       <section className="space-y-2">

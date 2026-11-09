@@ -6,7 +6,13 @@ import { t } from '../../i18n';
 import { api } from '../../lib/api';
 import { useApi } from '../../lib/useApi';
 
-type Method = { id: string; name: string; isCash: boolean; active: boolean };
+type Method = {
+  id: string;
+  name: string;
+  isCash: boolean;
+  posCode: string | null;
+  active: boolean;
+};
 
 export function CashSettingsPage() {
   const manage = useCan('settings.manage');
@@ -25,6 +31,7 @@ export function CashSettingsPage() {
                 {m.isCash && (
                   <span className="ml-2 text-xs text-slate-500">({t('cash.isCash')})</span>
                 )}
+                {m.posCode && <span className="ml-2 text-xs text-slate-500">POS: {m.posCode}</span>}
                 <Inactive active={m.active} />
               </span>
               {manage && (
@@ -54,6 +61,7 @@ export function CashSettingsPage() {
           fields={[
             { key: 'name', label: t('hr.name'), required: true },
             { key: 'isCash', label: t('cash.isCash'), type: 'checkbox' },
+            { key: 'posCode', label: t('cash.posCode') },
             { key: 'active', label: t('common.active'), type: 'checkbox' },
           ]}
           initial={editing === 'new' ? { active: true } : editing}

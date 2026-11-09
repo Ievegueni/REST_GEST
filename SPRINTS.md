@@ -165,6 +165,8 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Agente POS local (`apps/pos-agent`): mesas abertas no Winrest ocupam/libertam as mesas sozinhas; chave por unidade em Definições → Mesas
 - [x] Consulta das mesas abertas descoberta na BD do Palace Lounge (SQLite; mesas = acumuladores em `docheader`)
 - [x] Criação de mesas por intervalo (números do POS)
+- [x] Vendas em tempo real pelo agente: facturas fechadas → receita, stock (fichas técnicas), anulações, consumo interno; fecho de caixa com "Valores do POS"
+- [ ] Confirmar na BD real do Winrest os códigos (1018/1005/1300, 8002/8003, CI) e o significado dos documentos "Anulação" (1002)
 - [ ] Instalar o agente no Palace Lounge (e confirmar a BD do Palace Beach)
 - [ ] SMS de confirmação/lembrete da reserva (Futurix)
 - [ ] Relatório de ocupação e no-shows

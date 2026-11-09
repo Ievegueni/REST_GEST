@@ -861,6 +861,12 @@ export const ptAO = {
   'cash.methods': 'Meios de pagamento',
   'cash.isCash': 'Numerário (contado fisicamente)',
   'cash.newMethod': 'Novo meio de pagamento',
+  'cash.posCode': 'Código no POS (ex.: NU, MC) — preenche o fecho com as vendas do agente',
+  'cash.fromPos': 'Valores do POS',
+  'cash.fromPosHint': 'Preenche os valores do sistema com as vendas recebidas do POS (agente)',
+  'cash.fromPosDone': 'Valores do sistema preenchidos com as vendas do POS.',
+  'cash.posUnmapped':
+    'Valores do sistema preenchidos. Meios do POS sem correspondência (definir o código em Definições → Caixa): {codes}',
   'cash.diffLimit': 'Diferença máxima sem justificação (Kz)',
   'alertType.CASH_DIFFERENCE': 'Diferença de caixa',
 

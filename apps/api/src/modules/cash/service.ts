@@ -114,6 +114,42 @@ export async function setAmounts(
   return getSession(auth, id);
 }
 
+/**
+ * Valores do sistema a partir das vendas recebidas pelo agente POS: soma dos pagamentos
+ * por código POS (fecho diário = dia de negócio; por turno = facturas fechadas durante o turno).
+ * Só mexe nos meios de pagamento com código POS; devolve os códigos sem correspondência.
+ */
+export async function fillFromPos(auth: AuthContext, id: string) {
+  const s = await load(auth, id);
+  assertOpen(s);
+  const sums = await auth.db.posPayment.groupBy({
+    by: ['methodCode'],
+    where: {
+      document: {
+        unitId: s.unitId,
+        cancelledAt: null,
+        ...(s.shift
+          ? { closedAt: { gte: s.openedAt, lte: s.closedAt ?? new Date() } }
+          : { businessDate: s.businessDate }),
+      },
+    },
+    _sum: { amount: true },
+  });
+  const methods = await auth.db.paymentMethod.findMany({ where: { posCode: { not: null } } });
+  const byCode = new Map(sums.map((x) => [x.methodCode.toUpperCase(), x._sum.amount ?? 0]));
+  await setAmounts(auth, id, {
+    amounts: methods.map((m) => ({
+      paymentMethodId: m.id,
+      systemAmount: byCode.get(m.posCode!) ?? 0,
+    })),
+  });
+  const mapped = new Set(methods.map((m) => m.posCode));
+  return {
+    ...(await getSession(auth, id)),
+    posUnmapped: [...byCode.keys()].filter((c) => !mapped.has(c)),
+  };
+}
+
 /** Sangria, entrada ou pagamento pela caixa (este gera um custo diário ligado à sessão). */
 export async function addMovement(
   auth: AuthContext,

@@ -12,6 +12,12 @@ export const categorySchema = z.object({ name, active: z.boolean().default(true)
 export const paymentMethodSchema = z.object({
   name,
   isCash: z.boolean().default(false),
+  posCode: z
+    .string()
+    .trim()
+    .max(20)
+    .nullish()
+    .transform((v) => v?.toUpperCase() || null),
   active: z.boolean().default(true),
 });
 

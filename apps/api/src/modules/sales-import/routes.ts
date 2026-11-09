@@ -1,8 +1,9 @@
 import type { FastifyInstance } from 'fastify';
-import { canAccessUnit, protect } from '../../core/auth';
+import { agentRoute, agentUnitId, canAccessUnit, protect } from '../../core/auth';
 import { AppError } from '../../core/errors';
 import { idParam } from '../../core/schemas';
 import { mappingSchema, profileSchema, uploadFields } from './schemas';
+import { agentSalesSchema, ingestAgentSales } from './agent';
 import * as service from './service';
 
 export async function salesImportRoutes(app: FastifyInstance) {
@@ -90,5 +91,21 @@ export async function salesImportRoutes(app: FastifyInstance) {
   }));
   app.post('/sales-imports/:id/cancel', guard, async (req) => ({
     data: await service.cancelImport(req.auth, idParam.parse(req.params).id, req.ip),
+  }));
+
+  // ---- Agente POS local: vendas em tempo real
+  const agent = agentRoute('sales_import');
+  app.get('/pos-agent/sales/cursor', agent, async (req) => ({
+    data: {
+      cursor: (
+        await req.auth.db.unit.findUniqueOrThrow({
+          where: { id: agentUnitId(req.auth) },
+          select: { posSalesCursor: true },
+        })
+      ).posSalesCursor,
+    },
+  }));
+  app.post('/pos-agent/sales', { ...agent, bodyLimit: 5 * 1024 * 1024 }, async (req) => ({
+    data: await ingestAgentSales(req.auth, agentUnitId(req.auth), agentSalesSchema.parse(req.body)),
   }));
 }

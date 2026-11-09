@@ -2,7 +2,13 @@ import { randomBytes } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { audit } from '../../core/audit';
-import { assertUnitAccess, authenticateAgent, protect, type AuthContext } from '../../core/auth';
+import {
+  agentRoute,
+  agentUnitId,
+  assertUnitAccess,
+  protect,
+  type AuthContext,
+} from '../../core/auth';
 import { sha256 } from '../../core/crypto';
 import { AppError } from '../../core/errors';
 import { idParam } from '../../core/schemas';
@@ -150,7 +156,10 @@ export async function reservationRoutes(app: FastifyInstance) {
       const { id } = idParam.parse(req.params);
       assertUnitAccess(req.auth, id);
       const key = `rga_${randomBytes(24).toString('base64url')}`;
-      await req.auth.db.unit.update({ where: { id }, data: { posAgentKeyHash: sha256(key) } });
+      await req.auth.db.unit.update({
+        where: { id },
+        data: { posAgentKeyHash: sha256(key), posAgentUserId: req.auth.userId },
+      });
       await audit({
         tenantId: req.auth.tenantId,
         userId: req.auth.userId,
@@ -162,9 +171,8 @@ export async function reservationRoutes(app: FastifyInstance) {
     },
   );
 
-  app.post('/pos-agent/tables', { preHandler: authenticateAgent }, async (req) => {
+  app.post('/pos-agent/tables', agentRoute('reservations'), async (req) => {
     const { open } = z.object({ open: z.array(z.string().max(50)).max(1000) }).parse(req.body);
-    const [unitId] = req.auth.unitIds as string[];
-    return { data: await syncPosTables(req.auth, unitId!, open) };
+    return { data: await syncPosTables(req.auth, agentUnitId(req.auth), open) };
   });
 }
