@@ -285,6 +285,8 @@ Implementado com a **Anthropic API** (tool use). O modelo **nunca acede à BD di
 - O agente POS (`POS_KITCHEN=on`) envia a fotografia dos artigos das mesas abertas com a zona de impressão do produto; o servidor (`POST /pos-agent/kitchen`) mantém `KitchenTicket` (mesa + ronda + zona) e `KitchenItem` (anulados riscados; mesa fechada → talão sai).
 - Ecrã `/cozinha?zona=…` para TV (sem menu, ecrã inteiro): talões por ordem de chegada com tempo de espera (verde/amarelo/vermelho, minutos em Definições → Cozinha), estados `NEW → IN_PROGRESS → READY`, recuperar o último pronto.
 - Navegação: teclado numérico / bump bar (1–9 escolhe, ←→ muda, Enter avança, Backspace recupera), toque ou rato. Actualiza a cada 5 s.
+- Aviso sonoro (Web Audio) quando chega um talão novo; o browser só deixa tocar depois do primeiro toque/tecla no ecrã.
+- Relatório **Tempos de cozinha** (`kitchen-times`): espera, preparação e total por prato e zona.
 - Perfil base **Cozinha** (`kitchen.manage`): entra directo no ecrã. O estado fica só no RestoGest (o agente só lê o POS).
 
 ## 8. Modelo de dados (resumo)

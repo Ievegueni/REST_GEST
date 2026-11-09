@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Maximize, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Bell, BellOff, Maximize, RotateCcw } from 'lucide-react';
 import { useCan, useFeature, useSession } from '../../features/session';
 import { t, type TKey } from '../../i18n';
 import { api } from '../../lib/api';
@@ -26,6 +26,71 @@ type Board = {
 
 const POLL_MS = 5_000;
 const NEXT: Record<Status, Status> = { NEW: 'IN_PROGRESS', IN_PROGRESS: 'READY', READY: 'READY' };
+const SOUND_KEY = 'restgest.kdsSound';
+
+/** Dois toques curtos (Web Audio: não precisa de ficheiro de som). */
+function chime(ctx: AudioContext) {
+  [880, 1320].forEach((hz, i) => {
+    const at = ctx.currentTime + i * 0.25;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.frequency.value = hz;
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(0.5, at + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + 0.4);
+    o.connect(g).connect(ctx.destination);
+    o.start(at);
+    o.stop(at + 0.45);
+  });
+}
+
+/**
+ * Aviso sonoro quando chega um talão novo (não ao abrir o ecrã nem ao recuperar).
+ * Os browsers só deixam tocar depois de um toque/tecla: o som desbloqueia no primeiro.
+ * Ligado/desligado fica guardado nesta TV.
+ */
+function useChime(tickets: Ticket[]) {
+  const [on, setOn] = useState(() => {
+    try {
+      return localStorage.getItem(SOUND_KEY) !== '0';
+    } catch {
+      return true;
+    }
+  });
+  const [locked, setLocked] = useState(true);
+  const ctx = useRef<AudioContext | null>(null);
+  const seen = useRef<Set<string> | null>(null);
+
+  useEffect(() => {
+    const unlock = () => {
+      ctx.current ??= new AudioContext();
+      void ctx.current.resume().then(() => setLocked(ctx.current?.state !== 'running'));
+    };
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
+
+  useEffect(() => {
+    const ids = tickets.map((x) => x.id);
+    const fresh = seen.current ? ids.filter((id) => !seen.current!.has(id)) : [];
+    seen.current = new Set([...(seen.current ?? []), ...ids]);
+    if (fresh.length && on && ctx.current?.state === 'running') chime(ctx.current);
+  }, [tickets, on]);
+
+  const toggle = () => {
+    setOn(!on);
+    try {
+      localStorage.setItem(SOUND_KEY, on ? '0' : '1');
+    } catch {
+      /* armazenamento indisponível: fica só nesta sessão */
+    }
+  };
+  return { on, locked, toggle };
+}
 
 /**
  * Ecrã de cozinha (TV, ecrã inteiro). Navegação por teclado numérico / bump bar:
@@ -61,6 +126,7 @@ export function KitchenPage() {
 
   const tickets = useMemo(() => data?.tickets ?? [], [data]);
   const sel = Math.min(selected, Math.max(tickets.length - 1, 0));
+  const sound = useChime(tickets);
 
   const setStatus = useCallback(
     async (id: string, status: Status) => {
@@ -134,7 +200,18 @@ export function KitchenPage() {
           {t('kds.inProgress', { n: counts('IN_PROGRESS') })}
         </span>
         <span className="hidden text-sm text-slate-400 lg:inline">{t('kds.keys')}</span>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex items-center gap-2">
+          {sound.on && sound.locked && (
+            <span className="text-sm text-amber-300">{t('kds.soundLocked')}</span>
+          )}
+          <button
+            onClick={sound.toggle}
+            className="rounded-lg bg-white/10 p-2 hover:bg-white/20"
+            aria-label={t(sound.on ? 'kds.soundOff' : 'kds.soundOn')}
+            title={t(sound.on ? 'kds.soundOff' : 'kds.soundOn')}
+          >
+            {sound.on ? <Bell className="size-5" /> : <BellOff className="size-5" />}
+          </button>
           <button
             disabled={!data?.ready[0]}
             onClick={() => data?.ready[0] && setStatus(data.ready[0].id, 'IN_PROGRESS')}

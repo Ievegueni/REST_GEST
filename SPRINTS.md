@@ -167,7 +167,8 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Criação de mesas por intervalo (números do POS)
 - [x] Vendas em tempo real pelo agente: facturas fechadas → receita, stock (fichas técnicas), anulações, consumo interno; fecho de caixa com "Valores do POS"
 - [x] Ecrã de cozinha (COMPLETO): talões por zona a partir das mesas abertas no Winrest, Novo → Em produção → Pronto, teclado numérico/toque, perfil Cozinha
-- [ ] Ecrã de cozinha: aviso sonoro de talão novo; relatório de tempos de preparação
+- [x] Ecrã de cozinha: aviso sonoro de talão novo (desbloqueia no primeiro toque; ligar/desligar por TV)
+- [x] Relatório "Tempos de cozinha": espera, preparação e total por prato e zona (PDF/Excel)
 - [ ] Confirmar na BD real do Winrest os códigos (1018/1005/1300, 8002/8003, CI) e o significado dos documentos "Anulação" (1002)
 - [ ] Instalar o agente no Palace Lounge (e confirmar a BD do Palace Beach)
 - [ ] SMS de confirmação/lembrete da reserva (Futurix)

@@ -790,6 +790,89 @@ async function financialResults(auth: AuthContext, f: Filters): Promise<Report> 
   };
 }
 
+// ---------- Tempos de cozinha (ecrã de cozinha) ----------
+/**
+ * Por prato e zona, nos talões prontos do período: espera (chegada → começar),
+ * preparação (começar → pronto) e total (chegada → pronto), em minutos.
+ * A chegada é a hora em que o agente POS viu o pedido (±intervalo de sincronização).
+ */
+async function kitchenTimes(auth: AuthContext, f: Filters): Promise<Report> {
+  const p = period(f);
+  const units = scopeUnits(auth, f);
+  const tickets = await auth.db.kitchenTicket.findMany({
+    where: {
+      status: 'READY',
+      readyAt: { not: null },
+      seenAt: { gte: p.gte, lt: p.lt },
+      ...(units && { unitId: { in: units } }),
+    },
+    select: {
+      zone: true,
+      seenAt: true,
+      startedAt: true,
+      readyAt: true,
+      items: { where: { cancelled: false }, select: { label: true } },
+    },
+  });
+  const min = (a: Date, b: Date) => (b.getTime() - a.getTime()) / 60_000;
+  type Acc = {
+    zone: string;
+    item: string;
+    n: number;
+    wait: number[];
+    prep: number[];
+    total: number[];
+  };
+  const acc = new Map<string, Acc>();
+  const all: Acc = { zone: '', item: '', n: 0, wait: [], prep: [], total: [] };
+  for (const t of tickets) {
+    const total = min(t.seenAt, t.readyAt!);
+    const wait = t.startedAt ? min(t.seenAt, t.startedAt) : null;
+    const prep = t.startedAt ? min(t.startedAt, t.readyAt!) : null;
+    const add = (a: Acc) => {
+      a.n++;
+      a.total.push(total);
+      if (wait != null) a.wait.push(wait);
+      if (prep != null) a.prep.push(prep);
+    };
+    add(all);
+    for (const label of new Set(t.items.map((i) => i.label.trim()))) {
+      const k = `${t.zone}|${label}`;
+      if (!acc.has(k))
+        acc.set(k, { zone: t.zone, item: label, n: 0, wait: [], prep: [], total: [] });
+      add(acc.get(k)!);
+    }
+  }
+  const avg = (xs: number[]) =>
+    xs.length ? round(xs.reduce((s, x) => s + x, 0) / xs.length, 1) : null;
+  const stats = (a: Acc) => ({
+    tickets: a.n,
+    wait: avg(a.wait),
+    prep: avg(a.prep),
+    total: avg(a.total),
+    max: a.total.length ? round(Math.max(...a.total), 1) : null,
+  });
+  const rows = [...acc.values()]
+    .map((a) => ({ zone: a.zone, item: a.item, ...stats(a) }))
+    .sort((a, b) => a.zone.localeCompare(b.zone) || (b.total ?? 0) - (a.total ?? 0));
+  return {
+    title: 'Tempos de cozinha',
+    columns: [
+      col('zone', 'Zona'),
+      col('item', 'Prato / artigo'),
+      col('tickets', 'Talões', 'int'),
+      col('wait', 'Espera (min)', 'qty'),
+      col('prep', 'Preparação (min)', 'qty'),
+      col('total', 'Total (min)', 'qty'),
+      col('max', 'Máximo (min)', 'qty'),
+    ],
+    rows,
+    totals: { zone: 'Todos os talões', ...stats(all) },
+    notes:
+      'Espera = da chegada do pedido ao "Começar"; preparação = do "Começar" ao "Pronto". A chegada é a hora em que o pedido foi lido do POS.',
+  };
+}
+
 export const REPORTS = {
   stock: { title: 'Stock actual', run: stock, period: false },
   consumption: { title: 'Consumo', run: consumption, period: true },
@@ -822,6 +905,12 @@ export const REPORTS = {
     run: financialResults,
     period: true,
     feature: 'financial_results',
+  },
+  'kitchen-times': {
+    title: 'Tempos de cozinha',
+    run: kitchenTimes,
+    period: true,
+    feature: 'kitchen_display',
   },
 } as const satisfies Record<
   string,

@@ -46,7 +46,7 @@ beforeAll(async () => {
   A = await createTestTenant({
     name: 'Kds',
     plan: 'COMPLETO',
-    perms: ['kitchen.manage', 'units.manage'],
+    perms: ['kitchen.manage', 'units.manage', 'reports.view'],
   });
   S = await createTestTenant({ name: 'KdsS', plan: 'STOCK', perms: ['kitchen.manage'] });
   api = await clientFor(app, A.email);
@@ -111,6 +111,36 @@ describe('ecrã de cozinha', () => {
     expect((await sync([])).json().data.closed).toBe(2);
     expect((await board()).tickets).toHaveLength(0);
     expect((await board('Bar')).tickets).toHaveLength(0);
+  });
+
+  it('relatório de tempos: espera, preparação e total por prato', async () => {
+    const t = await prisma.kitchenTicket.findFirstOrThrow({
+      where: { tenantId: A.tenant.id, zone: 'Cozinha' },
+    });
+    // o Choco volta a contar; o Franguinho (L1) continua anulado
+    await prisma.kitchenItem.updateMany({
+      where: { ticketId: t.id, posLineId: 'L2' },
+      data: { cancelled: false },
+    });
+    const at = (m: number) => new Date(Date.UTC(2026, 10, 3, 12, m));
+    await prisma.kitchenTicket.update({
+      where: { id: t.id },
+      data: { status: 'READY', seenAt: at(0), startedAt: at(4), readyAt: at(16) },
+    });
+    const r = (await api('GET', '/api/reports/kitchen-times?from=2026-11-03&to=2026-11-03')).json()
+      .data;
+    expect(r.rows).toEqual([
+      {
+        zone: 'Cozinha',
+        item: 'Choco Grelhado',
+        tickets: 1,
+        wait: 4,
+        prep: 12,
+        total: 16,
+        max: 16,
+      },
+    ]);
+    expect(r.totals).toMatchObject({ tickets: 1, total: 16 });
   });
 
   it('plano STOCK não tem ecrã de cozinha', async () => {
