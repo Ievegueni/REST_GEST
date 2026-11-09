@@ -20,6 +20,12 @@ Corre na máquina onde está a base de dados do POS (ficheiro **SQLite**). A cad
   definir o código POS em Definições → Caixa);
 - dias já importados por ficheiro Excel são ignorados (não conta a dobrar).
 
+**Cozinha** (`POS_KITCHEN=on`, plano Completo) — os artigos pedidos nas mesas abertas com a zona de
+impressão do produto (`store_product.printzone_id` → Cozinha, Bar, Sushi…). Artigos enviados juntos
+(mesmo `cronano`) formam um talão por mesa e zona; a hora do talão é a hora em que o agente o vê
+(o Winrest não guarda uma hora legível por linha), por isso usar `POS_SYNC_SECONDS=5`.
+Ecrã: `/cozinha?zona=Cozinha` (TV com teclado numérico/bump bar, toque ou rato).
+
 Se a leitura falhar, não envia nada — nunca liberta mesas nem perde vendas por engano; ao voltar, retoma onde ficou.
 Só precisa de saída HTTPS para a internet — nada a abrir na firewall. Sem dependências: Node.js ≥ 22.13.
 

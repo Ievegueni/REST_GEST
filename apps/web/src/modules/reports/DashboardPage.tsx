@@ -127,6 +127,10 @@ export function DashboardPage() {
   const canReserve = useCan('reservations.manage');
   const canStock = useCan('stock.view');
   const reception = reservations && canReserve && !canStock;
+  // perfil só de cozinha (TV): vai directo ao ecrã de pedidos
+  const kitchenFeature = useFeature('kitchen_display');
+  const canKitchen = useCan('kitchen.manage');
+  const kitchenOnly = kitchenFeature && canKitchen && !canStock && !canReserve;
   const [preset, setPreset] = useState<Preset>('month');
   const [custom, setCustom] = useState(range('month'));
   const { from, to } = preset === 'custom' ? custom : range(preset);
@@ -139,6 +143,7 @@ export function DashboardPage() {
     <PageHeader title={t('nav.dashboard')} subtitle={t('dash.subtitle', { unit: unitName })} />
   );
   if (reception) return <Navigate to="/recepcao" replace />;
+  if (kitchenOnly) return <Navigate to="/cozinha" replace />;
   if (!stock) return header;
 
   const filters = (

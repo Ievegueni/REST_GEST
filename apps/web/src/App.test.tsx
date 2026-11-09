@@ -66,6 +66,6 @@ describe('App', () => {
   it('Definições → Plano mostra bloqueadas no plano STOCK', () => {
     renderAt('/definicoes/plano', 'STOCK');
     expect(screen.getByText('Recursos humanos')).toBeTruthy();
-    expect(screen.getAllByText('Disponível no plano Completo')).toHaveLength(7);
+    expect(screen.getAllByText('Disponível no plano Completo')).toHaveLength(8);
   });
 });

@@ -13,6 +13,8 @@ const SELECT = {
   payrollOvertimeRate: true,
   payrollMonthDays: true,
   cashDifferenceLimit: true,
+  kdsWarnMinutes: true,
+  kdsLateMinutes: true,
 } as const;
 
 /** Definições operacionais do tenant (a linha Tenant está fora de tenantDb). */
@@ -34,6 +36,8 @@ export async function updateSettings(
     payrollOvertimeRate?: number | null;
     payrollMonthDays?: number | null;
     cashDifferenceLimit?: number | null;
+    kdsWarnMinutes?: number;
+    kdsLateMinutes?: number;
   },
   ip?: string,
 ) {

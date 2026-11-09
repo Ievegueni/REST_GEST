@@ -21,6 +21,8 @@ const schema = z
     payrollOvertimeRate: z.coerce.number().min(1).max(5).nullable(),
     payrollMonthDays: z.coerce.number().int().min(20).max(31).nullable(),
     cashDifferenceLimit: z.coerce.number().int().min(0).nullable(),
+    kdsWarnMinutes: z.coerce.number().int().min(1).max(240),
+    kdsLateMinutes: z.coerce.number().int().min(1).max(240),
   })
   .partial();
 

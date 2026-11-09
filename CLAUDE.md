@@ -98,6 +98,7 @@ Mapa de features em `packages/shared/features.ts`:
 | `payables` | — | ✔ |
 | `financial_results` | — | ✔ |
 | `ai_analyzer` | — | ✔ |
+| `kitchen_display` | — | ✔ |
 
 Features efectivas = mapa do plano + `featureOverrides`.
 
@@ -124,6 +125,7 @@ Features efectivas = mapa do plano + `featureOverrides`.
 | Ecónomo | Stock, compras, inventários, transferências |
 | Caixa | Fecho de caixa da sua unidade (COMPLETO) |
 | Recepção | Reservas e mesas (tablet da entrada) |
+| Cozinha | Ecrã de cozinha (COMPLETO) |
 | RH | Módulo RH e salários (COMPLETO) |
 | Consulta | Só leitura de relatórios |
 
@@ -279,6 +281,12 @@ Implementado com a **Anthropic API** (tool use). O modelo **nunca acede à BD di
 - **Ligação ao POS (Winrest)** via agente local (`apps/pos-agent`): lê as mesas abertas na BD SQLite do POS (só leitura, consulta configurável; ver `apps/pos-agent/README.md`) e envia a lista completa a `POST /pos-agent/tables` com a chave da unidade (`x-agent-key`; só o hash fica em `Unit.posAgentKeyHash`). O servidor ocupa as mesas abertas no POS e liberta as que o POS fechou (`Reservation.posSeen`). As mesas ligam-se pelo nome.
 - **Vendas em tempo real** (mesmo agente, `POST /pos-agent/sales`): cada factura fechada no POS entra numa `SalesImport` do dia (confirmada) com `posDocId` nas linhas — receita sem IVA, `SALE_OUT` pelas fichas técnicas, consumo interno sem receita, anulações estornadas; `PosDocument`/`PosPayment` evitam duplicados e alimentam o fecho de caixa (`PaymentMethod.posCode`). Dias já importados por ficheiro são ignorados.
 
+### 7.17 Ecrã de cozinha (plano COMPLETO, feature `kitchen_display`)
+- O agente POS (`POS_KITCHEN=on`) envia a fotografia dos artigos das mesas abertas com a zona de impressão do produto; o servidor (`POST /pos-agent/kitchen`) mantém `KitchenTicket` (mesa + ronda + zona) e `KitchenItem` (anulados riscados; mesa fechada → talão sai).
+- Ecrã `/cozinha?zona=…` para TV (sem menu, ecrã inteiro): talões por ordem de chegada com tempo de espera (verde/amarelo/vermelho, minutos em Definições → Cozinha), estados `NEW → IN_PROGRESS → READY`, recuperar o último pronto.
+- Navegação: teclado numérico / bump bar (1–9 escolhe, ←→ muda, Enter avança, Backspace recupera), toque ou rato. Actualiza a cada 5 s.
+- Perfil base **Cozinha** (`kitchen.manage`): entra directo no ecrã. O estado fica só no RestoGest (o agente só lê o POS).
+
 ## 8. Modelo de dados (resumo)
 
 Entidades principais (todas com `id`, `tenantId`, `createdAt`, `updatedAt`, salvo indicação):
@@ -304,7 +312,7 @@ Entidades principais (todas com `id`, `tenantId`, `createdAt`, `updatedAt`, salv
 - `CashSession`, `CashCount`, `CashMovement`
 - `Payable`, `PayablePayment`
 - `AiRequest`, `AiReport`
-- `DiningTable`, `Reservation`, `PosDocument`, `PosPayment`
+- `DiningTable`, `Reservation`, `PosDocument`, `PosPayment`, `KitchenTicket`, `KitchenItem`
 - `AuditLog`
 
 Índices obrigatórios: `(tenantId, ...)` em todas as consultas frequentes; `StockMovement (tenantId, productId, locationId, occurredAt)`.

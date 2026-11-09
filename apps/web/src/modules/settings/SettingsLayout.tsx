@@ -15,6 +15,7 @@ export function SettingsLayout() {
   const tablesFeature = useFeature('reservations');
   const tablesManage = useCan('reservations.manage');
   const tables = tablesFeature && tablesManage;
+  const kitchen = useFeature('kitchen_display');
   return (
     <>
       <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t('nav.settings')}</h1>
@@ -29,6 +30,7 @@ export function SettingsLayout() {
           ...(payroll ? [{ to: '/definicoes/salarios', label: t('payroll.settings') }] : []),
           ...(cash ? [{ to: '/definicoes/caixa', label: t('cash.settings') }] : []),
           ...(tables ? [{ to: '/definicoes/mesas', label: t('res.tables') }] : []),
+          ...(kitchen ? [{ to: '/definicoes/cozinha', label: t('kds.settings') }] : []),
         ]}
       />
       <Outlet />

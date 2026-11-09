@@ -76,6 +76,8 @@ import { SupplierPage } from './modules/suppliers/SupplierPage';
 import { SuppliersPage } from './modules/suppliers/SuppliersPage';
 import { ReceptionPage } from './modules/reservations/ReceptionPage';
 import { TablesPage } from './modules/reservations/TablesPage';
+import { KitchenPage } from './modules/kitchen/KitchenPage';
+import { KitchenSettingsPage } from './modules/kitchen/KitchenSettingsPage';
 
 const gate = (feature: Feature, el: ReactNode) => <FeatureGate feature={feature}>{el}</FeatureGate>;
 
@@ -85,6 +87,8 @@ export function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+      {/* ecrã de cozinha: ecrã inteiro, sem menu */}
+      <Route path="/cozinha" element={<KitchenPage />} />
 
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboardPage />} />
@@ -170,6 +174,7 @@ export function App() {
           <Route path="salarios" element={gate('payroll', <PayrollSettingsPage />)} />
           <Route path="caixa" element={gate('cash_closing', <CashSettingsPage />)} />
           <Route path="mesas" element={gate('reservations', <TablesPage />)} />
+          <Route path="cozinha" element={gate('kitchen_display', <KitchenSettingsPage />)} />
         </Route>
       </Route>
     </Routes>

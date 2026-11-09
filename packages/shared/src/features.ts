@@ -16,6 +16,7 @@ export const FEATURES = [
   'payables',
   'financial_results',
   'ai_analyzer',
+  'kitchen_display',
 ] as const;
 export type Feature = (typeof FEATURES)[number];
 

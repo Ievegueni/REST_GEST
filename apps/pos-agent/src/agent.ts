@@ -2,7 +2,8 @@
  * Agente POS local: corre na máquina onde está a BD do POS (SQLite do Winrest) e, a cada ciclo,
  * com ligação SÓ DE LEITURA:
  *  - mesas: envia a lista das mesas abertas (ocupa/liberta as mesas no RestoGest);
- *  - vendas: envia as facturas fechadas desde a última enviada (receita, stock e caixa em tempo real).
+ *  - vendas: envia as facturas fechadas desde a última enviada (receita, stock e caixa em tempo real);
+ *  - cozinha (POS_KITCHEN=on): envia os artigos pedidos nas mesas abertas, com a zona (ecrã de cozinha).
  * Se uma leitura falhar não envia nada dessa parte — nunca liberta mesas nem perde vendas por engano.
  *
  *   node --env-file=.env dist/agent.js          sincroniza a cada POS_SYNC_SECONDS
@@ -28,6 +29,7 @@ const list = (v: string) =>
 const dbPath = env('POS_DB_PATH');
 const tablesQuery = process.env.POS_OPEN_TABLES_QUERY;
 const salesOn = process.env.POS_SALES !== 'off';
+const kitchenOn = process.env.POS_KITCHEN === 'on';
 // Códigos da BD do Winrest (BD de demonstração analisada em 2026-11); confirmar com --check.
 const posName = env('POS_NAME', 'Winrest');
 const saleTypes = list(env('POS_SALE_DOCTYPES', '1018,1005')); // Factura-recibo, Factura
@@ -35,6 +37,8 @@ const internalTypes = list(env('POS_INTERNAL_DOCTYPES', '1300')); // Consumo pr�
 const internalPay = list(env('POS_INTERNAL_PAYMETHODS', 'CI')); // Consumo Interno
 const closedStatus = env('POS_CLOSED_STATUS', '8002');
 const cancelledStatus = env('POS_CANCELLED_STATUS', '8003');
+const openStatus = env('POS_OPEN_STATUS', '8001');
+const lineCancelledStatus = env('POS_LINE_CANCELLED_STATUS', '8502');
 const BATCH = 100;
 
 const log = (msg: string) => console.log(`${new Date().toISOString()} ${msg}`);
@@ -71,7 +75,8 @@ function openTables(db: DatabaseSync) {
 const DAY0 = Date.UTC(1901, 0, 1);
 const toDay = (n: unknown) => new Date(DAY0 + Number(n) * 86_400_000).toISOString().slice(0, 10);
 const todaySerial = () => {
-  const local = new Date().toLocaleDateString('en-CA'); // fuso da máquina do POS
+  // POS_TODAY (YYYY-MM-DD): só para testar com cópias antigas da BD
+  const local = process.env.POS_TODAY || new Date().toLocaleDateString('en-CA'); // fuso da máquina do POS
   return Math.round((Date.parse(local) - DAY0) / 86_400_000);
 };
 
@@ -166,11 +171,50 @@ function readSales(db: DatabaseSync, cursor: string | null) {
   return { docs, cancelled, cursor: last ? String(last.clock_date) : cursor };
 }
 
+// ---------------------------------------------------------------- Cozinha
+
+/**
+ * Artigos das contas abertas (mesas) com a zona de impressão do produto na loja.
+ * Linhas enviadas juntas partilham `cronano` = ronda (um talão por mesa, ronda e zona).
+ */
+function kitchenLines(db: DatabaseSync) {
+  return all(
+    db,
+    `SELECT d.id, d.docheader_id, d.cronano, d.line_number, h.accumulator, d.product_code,
+            d.description, d.qnt, d.detailstatus_id, z.description AS zone
+     FROM docheader h
+     JOIN docmovdetail d ON d.docheader_id = h.id AND d.deleted = 0
+     JOIN store_product sp ON sp.product_id = d.product_id AND sp.store_id = h.store_id AND sp.deleted = 0
+     JOIN printzone z ON z.id = sp.printzone_id
+     WHERE h.deleted = 0 AND h.docstatus_id = ? AND h.doc_number = 0 AND h.accumulator > 0
+       AND h.docconfig_id IN (${marks(saleTypes.length)}) AND h.doc_date >= ?`,
+    BigInt(openStatus),
+    ...saleTypes.map(BigInt),
+    BigInt(todaySerial() - 1),
+  ).map((r) => ({
+    id: String(r.id),
+    docId: String(r.docheader_id),
+    round: String(r.cronano),
+    zone: String(r.zone).trim(),
+    table: String(r.accumulator),
+    code: String(r.product_code ?? ''),
+    label: String(r.description ?? ''),
+    qty: Number(r.qnt),
+    position: Number(r.line_number),
+    cancelled: String(r.detailstatus_id) === lineCancelledStatus,
+  }));
+}
+
 // ---------------------------------------------------------------- --check
 
 if (process.argv.includes('--check')) {
   withDb((db) => {
     if (tablesQuery) console.log('Mesas abertas:', openTables(db));
+    if (kitchenOn) {
+      const k = kitchenLines(db);
+      const zones = [...new Set(k.map((l) => l.zone))];
+      console.log(`Cozinha: ${k.length} artigos em contas abertas; zonas: ${zones.join(', ')}`);
+    }
     if (salesOn) {
       const s = readSales(db, null);
       console.log(`Vendas desde o dia anterior: ${s.docs.length} (primeiro lote)`);
@@ -211,6 +255,15 @@ async function syncTables() {
   lastUnknown = unknown;
 }
 
+let lastKitchen = '';
+async function syncKitchen() {
+  const lines = withDb(kitchenLines);
+  const d = await call<{ created: number; closed: number }>('/kitchen', { lines });
+  const msg = d.created || d.closed ? `cozinha: +${d.created} talões · ${d.closed} fechados` : '';
+  if (msg && msg !== lastKitchen) log(msg);
+  lastKitchen = msg;
+}
+
 let cursor: string | null | undefined; // undefined = pedir ao servidor
 async function syncSales() {
   cursor ??= (await call<{ cursor: string | null }>('/sales/cursor')).cursor;
@@ -240,6 +293,7 @@ async function syncSales() {
 log(`agente POS a sincronizar com ${apiUrl} a cada ${everyMs / 1000}s`);
 for (;;) {
   if (tablesQuery) await syncTables().catch((e: Error) => log(`erro (mesas): ${e.message}`));
+  if (kitchenOn) await syncKitchen().catch((e: Error) => log(`erro (cozinha): ${e.message}`));
   if (salesOn)
     await syncSales().catch((e: Error) => {
       cursor = undefined; // volta a perguntar ao servidor onde ficou

@@ -3,6 +3,7 @@ import {
   BarChart3,
   Bell,
   CalendarCheck,
+  ChefHat,
   Building2,
   ClipboardList,
   CookingPot,
@@ -29,6 +30,7 @@ import { Shell, type ShellNavItem } from './Shell';
 export const NAV: (Omit<ShellNavItem, 'label'> & { label: TKey; feature?: Feature })[] = [
   { to: '/', label: 'nav.dashboard', icon: LayoutDashboard },
   { to: '/recepcao', label: 'nav.reservations', icon: CalendarCheck, feature: 'reservations' },
+  { to: '/cozinha', label: 'nav.kitchen', icon: ChefHat, feature: 'kitchen_display' },
   { to: '/catalogo/produtos', label: 'nav.catalog', icon: Package, feature: 'stock' },
   { to: '/fornecedores', label: 'nav.suppliers', icon: Truck, feature: 'stock' },
   { to: '/stock', label: 'nav.stock', icon: Warehouse, feature: 'stock' },

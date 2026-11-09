@@ -55,6 +55,9 @@ model Tenant {
   payrollMonthDays    Int?
   /// diferença de caixa (AOA) acima da qual a justificação é obrigatória e há alerta
   cashDifferenceLimit Int?
+  /// ecrã de cozinha: minutos de espera a partir dos quais o talão fica amarelo / vermelho
+  kdsWarnMinutes      Int                 @default(10)
+  kdsLateMinutes      Int                 @default(20)
   /// logotipo (PNG/JPEG, ≤ 512 KB) guardado na BD: servido sem sessão em <img> e usado nos PDF
   logoData            Bytes?
   logoMime            String?
@@ -129,6 +132,8 @@ model Tenant {
   reservations           Reservation[]
   posDocuments           PosDocument[]
   posPayments            PosPayment[]
+  kitchenTickets         KitchenTicket[]
+  kitchenItems           KitchenItem[]
 }
 
 model Unit {
@@ -162,6 +167,7 @@ model Unit {
   diningTables    DiningTable[]
   reservations    Reservation[]
   posDocuments    PosDocument[]
+  kitchenTickets  KitchenTicket[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -1869,4 +1875,58 @@ model PosPayment {
   document PosDocument @relation(fields: [tenantId, documentId], references: [tenantId, id], onDelete: Cascade)
 
   @@index([tenantId, documentId])
+}
+
+// ---------------------------------------------------------------- Ecrã de cozinha (pedidos do POS)
+
+enum KitchenStatus {
+  NEW
+  IN_PROGRESS
+  READY
+}
+
+/// Talão = artigos de uma mesa enviados juntos (mesma ronda) para uma zona (Cozinha, Bar…).
+model KitchenTicket {
+  id        String        @id @default(cuid())
+  tenantId  String        @default(dbgenerated("current_setting('app.tenant_id')"))
+  unitId    String
+  /// documento (conta da mesa) e ronda de envio no POS
+  posDocId  String
+  round     String
+  zone      String
+  table     String?
+  status    KitchenStatus @default(NEW)
+  /// hora em que o agente viu o pedido pela primeira vez (≈ hora do pedido)
+  seenAt    DateTime      @default(now())
+  startedAt DateTime?
+  readyAt   DateTime?
+  /// a mesa fechou (ou os artigos saíram da conta) no POS
+  closedAt  DateTime?
+
+  tenant Tenant        @relation(fields: [tenantId], references: [id])
+  unit   Unit          @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  items  KitchenItem[]
+
+  @@unique([tenantId, unitId, posDocId, round, zone])
+  @@unique([tenantId, id])
+  @@index([tenantId, unitId, zone, closedAt])
+}
+
+model KitchenItem {
+  id        String  @id @default(cuid())
+  tenantId  String  @default(dbgenerated("current_setting('app.tenant_id')"))
+  ticketId  String
+  /// linha do POS
+  posLineId String
+  /// ordem da linha na conta (modificadores como "Médio Bem" vêm a seguir ao prato)
+  position  Int     @default(0)
+  posCode   String
+  label     String
+  qty       Decimal @db.Decimal(14, 3)
+  cancelled Boolean @default(false)
+
+  tenant Tenant        @relation(fields: [tenantId], references: [id])
+  ticket KitchenTicket @relation(fields: [tenantId, ticketId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, ticketId, posLineId])
 }
