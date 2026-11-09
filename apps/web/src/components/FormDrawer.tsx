@@ -12,6 +12,7 @@ export type FieldDef = {
     | 'email'
     | 'password'
     | 'date'
+    | 'datetime-local'
     | 'textarea'
     | 'select'
     | 'checkbox'

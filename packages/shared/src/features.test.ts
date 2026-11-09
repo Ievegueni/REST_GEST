@@ -17,6 +17,6 @@ describe('effectiveFeatures', () => {
   });
   it('ignora chaves desconhecidas', () => {
     const f = effectiveFeatures('STOCK', { nope: true } as never);
-    expect(f.size).toBe(6);
+    expect(f.size).toBe(7);
   });
 });

@@ -125,6 +125,8 @@ model Tenant {
   cashMovements          CashMovement[]
   payables               Payable[]
   payablePayments        PayablePayment[]
+  diningTables           DiningTable[]
+  reservations           Reservation[]
 }
 
 model Unit {
@@ -133,6 +135,8 @@ model Unit {
   name      String
   address   String?
   active    Boolean  @default(true)
+  /// SHA-256 da chave do agente POS local (sincroniza mesas abertas); a chave só é mostrada ao gerar
+  posAgentKeyHash String? @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -149,6 +153,8 @@ model Unit {
   recurringCosts  RecurringCost[]
   cashSessions    CashSession[]
   payables        Payable[]
+  diningTables    DiningTable[]
+  reservations    Reservation[]
 
   @@unique([tenantId, name])
   @@unique([tenantId, id])
@@ -1742,4 +1748,65 @@ model PlatformSetting {
   secret    Boolean  @default(false)
   updatedBy String?
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------- Reservas
+
+/// Mesa de uma unidade (grelha por área).
+model DiningTable {
+  id        String   @id @default(cuid())
+  tenantId  String   @default(dbgenerated("current_setting('app.tenant_id')"))
+  unitId    String
+  name      String
+  seats     Int
+  /// zona da sala (ex.: Sala, Esplanada); agrupa a grelha
+  area      String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  unit         Unit          @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  reservations Reservation[]
+
+  @@unique([tenantId, unitId, name])
+  @@unique([tenantId, id])
+}
+
+enum ReservationStatus {
+  BOOKED
+  SEATED
+  DONE
+  CANCELLED
+  NO_SHOW
+}
+
+/// Reserva ou cliente sem reserva (walk-in = criada já SEATED). Mesa ocupada = reserva SEATED.
+model Reservation {
+  id           String            @id @default(cuid())
+  tenantId     String            @default(dbgenerated("current_setting('app.tenant_id')"))
+  unitId       String
+  tableId      String?
+  customerName String
+  phone        String?
+  partySize    Int
+  startsAt     DateTime
+  status       ReservationStatus @default(BOOKED)
+  walkIn       Boolean           @default(false)
+  /// a mesa já foi vista aberta no POS: fecha sozinha quando o POS a fechar
+  posSeen      Boolean           @default(false)
+  notes        String?
+  seatedAt     DateTime?
+  closedAt     DateTime?
+  createdById  String
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  tenant Tenant       @relation(fields: [tenantId], references: [id])
+  unit   Unit         @relation(fields: [tenantId, unitId], references: [tenantId, id])
+  table  DiningTable? @relation(fields: [tenantId, tableId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, unitId, startsAt])
+  @@index([tenantId, unitId, status])
 }

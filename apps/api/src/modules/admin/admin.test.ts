@@ -83,7 +83,7 @@ describe('gestão de tenants', () => {
     newTenantId = res.json().data.id;
     tenantIds.push(newTenantId);
 
-    expect(await prisma.role.count({ where: { tenantId: newTenantId, isSystem: true } })).toBe(6);
+    expect(await prisma.role.count({ where: { tenantId: newTenantId, isSystem: true } })).toBe(7);
     expect((await tenantLogin(NEW_ADMIN_EMAIL)).statusCode).toBe(200);
   });
 

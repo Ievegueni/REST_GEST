@@ -157,6 +157,18 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [ ] SMS resumido do relatório semanal (opcional — não feito)
 - [ ] Activação do plano COMPLETO para o Palace (tarefa do Super Admin)
 
+### Reservas e mesas (STOCK e COMPLETO)
+- [x] Mesas por unidade e área (Definições → Mesas)
+- [x] Reservas feitas pela equipa (sem reserva online); walk-in = reserva já sentada
+- [x] Ecrã da recepção para tablet (`/recepcao`): grelha livre/reservada/ocupada, chegou → sentar, libertar, não compareceu, actualização a cada 15 s
+- [x] Perfil base **Recepção** (`reservations.manage`); entra directo no ecrã das mesas
+- [x] Agente POS local (`apps/pos-agent`): mesas abertas no Winrest ocupam/libertam as mesas sozinhas; chave por unidade em Definições → Mesas
+- [x] Consulta das mesas abertas descoberta na BD do Palace Lounge (SQLite; mesas = acumuladores em `docheader`)
+- [x] Criação de mesas por intervalo (números do POS)
+- [ ] Instalar o agente no Palace Lounge (e confirmar a BD do Palace Beach)
+- [ ] SMS de confirmação/lembrete da reserva (Futurix)
+- [ ] Relatório de ocupação e no-shows
+
 ---
 
 ## FASE 3 — SaaS comercial

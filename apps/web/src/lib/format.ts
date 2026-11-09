@@ -11,9 +11,9 @@ const cf = new Intl.NumberFormat('pt-AO', { maximumFractionDigits: 2 });
 export const formatCost = (v: string | number | null | undefined) =>
   v == null ? '—' : `${cf.format(Number(v))} Kz`;
 
-/** valor para <input type="datetime-local"> no fuso do browser */
-export const nowLocal = () => {
-  const d = new Date();
+/** valor para <input type="datetime-local"> no fuso do browser (por defeito agora) */
+export const nowLocal = (iso?: string) => {
+  const d = iso ? new Date(iso) : new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
 };
@@ -35,3 +35,6 @@ export function formatCell(type: ColType, v: string | number | null | undefined)
   if (type === 'qty') return formatQty(v);
   return nf0.format(v);
 }
+/** "20:30" no fuso do browser */
+export const formatTime = (v: string) =>
+  new Date(v).toLocaleTimeString('pt-AO', { hour: '2-digit', minute: '2-digit' });

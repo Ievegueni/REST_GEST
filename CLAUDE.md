@@ -51,6 +51,7 @@ Regras:
 │   │   │   ├── integrations/# futurix-sms, cloudinary, anthropic
 │   │   │   └── server.ts
 │   │   └── prisma/schema.prisma
+│   ├── pos-agent/           # agente local no servidor do restaurante (lê mesas abertas na BD do POS)
 │   └── web/                 # React
 │       └── src/
 │           ├── modules/     # espelha os módulos da API
@@ -89,6 +90,7 @@ Mapa de features em `packages/shared/features.ts`:
 | `sales_import` | ✔ | ✔ |
 | `alerts_sms` | ✔ | ✔ |
 | `reports_stock` | ✔ | ✔ |
+| `reservations` | ✔ | ✔ |
 | `hr` | — | ✔ |
 | `payroll` | — | ✔ |
 | `daily_costs` | — | ✔ |
@@ -121,6 +123,7 @@ Features efectivas = mapa do plano + `featureOverrides`.
 | Gerente | Tudo na(s) sua(s) unidade(s) |
 | Ecónomo | Stock, compras, inventários, transferências |
 | Caixa | Fecho de caixa da sua unidade (COMPLETO) |
+| Recepção | Reservas e mesas (tablet da entrada) |
 | RH | Módulo RH e salários (COMPLETO) |
 | Consulta | Só leitura de relatórios |
 
@@ -267,6 +270,14 @@ Implementado com a **Anthropic API** (tool use). O modelo **nunca acede à BD di
 - Impersonation (entrar como admin do tenant) com registo em auditoria.
 - Cobrança de subscrições: fase futura (ProxyPay/Multicaixa).
 
+### 7.16 Reservas e mesas (planos STOCK e COMPLETO)
+- **Mesas** por unidade (nome, lugares, área); a área agrupa a grelha. Configuração em Definições → Mesas.
+- **Reservas** criadas só pela equipa (telefone/WhatsApp/presencial): nome, telefone, nº de pessoas, dia e hora, mesa opcional, observações.
+- Estados: `BOOKED → SEATED → DONE`, ou `CANCELLED` / `NO_SHOW`. Cliente sem reserva = reserva criada já `SEATED` (`walkIn`). Mesa ocupada = reserva `SEATED` nessa mesa.
+- **Ecrã da recepção** (`/recepcao`, pensado para tablet): grelha de mesas (livre / reservada / ocupada com minutos), lista das reservas do dia, chegou → escolher mesa, libertar mesa. Actualiza por polling (15 s).
+- Perfil **Recepção** (`reservations.manage`): ao entrar vai directo para o ecrã das mesas.
+- **Ligação ao POS (Winrest)** via agente local (`apps/pos-agent`): lê as mesas abertas na BD SQLite do POS (só leitura, consulta configurável; ver `apps/pos-agent/README.md`) e envia a lista completa a `POST /pos-agent/tables` com a chave da unidade (`x-agent-key`; só o hash fica em `Unit.posAgentKeyHash`). O servidor ocupa as mesas abertas no POS e liberta as que o POS fechou (`Reservation.posSeen`). As mesas ligam-se pelo nome.
+
 ## 8. Modelo de dados (resumo)
 
 Entidades principais (todas com `id`, `tenantId`, `createdAt`, `updatedAt`, salvo indicação):
@@ -292,6 +303,7 @@ Entidades principais (todas com `id`, `tenantId`, `createdAt`, `updatedAt`, salv
 - `CashSession`, `CashCount`, `CashMovement`
 - `Payable`, `PayablePayment`
 - `AiRequest`, `AiReport`
+- `DiningTable`, `Reservation`
 - `AuditLog`
 
 Índices obrigatórios: `(tenantId, ...)` em todas as consultas frequentes; `StockMovement (tenantId, productId, locationId, occurredAt)`.

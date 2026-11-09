@@ -74,6 +74,8 @@ import { NewReceiptPage } from './modules/purchases/NewReceiptPage';
 import { ReceiptPage } from './modules/purchases/ReceiptPage';
 import { SupplierPage } from './modules/suppliers/SupplierPage';
 import { SuppliersPage } from './modules/suppliers/SuppliersPage';
+import { ReceptionPage } from './modules/reservations/ReceptionPage';
+import { TablesPage } from './modules/reservations/TablesPage';
 
 const gate = (feature: Feature, el: ReactNode) => <FeatureGate feature={feature}>{el}</FeatureGate>;
 
@@ -156,6 +158,7 @@ export function App() {
         <Route path="/salarios" element={gate('payroll', <PayrollPage />)} />
         <Route path="/salarios/:id" element={gate('payroll', <RunPage />)} />
         <Route path="/alertas" element={gate('alerts_sms', <AlertsPage />)} />
+        <Route path="/recepcao" element={gate('reservations', <ReceptionPage />)} />
         <Route path="/definicoes" element={<SettingsLayout />}>
           <Route index element={<Navigate to="plano" replace />} />
           <Route path="plano" element={<PlanPage />} />
@@ -166,6 +169,7 @@ export function App() {
           <Route path="alertas" element={gate('alerts_sms', <AlertSettingsPage />)} />
           <Route path="salarios" element={gate('payroll', <PayrollSettingsPage />)} />
           <Route path="caixa" element={gate('cash_closing', <CashSettingsPage />)} />
+          <Route path="mesas" element={gate('reservations', <TablesPage />)} />
         </Route>
       </Route>
     </Routes>

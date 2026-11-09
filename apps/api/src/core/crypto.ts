@@ -1,5 +1,5 @@
 /** Encriptação de campos sensíveis (IBAN…) com AES-256-GCM. Chave de 32 bytes em ENCRYPTION_KEY (base64 ou hex). */
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { env } from './env';
 import { AppError } from './errors';
 
@@ -33,3 +33,5 @@ export function decrypt(payload: string) {
   d.setAuthTag(Buffer.from(tag, 'base64'));
   return Buffer.concat([d.update(Buffer.from(data, 'base64')), d.final()]).toString('utf8');
 }
+
+export const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');

@@ -12,6 +12,9 @@ export function SettingsLayout() {
   const alerts = alertsFeature && alertsManage;
   const payroll = useFeature('payroll');
   const cash = useFeature('cash_closing');
+  const tablesFeature = useFeature('reservations');
+  const tablesManage = useCan('reservations.manage');
+  const tables = tablesFeature && tablesManage;
   return (
     <>
       <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t('nav.settings')}</h1>
@@ -25,6 +28,7 @@ export function SettingsLayout() {
           ...(alerts ? [{ to: '/definicoes/alertas', label: t('settings.alerts') }] : []),
           ...(payroll ? [{ to: '/definicoes/salarios', label: t('payroll.settings') }] : []),
           ...(cash ? [{ to: '/definicoes/caixa', label: t('cash.settings') }] : []),
+          ...(tables ? [{ to: '/definicoes/mesas', label: t('res.tables') }] : []),
         ]}
       />
       <Outlet />

@@ -7,6 +7,7 @@ import {
   type Permission,
   type Plan,
 } from '@restgest/shared';
+import { sha256 } from './crypto';
 import { AppError } from './errors';
 import { prisma, tenantDb, type TenantDb } from './prisma';
 
@@ -125,4 +126,19 @@ export async function systemAuth(
     unitIds,
     db: tenantDb(tenantId),
   };
+}
+
+/**
+ * preHandler do agente POS local: chave da unidade no header `x-agent-key`.
+ * Contexto de sistema limitado a essa unidade; exige a feature de reservas.
+ */
+export async function authenticateAgent(req: FastifyRequest) {
+  const key = req.headers['x-agent-key'];
+  const unit =
+    typeof key === 'string' && key
+      ? await prisma.unit.findUnique({ where: { posAgentKeyHash: sha256(key) } })
+      : null;
+  if (!unit?.active) throw new AppError('UNAUTHORIZED', 'Chave do agente inválida');
+  req.auth = await systemAuth(unit.tenantId, [unit.id]);
+  await requireFeature('reservations')(req);
 }

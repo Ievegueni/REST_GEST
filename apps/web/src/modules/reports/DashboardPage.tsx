@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import {
   BellRing,
   Boxes,
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { AreaChart } from '../../components/AreaChart';
 import { ErrorBox, inputBase, PageHeader, Panel, StatCard } from '../../components/ui';
-import { useFeature, useSession } from '../../features/session';
+import { useCan, useFeature, useSession } from '../../features/session';
 import { t, type TKey } from '../../i18n';
 import { formatDate, formatDateTime, formatMoney } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
@@ -122,6 +122,11 @@ function Bars({ rows }: { rows: { label: string; value: number; sub?: string }[]
 export function DashboardPage() {
   const { session, unitId } = useSession();
   const stock = useFeature('stock');
+  // perfil só de recepção (tablet): vai directo ao ecrã das mesas
+  const reservations = useFeature('reservations');
+  const canReserve = useCan('reservations.manage');
+  const canStock = useCan('stock.view');
+  const reception = reservations && canReserve && !canStock;
   const [preset, setPreset] = useState<Preset>('month');
   const [custom, setCustom] = useState(range('month'));
   const { from, to } = preset === 'custom' ? custom : range(preset);
@@ -133,6 +138,7 @@ export function DashboardPage() {
   const header = (
     <PageHeader title={t('nav.dashboard')} subtitle={t('dash.subtitle', { unit: unitName })} />
   );
+  if (reception) return <Navigate to="/recepcao" replace />;
   if (!stock) return header;
 
   const filters = (

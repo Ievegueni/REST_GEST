@@ -8,6 +8,7 @@ export const FEATURES = [
   'sales_import',
   'alerts_sms',
   'reports_stock',
+  'reservations',
   'hr',
   'payroll',
   'daily_costs',
@@ -27,6 +28,7 @@ const STOCK_FEATURES: readonly Feature[] = [
   'sales_import',
   'alerts_sms',
   'reports_stock',
+  'reservations',
 ];
 
 export const PLAN_FEATURES: Record<Plan, readonly Feature[]> = {

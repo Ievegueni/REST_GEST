@@ -40,6 +40,8 @@ export async function deleteTenants(ids: string[]) {
   await prisma.aiReport.deleteMany({ where });
   await prisma.refreshToken.deleteMany({ where });
   await prisma.passwordReset.deleteMany({ where });
+  await prisma.reservation.deleteMany({ where });
+  await prisma.diningTable.deleteMany({ where });
   await prisma.payable.deleteMany({ where });
   await prisma.cashMovement.deleteMany({ where });
   await prisma.cashSessionAmount.deleteMany({ where });

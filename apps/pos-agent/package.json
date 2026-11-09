@@ -1,0 +1,29 @@
+{
+  "name": "@restgest/pos-agent",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'pos-agent: corre no servidor do restaurante (ver README)'",
+    "build": "tsup",
+    "start": "node --no-warnings --env-file=.env dist/agent.js",
+    "check": "node --no-warnings --env-file=.env dist/agent.js --check",
+    "typecheck": "tsc -p ."
+  },
+  "tsup": {
+    "entry": [
+      "src/agent.ts"
+    ],
+    "format": [
+      "esm"
+    ],
+    "target": "node22",
+    "removeNodeProtocol": false
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "tsup": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

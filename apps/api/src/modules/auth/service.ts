@@ -1,6 +1,7 @@
 import { logoUrl } from '../../core/logo';
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import argon2 from 'argon2';
+import { sha256 } from '../../core/crypto';
 import { AppError } from '../../core/errors';
 import { prisma } from '../../core/prisma';
 import { audit } from '../../core/audit';
@@ -8,7 +9,6 @@ import { audit } from '../../core/audit';
 export const REFRESH_TTL_MS = 30 * 24 * 3600 * 1000;
 const RESET_TTL_MS = 3600 * 1000;
 
-const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 const newToken = () => randomBytes(32).toString('base64url');
 
 // Hash fixo para igualar o tempo de resposta quando o email não existe.

@@ -4,12 +4,16 @@ import { assertWithinLimit } from '../../core/limits';
 import { idParam } from '../../core/schemas';
 import { locationSchema, unitSchema } from './schemas';
 
+/** hash da chave do agente POS nunca sai nas respostas */
+const omit = { posAgentKeyHash: true } as const;
+
 export async function unitRoutes(app: FastifyInstance) {
   const manage = protect({ permission: 'units.manage' });
 
   /** Unidades (com locais) a que o utilizador tem acesso. */
   app.get('/units', protect(), async (req) => {
     const units = await req.auth.db.unit.findMany({
+      omit,
       orderBy: { name: 'asc' },
       include: { locations: { orderBy: { name: 'asc' } } },
     });
@@ -19,7 +23,7 @@ export async function unitRoutes(app: FastifyInstance) {
   app.post('/units', manage, async (req, reply) => {
     const data = unitSchema.parse(req.body);
     if (data.active) await assertWithinLimit(req.auth.tenantId, 'units');
-    return reply.status(201).send({ data: await req.auth.db.unit.create({ data }) });
+    return reply.status(201).send({ data: await req.auth.db.unit.create({ data, omit }) });
   });
 
   app.patch('/units/:id', manage, async (req) => {
@@ -30,7 +34,7 @@ export async function unitRoutes(app: FastifyInstance) {
       const current = await req.auth.db.unit.findUniqueOrThrow({ where: { id } });
       if (!current.active) await assertWithinLimit(req.auth.tenantId, 'units');
     }
-    return { data: await req.auth.db.unit.update({ where: { id }, data }) };
+    return { data: await req.auth.db.unit.update({ where: { id }, data, omit }) };
   });
 
   app.post('/units/:id/locations', manage, async (req, reply) => {

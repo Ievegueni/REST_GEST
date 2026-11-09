@@ -27,6 +27,7 @@ export const PERMISSIONS = [
   'payables.manage',
   'financial.view',
   'ai.use',
+  'reservations.manage',
   'audit.view',
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
@@ -53,5 +54,6 @@ export const BASE_ROLES: Record<string, readonly Permission[]> = {
   Ecónomo: STOCK_OPS,
   Caixa: ['cash.close'],
   RH: ['hr.view', 'hr.manage', 'hr.sensitive', 'payroll.process'],
+  Recepção: ['reservations.manage'],
   Consulta: ['catalog.view', 'stock.view', 'reports.view'],
 };
