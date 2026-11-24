@@ -169,6 +169,7 @@ Marcar `[x]` ao concluir. Cada sprint termina com testes a passar e deploy em st
 - [x] Ecrã de cozinha (COMPLETO): talões por zona a partir das mesas abertas no Winrest, Novo → Em produção → Pronto, teclado numérico/toque, perfil Cozinha
 - [x] Ecrã de cozinha: aviso sonoro de talão novo (desbloqueia no primeiro toque; ligar/desligar por TV)
 - [x] Relatório "Tempos de cozinha": espera, preparação e total por prato e zona (PDF/Excel)
+- [x] App Android TV (`apps/tv`): ecrã de cozinha com as teclas do comando (setas/OK/números/Voltar), arranque com a TV e som sem toque
 - [ ] Confirmar na BD real do Winrest os códigos (1018/1005/1300, 8002/8003, CI) e o significado dos documentos "Anulação" (1002)
 - [ ] Instalar o agente no Palace Lounge (e confirmar a BD do Palace Beach)
 - [ ] SMS de confirmação/lembrete da reserva (Futurix)

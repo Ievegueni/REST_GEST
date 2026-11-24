@@ -1,0 +1,17 @@
+plugins { id 'com.android.application' version '8.11.2' }
+
+android {
+    namespace 'ao.comunica.restgest.tv'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'ao.comunica.restgest.tv'
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

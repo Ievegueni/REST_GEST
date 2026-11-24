@@ -66,6 +66,7 @@ function useChime(tickets: Ticket[]) {
       ctx.current ??= new AudioContext();
       void ctx.current.resume().then(() => setLocked(ctx.current?.state !== 'running'));
     };
+    unlock(); // na app da TV o som não precisa de gesto; no browser fica bloqueado até tocar
     window.addEventListener('pointerdown', unlock);
     window.addEventListener('keydown', unlock);
     return () => {
