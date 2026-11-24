@@ -8,6 +8,7 @@ import type { createUserSchema, updateUserSchema } from './schemas';
 
 const select = {
   id: true,
+  username: true,
   email: true,
   name: true,
   phone: true,

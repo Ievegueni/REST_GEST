@@ -67,7 +67,7 @@ beforeAll(async () => {
     await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: T.email, password: 'password123' },
+      payload: { username: T.email, password: 'password123' },
     })
   ).json().data.accessToken;
 
@@ -164,12 +164,12 @@ describe('relatórios', () => {
     const role = await db.role.findFirstOrThrow();
     await api('POST', '/api/users', {
       name: 'R',
-      email: `r-${T.tenant.id}@test.local`,
+      username: `r-${T.tenant.id}`,
       password: 'password123',
       roleId: role.id,
       unitIds: [ids.unit2],
     });
-    const restricted = await clientFor(app, `r-${T.tenant.id}@test.local`);
+    const restricted = await clientFor(app, `r-${T.tenant.id}`);
     const rr = (await restricted('GET', '/api/reports/units-comparison')).json().data;
     expect(rr.rows.map((x: { unit: string }) => x.unit)).toEqual(['Praia']);
     expect((await restricted('GET', `/api/reports/stock?unitId=${T.unit.id}`)).statusCode).toBe(

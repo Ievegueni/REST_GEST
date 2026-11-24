@@ -7,7 +7,7 @@ import { FeatureGate, SessionContext, type Session } from './features/session';
 
 function renderAt(path: string, plan: Plan | null) {
   const session: Session | null = plan && {
-    user: { id: 'u', name: 'Ana', email: 'ana@x' },
+    user: { id: 'u', name: 'Ana', username: 'ana', email: 'ana@x' },
     role: 'Administrador',
     permissions: [],
     tenant: { id: 't', name: 'Demo', plan, logoUrl: null },

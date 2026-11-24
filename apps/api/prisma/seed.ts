@@ -19,7 +19,12 @@ if (!(await prisma.tenant.findFirst({ where: { name: 'Restaurante Demo' } }))) {
   const { tenant } = await createTenant({
     name: 'Restaurante Demo',
     plan: 'STOCK',
-    admin: { name: 'Administrador Demo', email: 'admin@demo.local', password: PASSWORD },
+    admin: {
+      name: 'Administrador Demo',
+      username: 'admin',
+      email: 'admin@demo.local',
+      password: PASSWORD,
+    },
   });
   const db = tenantDb(tenant.id);
   for (const unitName of ['Unidade Centro', 'Unidade Praia']) {

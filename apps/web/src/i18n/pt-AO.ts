@@ -26,6 +26,8 @@ export const ptAO = {
   'common.genericError': 'Ocorreu um erro. Tente novamente.',
 
   'auth.email': 'Email',
+  'auth.username': 'Utilizador',
+  'auth.usernamePlaceholder': 'o seu utilizador',
   'auth.password': 'Senha',
   'auth.newPassword': 'Nova senha',
   'auth.confirmPassword': 'Confirmar senha',
@@ -42,7 +44,8 @@ export const ptAO = {
   'auth.forgot': 'Esqueci-me da senha',
   'auth.forgotTitle': 'Recuperar senha',
   'auth.forgotSend': 'Enviar instruções',
-  'auth.forgotSent': 'Se o email estiver registado, receberá instruções para redefinir a senha.',
+  'auth.forgotSent':
+    'Se o utilizador existir, receberá instruções para redefinir a senha. Se não receber, peça ao administrador para lhe definir uma nova senha.',
   'auth.resetTitle': 'Redefinir senha',
   'auth.resetSave': 'Guardar nova senha',
   'auth.resetDone': 'Senha alterada. Já pode entrar.',
@@ -223,7 +226,8 @@ export const ptAO = {
   'users.new': 'Novo utilizador',
   'users.edit': 'Editar utilizador',
   'users.name': 'Nome',
-  'users.email': 'Email',
+  'users.username': 'Utilizador (login)',
+  'users.email': 'Email (opcional)',
   'users.phone': 'Telefone',
   'users.role': 'Perfil',
   'users.allUnits': 'Acesso a todas as unidades',

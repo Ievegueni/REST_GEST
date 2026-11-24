@@ -26,7 +26,13 @@ export async function createTenant(input: {
   nif?: string | null;
   plan: Plan;
   limits?: TenantLimits;
-  admin: { name: string; email: string; password: string; phone?: string | null };
+  admin: {
+    name: string;
+    username: string;
+    email?: string | null;
+    password: string;
+    phone?: string | null;
+  };
 }) {
   const passwordHash = await argon2.hash(input.admin.password);
   // Garante o catálogo global de permissões (novas permissões entram sozinhas).
@@ -53,7 +59,8 @@ export async function createTenant(input: {
     const admin = await tx.user.create({
       data: {
         tenantId: tenant.id,
-        email: input.admin.email,
+        username: input.admin.username,
+        email: input.admin.email ?? null,
         name: input.admin.name,
         phone: input.admin.phone,
         passwordHash,

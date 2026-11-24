@@ -28,7 +28,14 @@ export type TenantDetail = TenantRow & {
     aiCostUsd: number;
     salesImports: number;
   };
-  users: { id: string; name: string; email: string; active: boolean; role: { name: string } }[];
+  users: {
+    id: string;
+    name: string;
+    username: string | null;
+    email: string | null;
+    active: boolean;
+    role: { name: string };
+  }[];
 };
 
 export const LIMIT_KEYS = ['maxUnits', 'maxUsers', 'smsMonthlyLimit', 'aiMonthlyLimit'] as const;

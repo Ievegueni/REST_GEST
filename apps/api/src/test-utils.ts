@@ -24,6 +24,7 @@ export async function createTestTenant(opts: {
   const user = await db.user.create({
     data: {
       email,
+      username: email,
       name: opts.name,
       roleId: role.id,
       allUnits: true,
@@ -107,7 +108,7 @@ export async function clientFor(app: import('fastify').FastifyInstance, email: s
   const res = await app.inject({
     method: 'POST',
     url: '/api/auth/login',
-    payload: { email, password: 'password123' },
+    payload: { username: email, password: 'password123' },
   });
   const token = res.json().data.accessToken as string;
   return (method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE', url: string, payload?: object) =>

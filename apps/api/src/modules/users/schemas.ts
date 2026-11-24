@@ -1,8 +1,10 @@
 import { z } from 'zod';
-import { name, optText } from '../../core/schemas';
+import { name, optEmail, optText, username } from '../../core/schemas';
 
 const base = {
   name,
+  username,
+  email: optEmail,
   phone: optText(30),
   roleId: z.string().min(1),
   allUnits: z.boolean().default(false),
@@ -12,7 +14,6 @@ const base = {
 
 export const createUserSchema = z.object({
   ...base,
-  email: z.email().toLowerCase(),
   password: z.string().min(8).max(200),
 });
 

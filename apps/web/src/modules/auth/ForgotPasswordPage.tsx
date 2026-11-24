@@ -6,7 +6,7 @@ import { buttonCls, Field } from '../../components/ui';
 import { AuthCard } from './AuthCard';
 
 export function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
@@ -14,7 +14,7 @@ export function ForgotPasswordPage() {
     e.preventDefault();
     setError('');
     try {
-      await api('/auth/forgot-password', { body: { email } });
+      await api('/auth/forgot-password', { body: { username } });
       setSent(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('common.genericError'));
@@ -28,11 +28,10 @@ export function ForgotPasswordPage() {
       ) : (
         <>
           <Field
-            label={t('auth.email')}
-            type="email"
-            value={email}
-            onChange={setEmail}
-            autoComplete="email"
+            label={t('auth.username')}
+            value={username}
+            onChange={setUsername}
+            autoComplete="username"
           />
           <button className={`${buttonCls} w-full`}>{t('auth.forgotSend')}</button>
         </>

@@ -118,6 +118,7 @@ describe('relatório semanal', () => {
     const u = await db.user.create({
       data: {
         email: `rep-restrito-${T.tenant.id}@test.local`,
+        username: `rep-restrito-${T.tenant.id}@test.local`,
         name: 'R',
         roleId: T.role.id,
         allUnits: false,
@@ -126,7 +127,7 @@ describe('relatório semanal', () => {
         userUnits: { create: { unitId: other.id } },
       },
     });
-    const api = await clientFor(app, u.email);
+    const api = await clientFor(app, u.username!);
     expect((await api('GET', '/api/ai/reports')).json().data).toEqual([]);
     const id = (await db.aiReport.findFirstOrThrow()).id;
     expect((await api('GET', `/api/ai/reports/${id}`)).statusCode).toBe(404);

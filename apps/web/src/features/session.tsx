@@ -3,7 +3,7 @@ import type { Feature, Permission, Plan } from '@restgest/shared';
 import { api, refresh, setAccessToken } from '../lib/api';
 
 export type Session = {
-  user: { id: string; name: string; email: string };
+  user: { id: string; name: string; username: string | null; email: string | null };
   role: string;
   permissions: string[];
   tenant: { id: string; name: string; plan: Plan; logoUrl: string | null };
@@ -19,7 +19,7 @@ type SessionState = {
   /** '' = todas as unidades */
   unitId: string;
   setUnitId: (id: string) => void;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   startImpersonation: (accessToken: string) => Promise<void>;
   endImpersonation: () => void;
@@ -53,9 +53,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(UNIT_KEY, id);
       setUnitIdState(id);
     },
-    login: async (email, password) => {
+    login: async (username, password) => {
       const { accessToken } = await api<{ accessToken: string }>('/auth/login', {
-        body: { email, password },
+        body: { username, password },
       });
       setAccessToken(accessToken);
       await load();

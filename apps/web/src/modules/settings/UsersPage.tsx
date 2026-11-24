@@ -17,9 +17,8 @@ export function UsersPage() {
 
   const fields: FieldDef[] = [
     { key: 'name', label: t('users.name'), required: true },
-    ...(isNew
-      ? [{ key: 'email', label: t('users.email'), type: 'email' as const, required: true }]
-      : []),
+    { key: 'username', label: t('users.username'), required: true },
+    { key: 'email', label: t('users.email'), type: 'email' },
     { key: 'phone', label: t('users.phone') },
     {
       key: 'roleId',
@@ -78,7 +77,7 @@ export function UsersPage() {
               <td className={tdCls}>
                 {u.name}
                 <Inactive active={u.active} />
-                <div className="text-xs text-slate-500">{u.email}</div>
+                <div className="text-xs text-slate-500">{u.username ?? u.email}</div>
               </td>
               <td className={tdCls}>{u.role.name}</td>
               <td className={tdCls}>

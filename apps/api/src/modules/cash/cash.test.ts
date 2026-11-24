@@ -24,12 +24,13 @@ beforeAll(async () => {
     data: {
       name: 'c',
       email: `cx-${T.tenant.id}@test.local`,
+      username: `cx-${T.tenant.id}@test.local`,
       passwordHash: await argon2.hash('password123'),
       roleId: role.id,
       allUnits: true,
     },
   });
-  cashier = await clientFor(app, u.email);
+  cashier = await clientFor(app, u.username!);
   ids.cash = (
     await api('POST', '/api/payment-methods', { name: 'Numerário', isCash: true })
   ).json().data.id;
@@ -187,12 +188,13 @@ describe('fecho de caixa', () => {
       data: {
         name: 'n',
         email: `n-${T.tenant.id}@test.local`,
+        username: `n-${T.tenant.id}@test.local`,
         passwordHash: await argon2.hash('password123'),
         roleId: role.id,
         allUnits: true,
       },
     });
-    const none = await clientFor(app, u.email);
+    const none = await clientFor(app, u.username!);
     expect((await none('GET', '/api/cash-sessions')).statusCode).toBe(403);
   });
 });

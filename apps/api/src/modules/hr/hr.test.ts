@@ -48,12 +48,13 @@ beforeAll(async () => {
       data: {
         name: email,
         email: `${email}-${T.tenant.id}@test.local`,
+        username: `${email}-${T.tenant.id}@test.local`,
         passwordHash: hash,
         roleId: mgrRole.id,
       },
     });
     await db.userUnit.create({ data: { userId: u.id, unitId } });
-    return u.email;
+    return u.username!;
   };
   rh = await clientFor(app, T.email);
   manager = await clientFor(app, await user('mgr', T.unit.id));

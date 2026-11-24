@@ -11,14 +11,14 @@ const RESET_TTL_MS = 3600 * 1000;
 
 const newToken = () => randomBytes(32).toString('base64url');
 
-// Hash fixo para igualar o tempo de resposta quando o email não existe.
+// Hash fixo para igualar o tempo de resposta quando o utilizador não existe.
 let dummyHash: Promise<string> | undefined;
 const getDummyHash = () => (dummyHash ??= argon2.hash('dummy-password'));
 
-const invalid = () => new AppError('UNAUTHORIZED', 'Email ou senha incorrectos');
+const invalid = () => new AppError('UNAUTHORIZED', 'Utilizador ou senha incorrectos');
 
-export async function login(email: string, password: string, ip?: string) {
-  const user = await prisma.user.findUnique({ where: { email }, include: { tenant: true } });
+export async function login(username: string, password: string, ip?: string) {
+  const user = await prisma.user.findUnique({ where: { username }, include: { tenant: true } });
   const ok = await argon2.verify(user?.passwordHash ?? (await getDummyHash()), password);
   if (!user || !ok || !user.active) throw invalid();
   if (user.tenant.status !== 'ACTIVE') throw new AppError('FORBIDDEN', 'Conta suspensa');
@@ -84,9 +84,9 @@ const revokeAll = (userId: string) =>
     data: { revokedAt: new Date() },
   });
 
-/** Devolve o token em claro para ser entregue ao utilizador (ou null se o email não existe). */
-export async function createPasswordReset(email: string) {
-  const user = await prisma.user.findUnique({ where: { email } });
+/** Devolve o token em claro para ser entregue ao utilizador (ou null se o utilizador não existe). */
+export async function createPasswordReset(username: string) {
+  const user = await prisma.user.findUnique({ where: { username } });
   if (!user || !user.active) return null;
   const token = newToken();
   await prisma.passwordReset.create({
@@ -144,7 +144,7 @@ export async function getSession(userId: string) {
       })
     : user.userUnits.map((u) => u.unit).filter((u) => u.active);
   return {
-    user: { id: user.id, name: user.name, email: user.email },
+    user: { id: user.id, name: user.name, username: user.username, email: user.email },
     role: user.role.name,
     permissions: user.role.permissions.map((p) => p.code),
     tenant: {

@@ -43,6 +43,7 @@ export async function getTenant(id: string) {
         select: {
           id: true,
           name: true,
+          username: true,
           email: true,
           active: true,
           role: { select: { name: true } },
@@ -97,7 +98,7 @@ export async function create(
     action: 'admin.tenant.create',
     entity: 'Tenant',
     entityId: result.tenant.id,
-    after: { ...rest, adminEmail: admin.email },
+    after: { ...rest, adminUsername: admin.username, adminEmail: admin.email },
     ip,
   });
   return result.tenant;

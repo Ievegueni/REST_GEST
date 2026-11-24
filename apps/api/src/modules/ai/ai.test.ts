@@ -98,6 +98,7 @@ describe('Analisador IA — chat', () => {
     const u = await db.user.create({
       data: {
         email: `restrito-${A.tenant.id}@test.local`,
+        username: `restrito-${A.tenant.id}@test.local`,
         name: 'Restrito',
         roleId: A.role.id,
         allUnits: false,
@@ -106,7 +107,7 @@ describe('Analisador IA — chat', () => {
         userUnits: { create: { unitId: other.id } },
       },
     });
-    const restricted = await clientFor(app, u.email);
+    const restricted = await clientFor(app, u.username!);
     for (const unitId of [B.unit.id, A.unit.id]) {
       const calls = fake([toolUse('t1', 'get_consumption', { unitId }), text('Sem acesso.')]);
       const res = await restricted('POST', '/api/ai/chat', {

@@ -323,7 +323,7 @@ export function TenantDetailPage() {
                       {usr.name}
                     </div>
                     <div className="truncate text-xs text-gray-500">
-                      {usr.email} · {usr.role.name}
+                      {usr.username ?? usr.email} · {usr.role.name}
                     </div>
                   </div>
                   {usr.active && !suspended && (

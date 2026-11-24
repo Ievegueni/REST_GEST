@@ -12,7 +12,13 @@ export function NewTenantPage() {
   const [nif, setNif] = useState('');
   const [plan, setPlan] = useState<Plan>('STOCK');
   const [limits, setLimits] = useState(limitsToInputs());
-  const [admin, setAdmin] = useState({ name: '', email: '', password: '', phone: '' });
+  const [admin, setAdmin] = useState({
+    name: '',
+    username: '',
+    email: '',
+    password: '',
+    phone: '',
+  });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -59,7 +65,14 @@ export function NewTenantPage() {
       <section className="space-y-3 rounded-xl border bg-white shadow-xs p-4">
         <h2 className="font-medium">{t('admin.firstAdmin')}</h2>
         <Field label={t('admin.name')} value={admin.name} onChange={setA('name')} />
-        <Field label={t('auth.email')} type="email" value={admin.email} onChange={setA('email')} />
+        <Field label={t('auth.username')} value={admin.username} onChange={setA('username')} />
+        <Field
+          label={t('users.email')}
+          type="email"
+          value={admin.email}
+          onChange={setA('email')}
+          required={false}
+        />
         <Field
           label={t('auth.password')}
           type="password"

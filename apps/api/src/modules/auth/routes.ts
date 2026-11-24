@@ -32,8 +32,8 @@ export async function authRoutes(app: FastifyInstance) {
   };
 
   app.post('/auth/login', strict, async (req, reply) => {
-    const { email, password } = loginSchema.parse(req.body);
-    const { user, refreshToken } = await service.login(email, password, req.ip);
+    const { username, password } = loginSchema.parse(req.body);
+    const { user, refreshToken } = await service.login(username, password, req.ip);
     return sendTokens(reply, user, refreshToken);
   });
 
@@ -50,14 +50,14 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post('/auth/forgot-password', strict, async (req) => {
-    const { email } = forgotSchema.parse(req.body);
-    const reset = await service.createPasswordReset(email);
+    const { username } = forgotSchema.parse(req.body);
+    const reset = await service.createPasswordReset(username);
     if (reset) {
       const link = `${env.APP_URL}/redefinir-senha?token=${reset.token}`;
       // ponytail: sem canal de entrega até ao Sprint 7 (SMS Futurix); em dev o link vai para o log.
       if (env.NODE_ENV !== 'production') req.log.info({ link }, 'password reset link');
     }
-    // Resposta igual quer o email exista ou não.
+    // Resposta igual quer o utilizador exista ou não.
     return { data: { ok: true } };
   });
 

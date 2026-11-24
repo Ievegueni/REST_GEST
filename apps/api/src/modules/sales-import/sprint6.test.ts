@@ -93,7 +93,7 @@ beforeAll(async () => {
     await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: T.email, password: 'password123' },
+      payload: { username: T.email, password: 'password123' },
     })
   ).json().data.accessToken;
 

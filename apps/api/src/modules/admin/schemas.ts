@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FEATURES, PLANS } from '@restgest/shared';
+import { optEmail, username } from '../../core/schemas';
 
 const limit = z.number().int().min(0).nullable().optional();
 const limits = {
@@ -21,7 +22,8 @@ export const createTenantSchema = z.object({
   ...limits,
   admin: z.object({
     name: z.string().trim().min(1).max(200),
-    email: z.email().toLowerCase(),
+    username,
+    email: optEmail,
     password: z.string().min(8).max(200),
     phone: z.string().trim().max(30).nullable().optional(),
   }),

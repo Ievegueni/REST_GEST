@@ -18,7 +18,8 @@ export type MeasureUnit = { id: string; name: string; symbol: string };
 export type Role = { id: string; name: string };
 export type User = {
   id: string;
-  email: string;
+  username: string | null;
+  email: string | null;
   name: string;
   phone: string | null;
   active: boolean;

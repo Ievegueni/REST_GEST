@@ -8,7 +8,7 @@ import { createTestTenant, deleteTenants } from '../../test-utils';
 const app = await buildApp();
 const suffix = Date.now();
 const ADMIN_EMAIL = `sa-${suffix}@test.local`;
-const NEW_ADMIN_EMAIL = `novo-${suffix}@test.local`;
+const NEW_ADMIN_EMAIL = `novo-${suffix}`;
 const tenantIds: string[] = [];
 let adm = ''; // cookie de sessão do Super Admin
 let newTenantId = '';
@@ -20,7 +20,7 @@ const tenantLogin = (email: string) =>
   app.inject({
     method: 'POST',
     url: '/api/auth/login',
-    payload: { email, password: 'password123' },
+    payload: { username: email, password: 'password123' },
   });
 
 beforeAll(async () => {
@@ -77,7 +77,7 @@ describe('gestão de tenants', () => {
       name: 'Novo Cliente',
       plan: 'STOCK',
       maxUnits: 2,
-      admin: { name: 'Dono', email: NEW_ADMIN_EMAIL, password: 'password123' },
+      admin: { name: 'Dono', username: NEW_ADMIN_EMAIL, password: 'password123' },
     });
     expect(res.statusCode).toBe(201);
     newTenantId = res.json().data.id;
@@ -87,10 +87,10 @@ describe('gestão de tenants', () => {
     expect((await tenantLogin(NEW_ADMIN_EMAIL)).statusCode).toBe(200);
   });
 
-  it('email de administrador duplicado → 409', async () => {
+  it('utilizador de administrador duplicado → 409', async () => {
     const res = await as('POST', '/api/admin/tenants', {
       name: 'Outro',
-      admin: { name: 'X', email: NEW_ADMIN_EMAIL, password: 'password123' },
+      admin: { name: 'X', username: NEW_ADMIN_EMAIL, password: 'password123' },
     });
     expect(res.statusCode).toBe(409);
     expect(await prisma.tenant.count({ where: { name: 'Outro', id: { notIn: tenantIds } } })).toBe(
@@ -203,7 +203,7 @@ describe('gestão de tenants', () => {
     expect(list.some((t: { id: string }) => t.id === newTenantId)).toBe(true);
     const detail = (await as('GET', `/api/admin/tenants/${newTenantId}`)).json().data;
     expect(detail.users[0]).toMatchObject({
-      email: NEW_ADMIN_EMAIL,
+      username: NEW_ADMIN_EMAIL,
       role: { name: 'Administrador' },
     });
     expect(detail.users[0].passwordHash).toBeUndefined();
@@ -219,7 +219,7 @@ describe('impersonation', () => {
         headers: { authorization: `Bearer ${res.json().data.accessToken}` },
       })
     ).json().data;
-    expect(me.user.email).toBe(NEW_ADMIN_EMAIL);
+    expect(me.user.username).toBe(NEW_ADMIN_EMAIL);
     expect(me.impersonated).toBe(true);
     expect(
       await prisma.auditLog.count({

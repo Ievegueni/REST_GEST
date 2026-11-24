@@ -1589,7 +1589,9 @@ model PayablePayment {
 model User {
   id           String    @id @default(cuid())
   tenantId     String    @default(dbgenerated("current_setting('app.tenant_id')"))
-  email        String    @unique
+  /// login (minúsculas, único em todo o sistema)
+  username     String?   @unique
+  email        String?   @unique
   name         String
   phone        String?
   passwordHash String

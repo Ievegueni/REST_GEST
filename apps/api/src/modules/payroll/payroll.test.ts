@@ -41,7 +41,7 @@ beforeAll(async () => {
     await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: T.email, password: 'password123' },
+      payload: { username: T.email, password: 'password123' },
     })
   ).json().data.accessToken;
   const role = await db.role.create({
@@ -54,12 +54,13 @@ beforeAll(async () => {
     data: {
       name: 'p',
       email: `proc-${T.tenant.id}@test.local`,
+      username: `proc-${T.tenant.id}@test.local`,
       passwordHash: await argon2.hash('password123'),
       roleId: role.id,
       allUnits: true,
     },
   });
-  processor = await clientFor(app, u.email);
+  processor = await clientFor(app, u.username!);
 
   emp.full = (
     await api('POST', '/api/employees', {

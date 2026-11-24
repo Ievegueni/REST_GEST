@@ -26,7 +26,7 @@ const cookieOf = (res: LightMyRequestResponse) =>
   res.cookies.find((c) => c.name === 'rt')?.value ?? '';
 
 const login = (email: string, password = 'password123') =>
-  app.inject({ method: 'POST', url: '/api/auth/login', payload: { email, password } });
+  app.inject({ method: 'POST', url: '/api/auth/login', payload: { username: email, password } });
 
 const get = (url: string, token?: string) =>
   app.inject({ url, headers: token ? { authorization: `Bearer ${token}` } : {} });
@@ -45,7 +45,7 @@ afterAll(async () => {
 });
 
 describe('login', () => {
-  it('rejeita senha errada e email inexistente com a mesma mensagem', async () => {
+  it('rejeita senha errada e utilizador inexistente com a mesma mensagem', async () => {
     const r1 = await login(A.email, 'errada123');
     const r2 = await login('ninguem@test.local');
     expect(r1.statusCode).toBe(401);
@@ -146,11 +146,11 @@ describe('refresh e logout', () => {
 });
 
 describe('recuperação de senha', () => {
-  it('forgot responde igual para email inexistente', async () => {
+  it('forgot responde igual para utilizador inexistente', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/auth/forgot-password',
-      payload: { email: 'ninguem@test.local' },
+      payload: { username: 'ninguem' },
     });
     expect(res.json()).toEqual({ data: { ok: true } });
   });

@@ -40,7 +40,7 @@ export function Field(props: {
           />
         )}
         <input
-          className={`${inputCls} ${Icon ? 'pl-10' : ''} ${props.type === 'email' || props.type === 'password' ? 'py-2.5' : ''}`}
+          className={`${inputCls} ${Icon ? 'pl-10' : ''} ${Icon || props.type === 'email' || props.type === 'password' ? 'py-2.5' : ''}`}
           placeholder={props.placeholder}
           type={props.type ?? 'text'}
           value={props.value}

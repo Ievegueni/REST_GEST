@@ -47,7 +47,7 @@ beforeAll(async () => {
     plan: 'STOCK',
     admin: {
       name: 'Admin',
-      email: `alert-admin-${Date.now()}@test.local`,
+      username: `alert-admin-${Date.now()}`,
       password: 'password123',
       phone: '923000001',
     },
@@ -68,6 +68,7 @@ beforeAll(async () => {
       data: {
         name,
         email: `${name.toLowerCase()}-${tenantId}@test.local`,
+        username: `${name.toLowerCase()}-${tenantId}@test.local`,
         passwordHash: hash,
         roleId: eco.id,
         phone,
@@ -251,12 +252,12 @@ describe('API', () => {
         await app.inject({
           method: 'POST',
           url: '/api/auth/login',
-          payload: { email, password: 'password123' },
+          payload: { username: email, password: 'password123' },
         })
       ).json().data.accessToken;
     const ecoB = await db.user.findUniqueOrThrow({ where: { id: ids.ecoB } });
 
-    const token = await login(ecoB.email);
+    const token = await login(ecoB.username!);
     const get = (url: string) => app.inject({ url, headers: { authorization: `Bearer ${token}` } });
     const before = (await get('/api/notifications')).json().data.unread;
     await raise(db, tenantId, {

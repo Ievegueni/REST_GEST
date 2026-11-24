@@ -158,7 +158,7 @@ describe('unidades e utilizadores', () => {
     const role = await prisma.role.findFirstOrThrow({ where: { tenantId: A.tenant.id } });
     const res = await api('POST', '/api/users', {
       name: 'Ecónomo',
-      email: `eco-${A.tenant.id}@test.local`,
+      username: `eco-${A.tenant.id}`,
       password: 'password123',
       roleId: role.id,
       unitIds: [A.unit.id],
@@ -166,7 +166,7 @@ describe('unidades e utilizadores', () => {
     expect(res.statusCode).toBe(201);
     expect(res.json().data.unitIds).toEqual([A.unit.id]);
 
-    const eco = await clientFor(app, `eco-${A.tenant.id}@test.local`);
+    const eco = await clientFor(app, `eco-${A.tenant.id}`);
     const units = (await eco('GET', '/api/units')).json().data;
     expect(units.map((u: { id: string }) => u.id)).toEqual([A.unit.id]);
   });
@@ -175,7 +175,7 @@ describe('unidades e utilizadores', () => {
     const role = await prisma.role.findFirstOrThrow({ where: { tenantId: A.tenant.id } });
     const res = await api('POST', '/api/users', {
       name: 'X',
-      email: `x-${A.tenant.id}@test.local`,
+      username: `x-${A.tenant.id}`,
       password: 'password123',
       roleId: role.id,
       unitIds: [B.unit.id],
@@ -210,7 +210,7 @@ describe('importação Excel', () => {
       await app.inject({
         method: 'POST',
         url: '/api/auth/login',
-        payload: { email: A.email, password: 'password123' },
+        payload: { username: A.email, password: 'password123' },
       })
     ).json().data.accessToken;
     return app.inject({

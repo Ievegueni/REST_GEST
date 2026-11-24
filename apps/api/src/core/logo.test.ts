@@ -23,7 +23,7 @@ const login = async (email: string) =>
     await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email, password: 'password123' },
+      payload: { username: email, password: 'password123' },
     })
   ).json().data.accessToken as string;
 
@@ -48,13 +48,14 @@ beforeAll(async () => {
   const u = await db.user.create({
     data: {
       email: `consulta-${T.tenant.id}@test.local`,
+      username: `consulta-${T.tenant.id}@test.local`,
       name: 'Consulta',
       roleId: role.id,
       allUnits: true,
       passwordHash: await argon2.hash('password123'),
     },
   });
-  limitedToken = await login(u.email);
+  limitedToken = await login(u.username!);
   await prisma.superAdmin.upsert({
     where: { email: 'logo-admin@test.local' },
     update: {},

@@ -3,13 +3,13 @@ import { Link, Navigate } from 'react-router-dom';
 import { useSession } from '../../features/session';
 import { t } from '../../i18n';
 import { ApiError } from '../../lib/api';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, User } from 'lucide-react';
 import { buttonCls, Field } from '../../components/ui';
 import { AuthCard } from './AuthCard';
 
 export function LoginPage() {
   const { session, login } = useSession();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -21,7 +21,7 @@ export function LoginPage() {
     setBusy(true);
     setError('');
     try {
-      await login(email, password);
+      await login(username, password);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t('common.genericError'));
     } finally {
@@ -32,13 +32,12 @@ export function LoginPage() {
   return (
     <AuthCard title={t('auth.welcome')} onSubmit={submit} error={error}>
       <Field
-        label={t('auth.email')}
-        type="email"
-        value={email}
-        onChange={setEmail}
-        autoComplete="email"
-        icon={Mail}
-        placeholder={t('auth.emailPlaceholder')}
+        label={t('auth.username')}
+        value={username}
+        onChange={setUsername}
+        autoComplete="username"
+        icon={User}
+        placeholder={t('auth.usernamePlaceholder')}
       />
       <Field
         label={t('auth.password')}
