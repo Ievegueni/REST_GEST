@@ -44,6 +44,7 @@ public class MainActivity extends Activity {
         s.setDomStorageEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false); // som do talão novo sem tocar no ecrã
         CookieManager.getInstance().setAcceptCookie(true);
+        web.clearCache(true); // depois de um deploy abre sempre a versão nova do ecrã
         web.setWebViewClient(new WebViewClient() {
             @Override
             public void onReceivedError(WebView v, WebResourceRequest req, WebResourceError err) {
