@@ -154,6 +154,10 @@ export function KitchenPage() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [tickets, sel, data, setStatus]);
+  // o talão seleccionado fica sempre à vista quando há mais talões do que cabem no ecrã
+  useEffect(() => {
+    document.querySelector('[data-selected]')?.scrollIntoView({ block: 'nearest' });
+  }, [sel]);
 
   if (loading) return null;
   if (!session) return <Navigate to="/login" replace />;
@@ -247,8 +251,11 @@ export function KitchenPage() {
             <article
               key={x.id}
               onClick={() => setSelected(i)}
-              className={`flex flex-col overflow-hidden rounded-2xl bg-white/5 ${
-                i === sel ? 'ring-4 ring-white' : 'ring-1 ring-white/10'
+              data-selected={i === sel || undefined}
+              className={`flex flex-col overflow-hidden rounded-2xl bg-white/5 transition-transform ${
+                i === sel
+                  ? 'relative z-10 scale-[1.03] ring-8 ring-sky-400 ring-offset-4 ring-offset-night-950'
+                  : 'ring-1 ring-white/10'
               }`}
             >
               <div className={`flex items-center gap-3 px-4 py-2 ${band}`}>
