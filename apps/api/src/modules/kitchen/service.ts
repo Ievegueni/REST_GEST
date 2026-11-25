@@ -12,6 +12,7 @@ export const kitchenSnapshotSchema = z.object({
         round: z.string().min(1).max(40),
         zone: z.string().trim().min(1).max(50),
         table: z.string().max(20).nullable(),
+        waiter: z.string().trim().max(80).nullish(),
         code: z.string().max(50),
         label: z.string().max(200),
         qty: z.number().min(-1e6).max(1e6),
@@ -71,8 +72,9 @@ export async function syncKitchen(auth: AuthContext, unitId: string, lines: Line
           round: first.round,
           zone: first.zone,
           table: first.table,
+          waiter: first.waiter,
         },
-        update: { closedAt: null, table: first.table },
+        update: { closedAt: null, table: first.table, waiter: first.waiter },
         include: { items: true },
       });
       created++;

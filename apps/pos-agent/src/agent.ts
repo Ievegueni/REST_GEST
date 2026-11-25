@@ -176,16 +176,18 @@ function readSales(db: DatabaseSync, cursor: string | null) {
 /**
  * Artigos das contas abertas (mesas) com a zona de impressão do produto na loja.
  * Linhas enviadas juntas partilham `cronano` = ronda (um talão por mesa, ronda e zona).
+ * `docmovdetail.employee_id` = empregado que lançou a ronda (nome em `entity.description`).
  */
 function kitchenLines(db: DatabaseSync) {
   return all(
     db,
     `SELECT d.id, d.docheader_id, d.cronano, d.line_number, h.accumulator, d.product_code,
-            d.description, d.qnt, d.detailstatus_id, z.description AS zone
+            d.description, d.qnt, d.detailstatus_id, z.description AS zone, e.description AS waiter
      FROM docheader h
      JOIN docmovdetail d ON d.docheader_id = h.id AND d.deleted = 0
      JOIN store_product sp ON sp.product_id = d.product_id AND sp.store_id = h.store_id AND sp.deleted = 0
      JOIN printzone z ON z.id = sp.printzone_id
+     LEFT JOIN entity e ON e.id = d.employee_id
      WHERE h.deleted = 0 AND h.docstatus_id = ? AND h.doc_number = 0 AND h.accumulator > 0
        AND h.docconfig_id IN (${marks(saleTypes.length)}) AND h.doc_date >= ?`,
     BigInt(openStatus),
@@ -197,6 +199,7 @@ function kitchenLines(db: DatabaseSync) {
     round: String(r.cronano),
     zone: String(r.zone).trim(),
     table: String(r.accumulator),
+    waiter: String(r.waiter ?? '').trim() || null,
     code: String(r.product_code ?? ''),
     label: String(r.description ?? ''),
     qty: Number(r.qnt),

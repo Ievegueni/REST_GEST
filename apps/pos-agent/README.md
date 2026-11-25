@@ -22,7 +22,7 @@ Corre na máquina onde está a base de dados do POS (ficheiro **SQLite**). A cad
 
 **Cozinha** (`POS_KITCHEN=on`, plano Completo) — os artigos pedidos nas mesas abertas com a zona de
 impressão do produto (`store_product.printzone_id` → Cozinha, Bar, Sushi…). Artigos enviados juntos
-(mesmo `cronano`) formam um talão por mesa e zona; a hora do talão é a hora em que o agente o vê
+(mesmo `cronano`) formam um talão por mesa e zona, com o empregado que os lançou (`docmovdetail.employee_id` → `entity.description`); a hora do talão é a hora em que o agente o vê
 (o Winrest não guarda uma hora legível por linha), por isso usar `POS_SYNC_SECONDS=5`.
 Ecrã: `/cozinha?zona=Cozinha` (TV com teclado numérico/bump bar, toque ou rato).
 

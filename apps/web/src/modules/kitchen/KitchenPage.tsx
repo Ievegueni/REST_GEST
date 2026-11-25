@@ -11,6 +11,7 @@ type Status = 'NEW' | 'IN_PROGRESS' | 'READY';
 type Ticket = {
   id: string;
   table: string | null;
+  waiter: string | null;
   status: Status;
   seenAt: string;
   items: { id: string; label: string; qty: string; cancelled: boolean }[];
@@ -264,8 +265,11 @@ export function KitchenPage() {
                     {i + 1}
                   </span>
                 )}
-                <span className="text-2xl font-bold whitespace-nowrap">
-                  {x.table ? t('kds.table', { n: x.table }) : '—'}
+                <span className="min-w-0">
+                  <span className="block text-2xl font-bold whitespace-nowrap">
+                    {x.table ? t('kds.table', { n: x.table }) : '—'}
+                  </span>
+                  {x.waiter && <span className="block truncate text-base">{x.waiter}</span>}
                 </span>
                 <span className="ml-auto font-mono text-2xl tabular-nums">{clock(x.seenAt)}</span>
               </div>

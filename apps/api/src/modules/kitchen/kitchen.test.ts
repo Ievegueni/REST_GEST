@@ -15,6 +15,7 @@ const line = (id: string, over: object = {}) => ({
   round: 'R1',
   zone: 'Cozinha',
   table: '6',
+  waiter: 'Ana',
   code: '23',
   label: 'Franguinho Palace',
   qty: 2,
@@ -33,6 +34,7 @@ type Board = {
     id: string;
     status: string;
     table: string;
+    waiter: string;
     items: { label: string; cancelled: boolean }[];
   }[];
   ready: { id: string }[];
@@ -69,7 +71,7 @@ describe('ecrã de cozinha', () => {
     expect(res.json().data).toEqual({ created: 2, closed: 0 });
     const b = await board();
     expect(b.tickets).toHaveLength(1);
-    expect(b.tickets[0]).toMatchObject({ status: 'NEW', table: '6' });
+    expect(b.tickets[0]).toMatchObject({ status: 'NEW', table: '6', waiter: 'Ana' });
     expect(b.tickets[0]!.items.map((i) => i.label)).toEqual([
       'Franguinho Palace',
       'Choco Grelhado',

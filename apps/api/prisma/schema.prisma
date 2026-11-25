@@ -1897,6 +1897,8 @@ model KitchenTicket {
   round     String
   zone      String
   table     String?
+  /// empregado que lançou a ronda no POS
+  waiter    String?
   status    KitchenStatus @default(NEW)
   /// hora em que o agente viu o pedido pela primeira vez (≈ hora do pedido)
   seenAt    DateTime      @default(now())
