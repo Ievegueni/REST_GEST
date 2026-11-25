@@ -139,6 +139,19 @@ describe('vendas em tempo real (agente POS)', () => {
     expect(await revenue()).toBe(5607);
   });
 
+  it('stock → artigos vendidos: soma por código no período (anuladas e consumo interno incluídos)', async () => {
+    const q = (from: string, to: string, extra = '') =>
+      api('GET', `/api/stock/sold-items?from=${from}&to=${to}${extra}`);
+    const rows = (await q(DAY, DAY)).json().data;
+    expect(rows).toEqual([
+      { code: '62', name: 'Cerveja', qty: 3, net: 4672, gross: 5000 },
+      { code: 'X1', name: 'Sem mapeamento', qty: 1, net: 935, gross: 1000 },
+    ]);
+    expect((await q(DAY, DAY, '&search=mapea')).json().data).toHaveLength(1);
+    expect((await q('2026-11-04', '2026-11-05')).json().data).toEqual([]);
+    expect((await q(DAY, DAY, `&unitId=${T.unit.id}`)).json().data).toHaveLength(2);
+  });
+
   it('fecho de caixa: valores do sistema a partir dos pagamentos do POS', async () => {
     const s = (
       await api('POST', '/api/cash-sessions', {

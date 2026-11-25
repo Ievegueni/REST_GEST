@@ -26,6 +26,7 @@ import { UsersPage } from './modules/settings/UsersPage';
 import { StockSettingsPage } from './modules/settings/StockSettingsPage';
 import { AlertSettingsPage } from './modules/settings/AlertSettingsPage';
 import { AlertsPage } from './modules/alerts/AlertsPage';
+import { SoldItemsPage } from './modules/stock/SoldItemsPage';
 import { BalancesPage } from './modules/stock/BalancesPage';
 import { KardexPage } from './modules/stock/KardexPage';
 import { MovementPage } from './modules/stock/MovementPage';
@@ -111,6 +112,7 @@ export function App() {
         <Route path="/stock" element={gate('stock', <StockLayout />)}>
           <Route index element={<BalancesPage />} />
           <Route path="movimento" element={<MovementPage />} />
+          <Route path="vendidos" element={<SoldItemsPage />} />
           <Route path="produto/:id" element={<KardexPage />} />
           <Route path="transferencias" element={<TransfersPage />} />
           <Route path="transferencias/:id" element={<TransferPage />} />

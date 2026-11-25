@@ -196,4 +196,55 @@ export async function stockRoutes(app: FastifyInstance) {
     });
     return { data: data.filter((d) => canAccessUnit(req.auth, d.location.unitId)) };
   });
+  /** Artigos vendidos (linhas das vendas POS confirmadas), por código do POS, no período (dia de negócio). */
+  app.get('/stock/sold-items', view, async (req) => {
+    const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+    const q = z
+      .object({
+        from: day,
+        to: day,
+        unitId: z.string().min(1).optional(),
+        search: z.string().trim().max(100).optional(),
+      })
+      .parse(req.query);
+    if (q.unitId) assertUnitAccess(req.auth, q.unitId);
+    const units = q.unitId ? [q.unitId] : req.auth.unitIds === 'all' ? null : req.auth.unitIds;
+    const db = req.auth.db;
+    const where: Prisma.SalesImportLineWhereInput = {
+      saleDate: { gte: new Date(q.from), lte: new Date(q.to) },
+      import: { status: 'CONFIRMED', ...(units && { unitId: { in: units } }) },
+      ...(q.search && {
+        OR: [
+          { posCode: { contains: q.search, mode: 'insensitive' } },
+          { posLabel: { contains: q.search, mode: 'insensitive' } },
+        ],
+      }),
+    };
+    const [groups, labels] = await Promise.all([
+      db.salesImportLine.groupBy({
+        by: ['posCode'],
+        where,
+        _sum: { qty: true, amount: true, grossAmount: true },
+      }),
+      // nome mais recente de cada código
+      db.salesImportLine.findMany({
+        where,
+        distinct: ['posCode'],
+        orderBy: [{ posCode: 'asc' }, { saleDate: 'desc' }],
+        select: { posCode: true, posLabel: true, saleItem: { select: { name: true } } },
+      }),
+    ]);
+    const label = new Map(labels.map((l) => [l.posCode, l.saleItem?.name ?? l.posLabel ?? '']));
+    const rows = groups
+      .map((g) => ({
+        code: g.posCode,
+        name: label.get(g.posCode) ?? '',
+        qty: g._sum.qty?.toNumber() ?? 0,
+        net: g._sum.amount ?? 0,
+        gross: g._sum.grossAmount ?? 0,
+      }))
+      .filter((r) => r.qty !== 0 || r.gross !== 0)
+      .sort((a, b) => b.gross - a.gross || a.name.localeCompare(b.name));
+    return { data: rows };
+  });
 }

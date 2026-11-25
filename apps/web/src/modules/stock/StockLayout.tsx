@@ -13,6 +13,7 @@ export function StockLayout() {
       <Tabs
         items={[
           { to: '/stock', label: t('stock.current') },
+          { to: '/stock/vendidos', label: t('sold.title') },
           ...(move ? [{ to: '/stock/movimento', label: t('stock.register') }] : []),
           ...(transfers ? [{ to: '/stock/transferencias', label: t('transfers.title') }] : []),
           ...(inventory ? [{ to: '/stock/inventarios', label: t('inventory.title') }] : []),
