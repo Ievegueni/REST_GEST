@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AuthContext } from '../../core/auth';
+import { env } from '../../core/env';
 
 /** Linhas das mesas abertas no POS (fotografia completa), enviadas pelo agente. */
 export const kitchenSnapshotSchema = z.object({
@@ -22,6 +23,10 @@ export const kitchenSnapshotSchema = z.object({
 });
 type Line = z.infer<typeof kitchenSnapshotSchema>['lines'][number];
 
+/** zona desligada do ecrã (KDS_IGNORED_ZONES) */
+export const zoneIgnored = (zone: string) =>
+  env.KDS_IGNORED_ZONES.includes(zone.trim().toLowerCase());
+
 const key = (docId: string, round: string, zone: string) => `${docId}|${round}|${zone}`;
 
 /**
@@ -34,6 +39,7 @@ export async function syncKitchen(auth: AuthContext, unitId: string, lines: Line
   const db = auth.db;
   const groups = new Map<string, Line[]>();
   for (const l of lines) {
+    if (zoneIgnored(l.zone)) continue;
     const k = key(l.docId, l.round, l.zone);
     groups.set(k, [...(groups.get(k) ?? []), l]);
   }

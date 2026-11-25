@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { agentRoute, agentUnitId, assertUnitAccess, protect } from '../../core/auth';
 import { getSettings } from '../../core/settings';
 import { idParam } from '../../core/schemas';
-import { kitchenSnapshotSchema, syncKitchen } from './service';
+import { kitchenSnapshotSchema, syncKitchen, zoneIgnored } from './service';
 
 const RECENT_MS = 30 * 60_000; // prontos recentes que ainda se podem recuperar
 
@@ -43,7 +43,10 @@ export async function kitchenRoutes(app: FastifyInstance) {
         now: new Date(),
         tickets,
         ready,
-        zones: zones.map((z) => z.zone).sort(),
+        zones: zones
+          .map((z) => z.zone)
+          .filter((z) => !zoneIgnored(z))
+          .sort(),
         warnMinutes: settings.kdsWarnMinutes,
         lateMinutes: settings.kdsLateMinutes,
       },

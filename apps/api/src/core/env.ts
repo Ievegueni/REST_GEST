@@ -38,6 +38,16 @@ const schema = z.object({
   TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   RUN_WORKERS: z.enum(['true', 'false']).default('true'),
   APP_URL: z.string().default('http://localhost:5173'),
+  /** zonas do POS que não vão para o ecrã de cozinha (separadas por vírgula, ex.: "Bar") */
+  KDS_IGNORED_ZONES: z
+    .string()
+    .optional()
+    .transform((v) =>
+      (v ?? '')
+        .split(',')
+        .map((z) => z.trim().toLowerCase())
+        .filter(Boolean),
+    ),
 });
 
 export const env = schema.parse(process.env);
