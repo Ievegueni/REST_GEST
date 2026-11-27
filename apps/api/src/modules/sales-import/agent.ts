@@ -17,7 +17,7 @@ const posId = z.string().trim().min(1).max(40);
 export const agentSalesSchema = z.object({
   /** sistema POS: os mapeamentos de artigos são partilhados com as importações Excel do mesmo POS */
   posName: z.string().trim().min(1).max(50),
-  /** marca do POS a guardar quando este lote for aceite (o agente retoma daqui) */
+  /** marca do POS a guardar quando este lote for aceite (só agentes antigos; os novos mandam null) */
   cursor: z.string().max(40).nullable(),
   docs: z
     .array(
@@ -58,6 +58,25 @@ export const agentSalesSchema = z.object({
   cancelled: z.array(posId).max(1000).default([]),
 });
 export type AgentSales = z.infer<typeof agentSalesSchema>;
+
+export const agentMissingSchema = z.object({ ids: z.array(posId).max(1000) });
+
+/** Dos ids de facturas do POS, os que ainda não foram recebidos nesta unidade. */
+export async function missingAgentSales(
+  auth: AuthContext,
+  unitId: string,
+  input: z.infer<typeof agentMissingSchema>,
+) {
+  const known = new Set(
+    (
+      await auth.db.posDocument.findMany({
+        where: { unitId, posDocId: { in: input.ids } },
+        select: { posDocId: true },
+      })
+    ).map((d) => d.posDocId),
+  );
+  return { missing: input.ids.filter((id) => !known.has(id)) };
+}
 
 /** Perfil técnico das importações do agente (inactivo: não aparece no upload de ficheiros). */
 async function agentProfile(auth: AuthContext, posName: string) {

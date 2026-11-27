@@ -3,7 +3,7 @@ import { agentRoute, agentUnitId, canAccessUnit, protect } from '../../core/auth
 import { AppError } from '../../core/errors';
 import { idParam } from '../../core/schemas';
 import { mappingSchema, profileSchema, uploadFields } from './schemas';
-import { agentSalesSchema, ingestAgentSales } from './agent';
+import { agentMissingSchema, agentSalesSchema, ingestAgentSales, missingAgentSales } from './agent';
 import * as service from './service';
 
 export async function salesImportRoutes(app: FastifyInstance) {
@@ -104,6 +104,14 @@ export async function salesImportRoutes(app: FastifyInstance) {
         })
       ).posSalesCursor,
     },
+  }));
+  // agente sem cursor: das facturas fechadas que vê no POS, quais ainda não chegaram aqui
+  app.post('/pos-agent/sales/missing', agent, async (req) => ({
+    data: await missingAgentSales(
+      req.auth,
+      agentUnitId(req.auth),
+      agentMissingSchema.parse(req.body),
+    ),
   }));
   app.post('/pos-agent/sales', { ...agent, bodyLimit: 5 * 1024 * 1024 }, async (req) => ({
     data: await ingestAgentSales(req.auth, agentUnitId(req.auth), agentSalesSchema.parse(req.body)),

@@ -112,6 +112,11 @@ describe('vendas em tempo real (agente POS)', () => {
     expect(await revenue()).toBe(5607);
   });
 
+  it('agente sem cursor: diz quais facturas ainda faltam', async () => {
+    const res = await agent('POST', '/sales/missing', { ids: ['D1', 'NOVA-1', 'NOVA-2'] });
+    expect(res.json().data.missing).toEqual(['NOVA-1', 'NOVA-2']);
+  });
+
   it('consumo interno: baixa stock, sem receita', async () => {
     await send([
       doc('D2', {

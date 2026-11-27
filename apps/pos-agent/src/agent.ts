@@ -2,7 +2,8 @@
  * Agente POS local: corre na máquina onde está a BD do POS (SQLite do Winrest) e, a cada ciclo,
  * com ligação SÓ DE LEITURA:
  *  - mesas: envia a lista das mesas abertas (ocupa/liberta as mesas no RestoGest);
- *  - vendas: envia as facturas fechadas desde a última enviada (receita, stock e caixa em tempo real);
+ *  - vendas: envia as facturas fechadas dos últimos dias que o servidor ainda não tem
+ *    (receita, stock e caixa em tempo real);
  *  - cozinha (POS_KITCHEN=on): envia os artigos pedidos nas mesas abertas, com a zona (ecrã de cozinha).
  * Se uma leitura falhar não envia nada dessa parte — nunca liberta mesas nem perde vendas por engano.
  *
@@ -80,29 +81,54 @@ const todaySerial = () => {
   return Math.round((Date.parse(local) - DAY0) / 86_400_000);
 };
 
-/** Próximo lote de facturas fechadas depois de `cursor` (clock_date em ns). */
-function readSales(db: DatabaseSync, cursor: string | null) {
+/**
+ * Primeiro dia de negócio a vigiar: o anterior ao de ontem (cobre fechos tardios e o `doc_date`
+ * adiantado do Winrest). POS_SALES_FROM (YYYY-MM-DD) recua mais, para recuperar dias antigos.
+ */
+function salesFrom() {
+  const from = process.env.POS_SALES_FROM;
+  return from ? Math.round((Date.parse(from) - DAY0) / 86_400_000) : todaySerial() - 2;
+}
+
+/**
+ * Ids das facturas fechadas nos dias vigiados. Não há cursor: o que já foi enviado decide-se pelo
+ * id do documento (o servidor diz quais lhe faltam), por isso a hora/data do relógio do POS não
+ * faz saltar facturas.
+ */
+function closedSaleIds(db: DatabaseSync) {
   const types = [...saleTypes, ...internalTypes];
+  return all(
+    db,
+    `SELECT id FROM docheader
+     WHERE deleted = 0 AND docstatus_id = ? AND docconfig_id IN (${marks(types.length)})
+       AND doc_date >= ?
+     ORDER BY clock_date`,
+    BigInt(closedStatus),
+    ...types.map(BigInt),
+    BigInt(salesFrom()),
+  ).map((r) => String(r.id));
+}
+
+/** Facturas anuladas depois de fechadas nos dias vigiados: o servidor estorna só as que recebeu. */
+function cancelledSaleIds(db: DatabaseSync) {
+  return all(
+    db,
+    `SELECT id FROM docheader WHERE deleted = 0 AND docstatus_id = ?
+       AND docconfig_id IN (${marks(saleTypes.length)}) AND doc_date >= ?`,
+    BigInt(cancelledStatus),
+    ...saleTypes.map(BigInt),
+    BigInt(salesFrom()),
+  ).map((r) => String(r.id));
+}
+
+/** Facturas completas (linhas e pagamentos) a partir dos ids. */
+function readSales(db: DatabaseSync, docIds: string[]) {
+  if (!docIds.length) return [];
   const heads = all(
     db,
     `SELECT id, docconfig_id, doc_prefix, doc_number, doc_date, clock_date, accumulator, total
-     FROM docheader
-     WHERE deleted = 0 AND docstatus_id = ? AND docconfig_id IN (${marks(types.length)})
-       AND clock_date > ? ${cursor ? '' : 'AND doc_date >= ?'}
-     ORDER BY clock_date LIMIT ${BATCH}`,
-    BigInt(closedStatus),
-    ...types.map(BigInt),
-    BigInt(cursor ?? 0),
-    // primeira vez: só o dia de negócio anterior e o actual (POS_SALES_FROM para recuperar mais)
-    ...(cursor
-      ? []
-      : [
-          BigInt(
-            process.env.POS_SALES_FROM
-              ? Math.round((Date.parse(process.env.POS_SALES_FROM) - DAY0) / 86_400_000)
-              : todaySerial() - 1,
-          ),
-        ]),
+     FROM docheader WHERE id IN (${marks(docIds.length)}) ORDER BY clock_date`,
+    ...docIds.map(BigInt),
   );
   const ids = heads.map((h) => h.id as bigint);
   const lines = ids.length
@@ -123,15 +149,6 @@ function readSales(db: DatabaseSync, cursor: string | null) {
         ...ids,
       )
     : [];
-  // anuladas depois de fechadas (dia actual e anterior): o servidor estorna só as que recebeu
-  const cancelled = all(
-    db,
-    `SELECT id FROM docheader WHERE deleted = 0 AND docstatus_id = ?
-       AND docconfig_id IN (${marks(saleTypes.length)}) AND doc_date >= ?`,
-    BigInt(cancelledStatus),
-    ...saleTypes.map(BigInt),
-    BigInt(todaySerial() - 1),
-  ).map((r) => String(r.id));
 
   const docs = heads.map((h) => {
     const id = h.id as bigint;
@@ -167,8 +184,7 @@ function readSales(db: DatabaseSync, cursor: string | null) {
       payments,
     };
   });
-  const last = heads.at(-1);
-  return { docs, cancelled, cursor: last ? String(last.clock_date) : cursor };
+  return docs;
 }
 
 // ---------------------------------------------------------------- Cozinha
@@ -219,10 +235,10 @@ if (process.argv.includes('--check')) {
       console.log(`Cozinha: ${k.length} artigos em contas abertas; zonas: ${zones.join(', ')}`);
     }
     if (salesOn) {
-      const s = readSales(db, null);
-      console.log(`Vendas desde o dia anterior: ${s.docs.length} (primeiro lote)`);
-      console.log(s.docs.slice(-3));
-      console.log('Anuladas recentes:', s.cancelled);
+      const ids = closedSaleIds(db);
+      console.log(`Facturas fechadas nos dias vigiados: ${ids.length}`);
+      console.log(readSales(db, ids.slice(-3)));
+      console.log('Anuladas recentes:', cancelledSaleIds(db));
     }
   });
   process.exit(0);
@@ -267,13 +283,32 @@ async function syncKitchen() {
   lastKitchen = msg;
 }
 
-let cursor: string | null | undefined; // undefined = pedir ao servidor
+/** Facturas que o servidor já tem (ou recusou de vez): não se voltam a perguntar até reiniciar. */
+const sentDocs = new Set<string>();
+const sentCancelled = new Set<string>();
 async function syncSales() {
-  cursor ??= (await call<{ cursor: string | null }>('/sales/cursor')).cursor;
-  // recupera o atraso em lotes; as anuladas vão só no primeiro
-  for (let first = true; ; first = false) {
-    const batch = withDb((db) => readSales(db, cursor!));
-    if (!batch.docs.length && (!first || !batch.cancelled.length)) return;
+  const { ids, cancelled } = withDb((db) => ({
+    ids: closedSaleIds(db),
+    cancelled: cancelledSaleIds(db),
+  }));
+  const fresh = ids.filter((id) => !sentDocs.has(id));
+  const freshCancelled = cancelled.filter((id) => !sentCancelled.has(id));
+  if (!fresh.length && !freshCancelled.length) return;
+
+  let missing: string[] = [];
+  for (let i = 0; i < fresh.length; i += 1000) {
+    const part = fresh.slice(i, i + 1000);
+    const d = await call<{ missing: string[] }>('/sales/missing', { ids: part });
+    const miss = new Set(d.missing);
+    for (const id of part) if (!miss.has(id)) sentDocs.add(id);
+    missing = missing.concat(part.filter((id) => miss.has(id)));
+  }
+
+  // envia as que faltam em lotes; as anuladas vão no primeiro
+  for (let i = 0, first = true; i < missing.length || first; i += BATCH, first = false) {
+    const part = missing.slice(i, i + BATCH);
+    const extra = first ? freshCancelled : [];
+    if (!part.length && !extra.length) return;
     const d = await call<{
       accepted: number;
       duplicates: number;
@@ -281,15 +316,15 @@ async function syncSales() {
       skippedDays: string[];
     }>('/sales', {
       posName,
-      cursor: batch.cursor,
-      docs: batch.docs,
-      cancelled: first ? batch.cancelled : [],
+      cursor: null,
+      docs: withDb((db) => readSales(db, part)),
+      cancelled: extra,
     });
-    cursor = batch.cursor;
+    for (const id of part) sentDocs.add(id);
+    for (const id of extra) sentCancelled.add(id);
     if (d.accepted || d.cancelled) log(`vendas: +${d.accepted} facturas · ${d.cancelled} anuladas`);
     if (d.skippedDays.length)
       log(`vendas ignoradas (dia já importado por ficheiro): ${d.skippedDays.join(', ')}`);
-    if (batch.docs.length < BATCH) return;
   }
 }
 
@@ -299,7 +334,6 @@ for (;;) {
   if (kitchenOn) await syncKitchen().catch((e: Error) => log(`erro (cozinha): ${e.message}`));
   if (salesOn)
     await syncSales().catch((e: Error) => {
-      cursor = undefined; // volta a perguntar ao servidor onde ficou
       log(`erro (vendas): ${e.message}`);
     });
   await sleep(everyMs);
